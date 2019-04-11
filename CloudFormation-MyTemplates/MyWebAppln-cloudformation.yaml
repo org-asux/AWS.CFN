@@ -1,0 +1,80 @@
+https://s3.amazonaws.com/cloudformation-templates-us-east-1/WordPress_Single_Instance_With_RDS.template
+
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  MyTag_BILLING:
+    Description: One of my standard REQUIRED EC2-Tags to identify who's paying for this
+    Type: 'AWS::SSM::Parameter::Value<String>'
+  My_Region:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: subnet-f7d11cab
+  My_Subnet:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: subnet-f7d11cab
+  MyEC2_AMI_ImageId:
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: t2.micro
+  MySSHKeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Default: Playground-Linux-FreeEC2.pem
+  DatabaseAdminUser:
+    Default: dba
+    NoEcho: 'true'
+    Description: The database admin-account user name
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+Mappings:
+  RegionMap:
+    us-east-1:
+      MyFavVPC: vpc-57edec2c
+      MyFavSubnet: subnet-f7d11cab
+      MyFavAZ: us-east-1a
+      FREEAMI_Linux: ami-0a584ac55a7631c0c
+      MyFavVMSize: t2.micro
+    eu-west-1:
+      HVM64: ami-047bb4163c506cd98
+      HVMG2: ami-0a7c483d527806435
+Resources:
+  57edec2c:
+    Type: 'AWS::EC2::VPC'
+    Properties: {}
+    Metadata:
+      'AWS::CloudFormation::Designer':
+        id: 74ca80b2-b421-4108-b904-3fe153e8a6f8
+  ElasticLoadBalancer:
+    Type: 'AWS::ElasticLoadBalancing::LoadBalancer'
+    Properties:
+      CrossZone: 'true'
+      AvailabilityZones: !GetAZs ''
+      LBCookieStickinessPolicy:
+        - PolicyName: CookieBasedPolicy
+          CookieExpirationPeriod: '30'
+      Listeners:
+        - LoadBalancerPort: '80'
+          InstancePort: '80'
+          Protocol: HTTP
+          PolicyNames:
+            - CookieBasedPolicy
+      HealthCheck:
+        Target: 'HTTP:80/'
+        HealthyThreshold: '2'
+        UnhealthyThreshold: '5'
+        Interval: '10'
+        Timeout: '5'
+Outputs:
+  WebsiteURL:
+    Description: WordPress Website per https://s3.amazonaws.com/cloudformation-templates-us-east-1/WordPress_Single_Instance_With_RDS.template
+    Value:
+        'Fn::Join':
+          - ''
+          - - |
+              http://
+            - !Fn::GetAtt
+                - WebServer
+                - PublicDnsName
+            - |
+              /wordpress
+

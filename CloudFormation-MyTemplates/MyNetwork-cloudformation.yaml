@@ -1,0 +1,536 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Based on the AWS CloudFormation Sample Template @
+  https://s3.amazonaws.com/cloudformation-examples/user-guide/cross-stack/SampleNetworkCrossStack.template
+  VPC_with_PublicIPs_And_DNS: Sample template that creates a VPC with DNS and
+  public IPs enabled. Note that you are billed for the AWS resources that you
+  use when you create a stack from this template.
+Parameters:
+  MyOrgName:
+    Description: "What is the Organization a.k.a. the prefix for the stack?  Example: orgASUX"
+    Type: String
+    Default: orgASUX
+  MyEnvironment:
+    Description: "What environment is this? For, TAG Name=ENV"
+    Type: String
+    Default: Playground
+  MyDistrList:
+    Description: "What is the distribution list to which all email-notifications - re: this stack's resources - will be sent to?"
+    Type: String
+    Default: tosarma@gmail.com
+
+  MyStackNamePrefix:
+    Description: No Default-value!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${MyAWSRegion}"
+    Type: String
+
+  EC2getsPublicIPByDefault:
+    Description: Whether any EC2 instance created within this VPC automatically gets a PUBLIC-IP (accessible via internet)
+    Type: String
+    Default: 'false'
+
+##  DummyPromptForStackName:
+##    Description: "Copy n paste the default value --> as the name of the Stack"
+##    Type: String
+##    Default: !Sub "${OrgName}-${MyEnvironment}-${AWS::Region}-VPC-1"
+
+Conditions:
+  USEast1: !Equals
+    - !Ref 'AWS::Region'
+    - "us-east-1"
+  USEast2: !Equals
+    - !Ref 'AWS::Region'
+    - "us-east-2"
+  USEast1and2: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+  Sydney: !Equals
+    - !Ref 'AWS::Region'
+    - ap-southeast-2
+  AnyRegion: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition Sydney
+  doesExistSubnet1: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition Sydney
+  doesExistSubnet2: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition Sydney
+  doesExistSubnet3: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition Sydney
+  doesExistSubnet4: !Condition USEast1
+  doesExistSubnet5: !Condition USEast1
+
+Resources:
+  MyVPC:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 172.31.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      InstanceTenancy: default
+      Tags:
+        - Key: APPLNAME
+          Value: !Ref 'AWS::StackId'
+        - Key: LOCATION
+          Value: !Ref 'AWS::Region'
+        - Key: CHRGCODE
+          Value: org.ASUX
+        - Key: ITOWNER
+          Value: sarma
+        - Key: BIZOWNER
+          Value: sarma
+        - Key: ARCHLAYER
+          Value: Files
+        - Key: ENV
+          Value: Playground
+        - Key: SNAPSHOTS
+          Value: 'No'
+        - Key: USERBASE
+          Value: admin
+        - Key: DISTRLIST
+          Value: tosarma@gmail.com
+        - Key: SVCGRP
+          Value: org.ASUX
+        - Key: VALIDATED
+          Value: 'No'
+  MyPublicSubnetAZ1:
+    Description: >-
+      If you specify a true or false value for the property
+      AssignIpv6AddressOnCreation (whose default value = false), then
+      Ipv6CidrBlock property must be specified. - - - Also, Cannot provide Tag
+      with Key=Name.
+    Type: 'AWS::EC2::Subnet'
+    Condition: doesExistSubnet1
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 172.31.0.0/20
+      MapPublicIpOnLaunch: !Ref EC2getsPublicIPByDefault
+      ## DefaultForAz: true  ## Apparently not supported for VPCs and Subnets that are NOT default ALREADY.
+      AvailabilityZone: !Join
+        - ''
+        - - !Ref 'AWS::Region'
+          - a
+      Tags:
+        - Key: APPLNAME
+          Value: !Ref 'AWS::StackId'
+        - Key: LOCATION
+          Value: !Ref 'AWS::Region'
+        - Key: CHRGCODE
+          Value: org.ASUX
+        - Key: ITOWNER
+          Value: sarma
+        - Key: BIZOWNER
+          Value: sarma
+        - Key: ARCHLAYER
+          Value: Files
+        - Key: ENV
+          Value: Playground
+        - Key: SNAPSHOTS
+          Value: 'No'
+        - Key: USERBASE
+          Value: admin
+        - Key: DISTRLIST
+          Value: tosarma@gmail.com
+        - Key: SVCGRP
+          Value: org.ASUX
+        - Key: VALIDATED
+          Value: 'No'
+  MyPublicSubnetAZ2:
+    Type: 'AWS::EC2::Subnet'
+    Condition: doesExistSubnet2
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 172.31.16.0/20
+      MapPublicIpOnLaunch: !Ref EC2getsPublicIPByDefault
+      AvailabilityZone: !Join
+        - ''
+        - - !Ref 'AWS::Region'
+          - b
+      Tags:
+        - Key: APPLNAME
+          Value: !Ref 'AWS::StackId'
+        - Key: LOCATION
+          Value: !Ref 'AWS::Region'
+        - Key: CHRGCODE
+          Value: org.ASUX
+        - Key: ITOWNER
+          Value: sarma
+        - Key: BIZOWNER
+          Value: sarma
+        - Key: ARCHLAYER
+          Value: Files
+        - Key: ENV
+          Value: Playground
+        - Key: SNAPSHOTS
+          Value: 'No'
+        - Key: USERBASE
+          Value: admin
+        - Key: DISTRLIST
+          Value: tosarma@gmail.com
+        - Key: SVCGRP
+          Value: org.ASUX
+        - Key: VALIDATED
+          Value: 'No'
+  MyPublicSubnetAZ3:
+    Type: 'AWS::EC2::Subnet'
+    Condition: doesExistSubnet3
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 172.31.32.0/20
+      MapPublicIpOnLaunch: !Ref EC2getsPublicIPByDefault
+      AvailabilityZone: !Join
+        - ''
+        - - !Ref 'AWS::Region'
+          - c
+      Tags:
+        - Key: APPLNAME
+          Value: !Ref 'AWS::StackId'
+        - Key: LOCATION
+          Value: !Ref 'AWS::Region'
+        - Key: CHRGCODE
+          Value: org.ASUX
+        - Key: ITOWNER
+          Value: sarma
+        - Key: BIZOWNER
+          Value: sarma
+        - Key: ARCHLAYER
+          Value: Files
+        - Key: ENV
+          Value: Playground
+        - Key: SNAPSHOTS
+          Value: 'No'
+        - Key: USERBASE
+          Value: admin
+        - Key: DISTRLIST
+          Value: tosarma@gmail.com
+        - Key: SVCGRP
+          Value: org.ASUX
+        - Key: VALIDATED
+          Value: 'No'
+  MyPublicSubnetAZ4:
+    Type: 'AWS::EC2::Subnet'
+    Condition: doesExistSubnet4
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 172.31.48.0/20
+      MapPublicIpOnLaunch: !Ref EC2getsPublicIPByDefault
+      AvailabilityZone: !Join
+        - ''
+        - - !Ref 'AWS::Region'
+          - d
+      Tags:
+        - Key: APPLNAME
+          Value: !Ref 'AWS::StackId'
+        - Key: LOCATION
+          Value: !Ref 'AWS::Region'
+        - Key: CHRGCODE
+          Value: org.ASUX
+        - Key: ITOWNER
+          Value: sarma
+        - Key: BIZOWNER
+          Value: sarma
+        - Key: ARCHLAYER
+          Value: Files
+        - Key: ENV
+          Value: Playground
+        - Key: SNAPSHOTS
+          Value: 'No'
+        - Key: USERBASE
+          Value: admin
+        - Key: DISTRLIST
+          Value: tosarma@gmail.com
+        - Key: SVCGRP
+          Value: org.ASUX
+        - Key: VALIDATED
+          Value: 'No'
+  MyPublicSubnetAZ5:
+    Type: 'AWS::EC2::Subnet'
+    Condition: doesExistSubnet5
+    Properties:
+      VpcId: !Ref MyVPC
+      CidrBlock: 172.31.64.0/20
+      MapPublicIpOnLaunch: !Ref EC2getsPublicIPByDefault
+      AvailabilityZone: !Join
+        - ''
+        - - !Ref 'AWS::Region'
+          - e
+      Tags:
+        - Key: APPLNAME
+          Value: !Ref 'AWS::StackId'
+        - Key: LOCATION
+          Value: !Ref 'AWS::Region'
+        - Key: CHRGCODE
+          Value: org.ASUX
+        - Key: ITOWNER
+          Value: sarma
+        - Key: BIZOWNER
+          Value: sarma
+        - Key: ARCHLAYER
+          Value: Files
+        - Key: ENV
+          Value: Playground
+        - Key: SNAPSHOTS
+          Value: 'No'
+        - Key: USERBASE
+          Value: admin
+        - Key: DISTRLIST
+          Value: tosarma@gmail.com
+        - Key: SVCGRP
+          Value: org.ASUX
+        - Key: VALIDATED
+          Value: 'No'
+  MyInternetGateway:
+    Description: >-
+      REMEMBER: an IGW is associated with entire VPC.  Only NATs are associated
+      with a single public-subnet.
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: APPLNAME
+          Value: !Ref 'AWS::StackId'
+        - Key: LOCATION
+          Value: !Ref 'AWS::Region'
+        - Key: CHRGCODE
+          Value: org.ASUX
+        - Key: ITOWNER
+          Value: sarma
+        - Key: BIZOWNER
+          Value: sarma
+        - Key: ARCHLAYER
+          Value: Files
+        - Key: ENV
+          Value: Playground
+        - Key: SNAPSHOTS
+          Value: 'No'
+        - Key: USERBASE
+          Value: admin
+        - Key: DISTRLIST
+          Value: tosarma@gmail.com
+        - Key: SVCGRP
+          Value: org.ASUX
+        - Key: VALIDATED
+          Value: 'No'
+    DependsOn:
+      - MyPublicSubnetAZ1
+      - MyPublicSubnetAZ2
+      - MyPublicSubnetAZ3
+  MyVPCGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    DependsOn:
+      - MyInternetGateway
+    Properties:
+      VpcId: !Ref MyVPC
+      InternetGatewayId: !Ref MyInternetGateway
+  MyPublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    DependsOn:
+      - MyVPCGatewayAttachment
+    Properties:
+      VpcId: !Ref MyVPC
+  MyPublicRoute:
+    Type: 'AWS::EC2::Route'
+    DependsOn: MyVPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref MyPublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref MyInternetGateway
+  MyPublicSubnetRouteTableAssociationAZ1:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: doesExistSubnet1
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ1
+      RouteTableId: !Ref MyPublicRouteTable
+  MyPublicSubnetRouteTableAssociationAZ2:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: doesExistSubnet2
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ2
+      RouteTableId: !Ref MyPublicRouteTable
+  MyPublicSubnetRouteTableAssociationAZ3:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: doesExistSubnet3
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ3
+      RouteTableId: !Ref MyPublicRouteTable
+  MyPublicSubnetRouteTableAssociationAZ4:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: doesExistSubnet4
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ4
+      RouteTableId: !Ref MyPublicRouteTable
+  MyPublicSubnetRouteTableAssociationAZ5:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: doesExistSubnet5
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ5
+      RouteTableId: !Ref MyPublicRouteTable
+  MyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAcl'
+    Properties:
+      VpcId: !Ref MyVPC
+  MyPublicSubnetNetworkAclAssociation1:
+    Type: 'AWS::EC2::SubnetNetworkAclAssociation'
+    Condition: doesExistSubnet1
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ1
+      NetworkAclId: !GetAtt
+        - MyVPC
+        - DefaultNetworkAcl
+  MyPublicSubnetNetworkAclAssociation2:
+    Type: 'AWS::EC2::SubnetNetworkAclAssociation'
+    Condition: doesExistSubnet2
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ2
+      NetworkAclId: !GetAtt
+        - MyVPC
+        - DefaultNetworkAcl
+  MyPublicSubnetNetworkAclAssociation3:
+    Type: 'AWS::EC2::SubnetNetworkAclAssociation'
+    Condition: doesExistSubnet3
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ3
+      NetworkAclId: !GetAtt
+        - MyVPC
+        - DefaultNetworkAcl
+  MyPublicSubnetNetworkAclAssociation4:
+    Type: 'AWS::EC2::SubnetNetworkAclAssociation'
+    Condition: doesExistSubnet4
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ4
+      NetworkAclId: !GetAtt
+        - MyVPC
+        - DefaultNetworkAcl
+  MyPublicSubnetNetworkAclAssociation5:
+    Type: 'AWS::EC2::SubnetNetworkAclAssociation'
+    Condition: doesExistSubnet5
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ5
+      NetworkAclId: !GetAtt
+        - MyVPC
+        - DefaultNetworkAcl
+  InboundHTTPNetworkAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref MyDefaultNetworkAcl
+      RuleNumber: '100'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '80'
+        To: '80'
+  InboundSSHNetworkAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref MyDefaultNetworkAcl
+      RuleNumber: '101'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '22'
+        To: '22'
+  InboundResponsePortsNetworkAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref MyDefaultNetworkAcl
+      RuleNumber: '102'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '1024'
+        To: '65535'
+  OutBoundHTTPNetworkAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref MyDefaultNetworkAcl
+      RuleNumber: '100'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '80'
+        To: '80'
+  OutBoundHTTPSNetworkAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref MyDefaultNetworkAcl
+      RuleNumber: '101'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '443'
+        To: '443'
+  OutBoundResponsePortsNetworkAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref MyDefaultNetworkAcl
+      RuleNumber: '102'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '1024'
+        To: '65535'
+
+
+Outputs:
+  VPCID: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
+    Description: VPC ID
+    Value: !Ref MyVPC   ## The value of the property returned by the aws cloudformation describe-stacks command
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${MyStackNamePrefix}-VPCID'  ## For each AWS account, Export names must be unique within a region.
+      ## Alternatively, the Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-VPC-1"
+      ##      But.. how will you replace the "1" at the end of the name in above line??????
+  DefaultAZ: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
+    Description: Default Availability Zone AZ ID
+    Value: !GetAtt   ## The value of the property returned by the aws cloudformation describe-stacks command
+      - !Ref MyPublicSubnetAZ1
+      - AvailabilityZone
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${MyStackNamePrefix}-AZ-ID'  ## For each AWS account, Export names must be unique within a region.
+  DefaultPublicSubnet:
+    Description: The subnet ID to use for public web servers
+    Value: !Ref MyPublicSubnetAZ1  ## The value of the property returned by the aws cloudformation describe-stacks command
+    Condition: doesExistSubnet1
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${MyStackNamePrefix}-Subnet-1-ID'  ## For each AWS account, Export names must be unique within a region.
+  DefaultPublicSubnet2:
+    Description: The subnet ID to use for public web servers
+    Value: !Ref MyPublicSubnetAZ2  ## The value of the property returned by the aws cloudformation describe-stacks command
+    Condition: doesExistSubnet2
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${MyStackNamePrefix}-Subnet-2-ID'  ## For each AWS account, Export names must be unique within a region.
+  DefaultPublicSubnet3:
+    Description: The subnet ID to use for public web servers
+    Condition: doesExistSubnet3
+    Value: !Ref MyPublicSubnetAZ3  ## The value of the property returned by the aws cloudformation describe-stacks command
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${MyStackNamePrefix}-Subnet-3-ID'  ## For each AWS account, Export names must be unique within a region.
+  DefaultPublicSubnet4:
+    Description: The subnet ID to use for public web servers
+    Value: !Ref MyPublicSubnetAZ4  ## The value of the property returned by the aws cloudformation describe-stacks command
+    Condition: doesExistSubnet4
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${MyStackNamePrefix}-Subnet-4-ID'  ## For each AWS account, Export names must be unique within a region.
+  DefaultPublicSubnet5:
+    Description: The subnet ID to use for public web servers
+    Value: !Ref MyPublicSubnetAZ5  ## The value of the property returned by the aws cloudformation describe-stacks command
+    Condition: doesExistSubnet5
+    Export:            ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${MyStackNamePrefix}-Subnet-5-ID'  ## For each AWS account, Export names must be unique within a region.
+
+### EOF

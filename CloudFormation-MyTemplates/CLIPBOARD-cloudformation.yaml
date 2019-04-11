@@ -1,0 +1,316 @@
+# https://github.com/awslabs/aws-cloudformation-templates/blob/master/community/services/VPC/vpc_template.json
+# 
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet.html
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-reference-ec2.html
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
+# 
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference.html
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/conditions-section-structure.html
+# https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-conditions.html
+
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+    VpcId:
+        Type: "AWS::EC2::VPC::Id"
+        Description: "Select a VPC that allows instances to access the Internet."
+        Default: !Sub  ## Fn::Sub
+            - www.${Domain}.com
+            - { Domain: !Ref RootDomainName }
+    SubnetId:
+        Type: "List<AWS::EC2::Subnet::Id>"
+        "Description": "Select at two subnets in your selected VPC."
+    EnvType: 
+        Description: Environment type.
+        Default: test
+        Type: String
+        AllowedValues: 
+        - prod
+        - test
+        ConstraintDescription: must specify prod or test.
+Mappings:
+    RegionMap:
+        USWest1:
+            MyFavVPC: vpc-57edec2c
+        USEast2:
+            MyFavVPC: vpc-0ccb3964
+        APSoutheast2:
+            MyFavVPC: vpc-0b4c001e1edc9ea85
+        USEast1:
+            "MyFavVPC": "vpc-57edec2c"
+            "MyFavSubnet": "subnet-f7d11cab"
+            "MyFavAZ": "us-east-1a"
+            "MyFavAMI": "ami-0de53d8956e8dcf80"
+        EUNorth2: 
+            "MyFavVPC": "vpc-0ccb3964"
+            "MyFavSubnet": "subnet-8f2febe7"
+            "MyFavAZ": "us-east-2a"
+            "MyFavAMI": "ami-02bcbb802e03574ba"
+       us-east-1:
+            MyFavVPC: vpc-57edec2c
+            MyFavAZ: us-east-1a
+            MyFavSubnet: subnet-f7d11cab
+            Subnet1: subnet-f7d11cab
+            Subnet2: subnet-979b51f0
+            Subnet3: subnet-bc03cc92
+            Subnet4: subnet-a71687ed
+            Subnet5: subnet-d03d26ef
+            MyFavAMI: ami-0de53d8956e8dcf80
+            MyStdEFS: fs-f25ac612
+        us-east-2:
+            MyFavVPC: vpc-0ccb3964
+            MyFavAZ: us-east-2a
+            MyFavSubnet: subnet-8f2febe7
+            Subnet1: subnet-8f2febe7
+            Subnet2: subnet-c08af38d
+            Subnet3: subnet-fdac9486
+            MyFavAMI: ami-02bcbb802e03574ba
+            MyStdEFS: fs-41710538
+Conditions:     ## <<-- Next, Insert within EACH resource: "Condition" : "useast1",
+    "useast1":
+        "Fn::Equals":
+        -   !Ref "AWS::Region"
+        -   "us-east-1"
+    "useast2":
+        !Fn::Equals:
+        -   !Ref "AWS::Region"
+        -   "us-east-2"
+Resources:
+    VPC:
+        Type: AWS::EC2::VPC
+        Properties:
+            "EnableDnsSupport" : "true"
+            "EnableDnsHostnames" : "true"
+            "CidrBlock" : "10.0.0.0/16"
+    MyDefaultSubnet:
+        Type: AWS::EC2::Subnet
+        Properties:
+            VpcId : !Fn::FindInMap: ["RegionMap", {"Ref":"AWS::Region"}, "MyFavVPC"]
+            VpcId:
+                !Ref "57edec2c"
+    MyInstanceProfile:          ## <<-------- way too complicated way to add IAM to EC2
+                                ## <<------ instead just use "IamInstanceProfile" under EC2 properties
+        Type : "AWS::IAM::InstanceProfile"
+        "Properties" :
+            "Path" : "/"
+            "Roles" :
+            -   "EC2-ReadWrite-to-S3"  ## <<----------- change this as needed
+    OrgAsuxEC2Instance:
+        Type: "AWS::EC2::Instance"
+        "Metadata" :
+            "AWS::CloudFormation::Init" :
+                "configSets" :
+                    "InstallAndRun":
+                    -   "Standup"
+                    -   "Configure"
+                "Standup" :
+                    "packages" :
+                        "yum":
+                            "tcsh" : 
+                            "git" :
+                            "maven" :
+                "CMDConfig" :
+                    "commands" :
+                        "sanity-testing" :
+                            "command" : "echo \"$CFNTEST\" > test.txt"
+                            "env" :
+                                "CFNTEST" : "I come from config1."
+                            "cwd" : "~"
+                Configure :
+                    commands :
+                        "01_set_mysql_root_password" :
+                            "command": !Fn::Join : ["", ["mysqladmin -u root password '", { "Ref" : "DBRootPassword" }, "'"]]
+                services :
+                    sysvinit :
+                        httpd:
+                            enabled : "false
+                            ensureRunning : "false"
+
+                    "files" : {
+                        "/tmp/sample-file-by-aws_cfn.txt" : {
+                            "content" : { "Fn::Join" : [ "", [
+                                "line #1\n",
+                                "Last line = line #2\n"
+                            ]]},
+                            "mode"  : "000600",
+                            "owner" : "apache",
+                            "group" : "apache"
+                        }
+                    },
+                    "UserData": {
+                        "Fn::Base64" : { "Fn::Join" : ["", [
+                            "#!/bin/bash -xe\n",
+                            "### See this output @ /var/log/cloud-init-output.log\n",
+                            "echo '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'\n",
+                            "date '+%Y-%m-%d %H:%M:%S'\n",
+                            "# See page 284 of UG - on how to Install the files and packages from the metadata\n",
+                            "yum -y update\n",
+                            "yum install -y aws-cfn-bootstrap\n",
+                            "# Install the files and packages from the metadata\n",
+                            "/opt/aws/bin/cfn-init -v ",
+                            "         --stack ", { "Ref" : "AWS::StackName" },
+                            "         --resource ", { "Ref": "MyEC2InstanceName" },
+                            "         --configsets Standup ",
+                            "         --region ", { "Ref" : "AWS::Region" }, "\n",
+                            "mkdir /var/build\n",
+                            "chown ec2-user /var/build\n",
+                            
+                            "EC2_REGION=",{"Ref": "AWS::Region"},"\n",
+                            "DIR_TGT=/mnt/efs/\n",
+                            "EFS_FILE_SYSTEM_ID=",{"Fn::FindInMap": ["RegionMap", {"Ref":"AWS::Region"}, "MyStdEFS"]},"\n",
+                            "mkdir -p $DIR_TGT\n",
+                            "DIR_SRC=$EFS_FILE_SYSTEM_ID.efs.$EC2_REGION.amazonaws.com\n",
+                            "mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 $DIR_SRC:/ $DIR_TGT"
+                            
+                            "### !!!!! WARNING !!!!!!!!: Sudo BELOW should be VERY LAST command\n",
+                            "### SECURITY-BestPractice: When you work with shared AMIs, a best practice is to disable direct root logins. To do this, issue the following command:\n",
+                            "sudo passwd -l root\n",
+                            "### This ABOVE command does NOT impact the use of sudo.\n",
+                            "### !!!!! WARNING !!!!!!!!: Sudo BELOW should be VERY LAST command\n"
+                        ]]
+                        }
+                    }
+                }
+                "MyEFSMountTarget": { <<--- DO NOT USE !!!! STILL DOES NOT WORK !!!!!!!!!!
+                    "Type": "AWS::EFS::MountTarget",
+                    "Properties": {
+                        "FileSystemId": {"Fn::FindInMap": ["RegionMap",{"Ref":"AWS::Region"}, "MyStdEFS"]},
+                        "SecurityGroups": [ {"Ref": "MyEFSSecurityGroup"} ],
+                        "Subnet": {"Fn::GetAtt" : ["OrgAsuxEC2Instance", "AvailabilityZone" ] }
+                    },
+                    "DependsOn": [ "OrgAsuxEC2Instance" ]
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": {
+                    "Fn::FindInMap": [
+                        "RegionMap",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        "MyFavAZ"
+                    ]
+                },
+                "VpcID": {
+                    "Type": "AWS::EC2::VPC::Id",  <<--- Does this work???
+                    {
+                        "Ref": "VPCID"
+                    }
+                },
+                "SubnetId": {"Ref": "MySubnet"},
+                "SubnetId": {
+                    "Fn::FindInMap": [
+                        "RegionMap",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        "MyFavSubnet"
+                    ]
+                },
+                "ImageId": {
+                    "Fn::FindInMap": [
+                        "RegionMap",
+                        {
+                            "Ref": "AWS::Region"
+                        },
+                        "FREEAMI_Linux"
+                    ]
+                },
+                "KeyName": {
+                    "Ref": "MySSHKeyName"
+                },
+                "InstanceType": {
+                    "Description": "New EC2 instance sizing",
+                    "Ref": "InstanceTypeParameter",
+                    "AllowedValues": [
+                        "t1.micro",
+                        "t2.nano",
+                        "t2.micro"
+                    ]
+                },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "SourceSecurityGroupName": "SG_LinuxEC2SSHAccess",
+                        "SourceSecurityGroupOwnerId": "591580567012"
+                    }
+                ],
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sdc",
+                        "VirtualName": "ephemeral0",
+                        "ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": {
+                                "Ref": "EBSVolumeSize"
+                            }
+                        }
+                    }
+                ],
+                "IamInstanceProfile" : "EC2-ReadWrite-to-S3",
+                "NetworkInterfaces": [
+                    {
+                        "SubnetId": {
+                            "Ref": "EC2S34GWY"
+                        }
+                    }
+                ]
+            }
+        },
+        "MyStdEFS": { <<-- WARNING !!!!!! AWS::EFS::FileSystem creates a new empty FileSystem
+            "Type": "AWS::EFS::FileSystem",
+            "Properties": {
+                "FileSystemTags" : [
+                    { "Name": "DEVELOPMENT-SRC" }, <<--- THIS IS The NAME of the EFS instance!
+                    {"Key": "APPLNAME", "Value": "org.ASUX"}, {"Key": "LOCATION", "Value": {"Ref":"AWS::Region"} },
+                    {"Key": "CHRGCODE", "Value": "org.ASUX"},
+                    {"Key": "ITOWNER", "Value": "sarma"}, {"Key": "BIZOWNER", "Value": "sarma"},
+                    {"Key": "ARCHLAYER", "Value": "Files"}, {"Key": "ENV", "Value": "Playground"}, {"Key": "SNAPSHOTS", "Value": "No"},
+                    {"Key": "USERBASE", "Value": "testing"}, {"Key": "DISTRLIST", "Value": "tosarma@gmail.com"}, {"Key": "SVCGRP", "Value": "org.ASUX"},
+                    {"Key": "VALIDATED", "Value": "No"}
+                ]
+            }
+        },
+        "EFSMT4U6RH": {
+            "Type": "AWS::EFS::MountTarget",
+            "Properties": {
+                "SubnetId": {"Ref": "MySubnet"},
+            },
+            "DependsOn": [
+                "OrgAsuxEC2Instance"
+            ]
+        },
+        "MyEIP": {
+            "Type": "AWS::EC2::EIP",
+            "Properties": {
+                "InstanceId": {
+                    "Ref": "OrgAsuxEC2Instance"
+                }
+            }
+        },
+        "EC2SG3BY8H": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {}
+        }
+    },
+    "Outputs" :
+        "VPCId" :
+            "Description" : "VPC ID"
+            "Value" : !Ref: "VPC"
+            "Export" :
+                "Name" : !Fn::Sub: "${AWS::StackName}-VPCID"
+        "PublicSubnet" :
+            "Description" : "The subnet ID to use for public web servers"
+            "Value" :
+                "Ref" : "PublicSubnet"
+            "Export" : 
+                "Name" : !"Fn::Sub": "${AWS::StackName}-SubnetID"
+        "WebServerSecurityGroup" : {
+            "Description" : "The security group ID to use for public web servers"
+            "Value" :  !Fn::GetAtt: ["WebServerSecurityGroup", "GroupId"]
+            "Export" :
+                Name: !Fn::Sub: "${AWS::StackName}-SecurityGroupID"
+        ALBDNSName:
+            "Description": "DNS Name of the loadbalancer"
+            Value: !GetAtt BackupLoadBalancer.DNSName
