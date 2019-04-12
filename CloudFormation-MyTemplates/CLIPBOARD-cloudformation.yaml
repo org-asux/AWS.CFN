@@ -8,6 +8,27 @@
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/conditions-section-structure.html
 # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-conditions.html
 
+
+https://www.fischco.org/technica/2017/cloud-formation-sub/
+    Name:
+        Fn::Sub:
+        - "myapp.${NotAnyWhereInThisFile}"
+        - NotAnyWhereInThisFile: !ImportValue MyEXPORT-from-AnotherCFNTemplate
+
+    Name:
+        Fn::Sub:
+        -   "myapp.${SubDomain}.${HostedZoneName}"
+        -   HostedZoneName: !ImportValue HostedZone-zone-name
+            SubDomain: !ImportValue HostedZone-subzone-name
+
+    Name:
+		Fn::Sub:
+		- "myapp.${ZoneName}"
+		- ZoneName: 
+			Fn::ImportValue:   ### Note how there is NO EXCLAMATION MARK here, as were using Fn:: prefix.
+				!Sub "${Route53StackName}-zone-name"
+
+
 AWSTemplateFormatVersion: 2010-09-09
 Parameters:
     VpcId:
