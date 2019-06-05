@@ -1,0 +1,204 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Just creates a new EFS (Elastic File System) + mounts in ALL SUBNETS.
+  THat's it.  Obviously, it will be associated with a SG_EFS
+  This is a CFN Template that I created from scratch.
+Parameters:
+  MyOrgName:
+    Description: "What is the Organization a.k.a. the prefix for the stack?  Example: orgASUX"
+    Type: String
+    Default: orgASUX
+  MyEnvironment:
+    Description: "What environment is this? For, TAG Name=ENV"
+    Type: String
+    Default: Playground
+  MyDistrList:
+    Description: "What is the distribution list to which all email-notifications - re: this stack's resources - will be sent to?"
+    Type: String
+    Default: tosarma@gmail.com
+
+  MyStackNamePrefix:
+    Description: No Default-value!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${MyAWSRegion}"
+    Type: String
+
+  MyVPC:
+    Description: "Make sure this VPC-ID-Ref matches EXACTLY with the EXPORT-OUTPUT of another Stack"
+    Type: String
+##    Bummer: AWS CloudFormation REQUIRES simple strings for DEFAULT value
+##    Default: !ImportValue !Sub "${MyOrgName}-${MyEnvironment}-${AWS::Region}-${AWS::StackName}"
+##    Default: "orgASUX-SydneyVPC-VPCID"
+
+  MyPublicSubnet1:
+    Description: "Make sure this Subnet-ID is the 1st subnet and .. matches EXACTLY with the EXPORT-OUTPUT of another Stack"
+    Type: String
+    ### Example: You provide "${MyStackNamePrefix}-Subnet" and this CFN will APPEND "-1-ID", "-2-ID" .. ..
+  MyPublicSubnet2:
+    Type: String
+  MyPublicSubnet3:
+    Type: String
+  MyPublicSubnet4:
+    Type: String
+  MyPublicSubnet5:
+    Type: String
+
+##  DummyPromptForStackName:
+##    Description: "Copy n paste the default value --> as the name of the Stack"
+##    Type: String
+##    Default: !Sub "${OrgName}-${MyEnvironment}-${AWS::Region}-${SG_SSH_Suffix}-1"
+
+  MyEFSSecurityGroup:
+    Description: 'Goddamn it. AWS::EFS::MountTarget only takes actual-ID/NOT a SG-NAME'
+    Type: String
+##    Default: sg-0ecf2c5233f4c81fa
+
+Conditions:
+  USEast1: !Equals
+    - !Ref 'AWS::Region'
+    - "us-east-1"
+  USEast2: !Equals
+    - !Ref 'AWS::Region'
+    - "us-east-2"
+  USEast1and2: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+  Sydney: !Equals
+    - !Ref 'AWS::Region'
+    - ap-southeast-2
+  AnyRegion: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition Sydney
+  doesExistSubnet1: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition Sydney
+  doesExistSubnet2: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition Sydney
+  doesExistSubnet3: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition Sydney
+  doesExistSubnet4: !Condition USEast1
+  doesExistSubnet5: !Condition USEast1
+
+Resources:
+  MyCommonEFS:
+    Type: 'AWS::EFS::FileSystem'
+    Properties:
+      FileSystemTags:
+        - Key: APPLNAME
+          Value: !Ref 'AWS::StackId'
+        - Key: LOCATION
+          Value: !Ref 'AWS::Region'
+        - Key: CHRGCODE
+          Value: org.ASUX
+        - Key: ITOWNER
+          Value: sarma
+        - Key: BIZOWNER
+          Value: sarma
+        - Key: ARCHLAYER
+          Value: Files
+        - Key: ENV
+          Value: Playground
+        - Key: SNAPSHOTS
+          Value: 'No'
+        - Key: USERBASE
+          Value: testing
+        - Key: DISTRLIST
+          Value: tosarma@gmail.com
+        - Key: SVCGRP
+          Value: org.ASUX
+        - Key: VALIDATED
+          Value: 'No'
+  MountTarget1:
+    Type: 'AWS::EFS::MountTarget'
+    Condition: doesExistSubnet1
+    Properties:
+      FileSystemId: !Ref MyCommonEFS
+      SecurityGroups: 
+        - !ImportValue
+            Ref: MyEFSSecurityGroup
+      SubnetId: !ImportValue
+          Ref: MyPublicSubnet1
+      # IpAddress: ### An IPv4 address that is within the address range of the subnet that is specified in the SubnetId property.
+            ### If you don't specify an IP address, Amazon EFS automatically assigns an address that is within the range of the subnet.
+    DependsOn:
+      - MyCommonEFS
+  MountTarget2:
+    Type: 'AWS::EFS::MountTarget'
+    Condition: doesExistSubnet2
+    Properties:
+      FileSystemId: !Ref MyCommonEFS
+      SecurityGroups: 
+        - !ImportValue
+            Ref: MyEFSSecurityGroup
+      SubnetId: !ImportValue
+          Ref: MyPublicSubnet2
+      # IpAddress: ### An IPv4 address that is within the address range of the subnet that is specified in the SubnetId property.
+            ### If you don't specify an IP address, Amazon EFS automatically assigns an address that is within the range of the subnet.
+    DependsOn:
+      - MyCommonEFS
+  MountTarget3:
+    Type: 'AWS::EFS::MountTarget'
+    Condition: doesExistSubnet3
+    Properties:
+      FileSystemId: !Ref MyCommonEFS
+      SecurityGroups: 
+        - !ImportValue
+            Ref: MyEFSSecurityGroup
+      SubnetId: !ImportValue
+          Ref: MyPublicSubnet3
+      # IpAddress: ### An IPv4 address that is within the address range of the subnet that is specified in the SubnetId property.
+            ### If you don't specify an IP address, Amazon EFS automatically assigns an address that is within the range of the subnet.
+    DependsOn:
+      - MyCommonEFS
+  MountTarget4:
+    Type: 'AWS::EFS::MountTarget'
+    Condition: doesExistSubnet4
+    Properties:
+      FileSystemId: !Ref MyCommonEFS
+      SecurityGroups: 
+        - !ImportValue
+            Ref: MyEFSSecurityGroup
+      SubnetId: !ImportValue
+          Ref: MyPublicSubnet4
+      # IpAddress: ### An IPv4 address that is within the address range of the subnet that is specified in the SubnetId property.
+            ### If you don't specify an IP address, Amazon EFS automatically assigns an address that is within the range of the subnet.
+    DependsOn:
+      - MyCommonEFS
+  MountTarget5:
+    Type: 'AWS::EFS::MountTarget'
+    Condition: doesExistSubnet5
+    Properties:
+      FileSystemId: !Ref MyCommonEFS
+      SecurityGroups: 
+        - !ImportValue
+            Ref: MyEFSSecurityGroup
+      SubnetId: !ImportValue
+          Ref: MyPublicSubnet5
+      # IpAddress: ### An IPv4 address that is within the address range of the subnet that is specified in the SubnetId property.
+            ### If you don't specify an IP address, Amazon EFS automatically assigns an address that is within the range of the subnet.
+    DependsOn:
+      - MyCommonEFS
+
+Outputs:
+  orgASUXEFSID: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
+    Description: ID of the EFS-FileSystem created
+    Value:   ## The value of the property returned by the aws cloudformation describe-stacks command
+      Ref: MyCommonEFS
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${MyStackNamePrefix}-EFSCommon-1'  ## For each AWS account, Export names must be unique within a region.
+      ## Alternatively, the Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-VPC-1"
+      ##      But.. how will you replace the "1" at the end of the name in above line??????
+
+###----------------
+### Looking for the EXPORT the Subnet-ID of the EFS-FileSystem created
+### WEll! it's the same 3 (or 5) subnets that you are using in all CFN templates.
+
+###----------------
+### Looking for EXPORT OUTPUT of "MountTarget1", "MountTarget2" .. "MountTarget5"?
+### Why do you need it?
+
+### EOF

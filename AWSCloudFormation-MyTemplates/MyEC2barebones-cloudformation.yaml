@@ -1,0 +1,264 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Just creates a Single Linux EC2 instance - NO EFS, No nothing.
+  THat's it.  Obviously, in a Public Subnet, with SSH access enabled (SG_SSH).
+  This is a CFN Template that I created from scratch.
+Parameters:
+  MyOrgName:
+    Description: "What is the Organization a.k.a. the prefix for the stack?  Example: orgASUX"
+    Type: String
+    Default: orgASUX
+  MyEnvironment:
+    Description: "What environment is this? For, TAG Name=ENV"
+    Type: String
+    Default: Playground
+  MyDistrList:
+    Description: "What is the distribution list to which all email-notifications - re: this stack's resources - will be sent to?"
+    Type: String
+    Default: tosarma@gmail.com
+
+  MyStackNamePrefix:
+    Description: No Default-value!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${MyAWSRegion}"
+    Type: String
+
+  MyVPC:
+    Description: "What is the EXPORTED OUTPUT of the VPC-ID - from another CloudFormation"
+    Type: String
+###    Bummer: AWS CloudFormation REQUIRES simple strings for DEFAULT value
+###    Default: Fn::ImportValue:
+###      !Sub "${OrgName}-${AWS::Region}-VPC"
+#  MyAZ:
+#    Description: "What is the default Availability Zone? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
+#    Type: String
+  MyPublicSubnet1:
+    Description: "What is the EXPORTED OUTPUT NAME of the SUBNET #1 - from the other CFN-template"
+    Type: String
+  MyPublicSubnet2:
+#    Description: "What is the EXPORTED OUTPUT NAME of the SUBNET #2 - from the other CFN-template"
+    Type: String
+  MyPublicSubnet3:
+#    Description: "What is the EXPORTED OUTPUT NAME of the SUBNET #3 - from the other CFN-template"
+    Type: String
+
+##################### The following two sub-trees must be deleted based on whether the region supports it or not
+#  MyPublicSubnet4:
+#    Description: "What is the EXPORTED OUTPUT NAME of the SUBNET #4 - from the other CFN-template"
+#    Type: String
+#  MyPublicSubnet5:
+#    Description: "What is the EXPORTED OUTPUT NAME of the SUBNET #5 - from the other CFN-template"
+#    Type: String
+
+  MySSHSecurityGroup:
+    Description: "What is the EXPORTED OUTPUT NAME of the SG for SSH? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
+    Type: String
+  MyIamInstanceProfiles:
+    Description: "What is the **LIST** of IAM groups? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
+    Type: String
+    Default: EC2-ReadWrite-to-S3
+
+  MyEC2InstanceName:
+    Type: String
+    Default: OrgAsuxEC2Instance
+    # MyEC2WorkStnIntance1
+  FreeEC2InstanceType:
+    Description: New EC2 instance sizing
+    Type: String
+    Default: t2.micro
+  FreeEC2EBSVolumeSize:
+    Type: Number
+    Default: '10'
+  needsMonitoring:
+    Description: Whether this EC2 instance needs **DETAILED** monitoring.  Default= FALSE
+    Type: String
+    Default: "false" ## Set to True if **DETAILED** CloudWatch monitoring is needed
+
+  MySSHKeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    # Default: Playground-Linux-FreeEC2.pem
+    # Default: USEast2-orgASUX-Linux-SSH.pem
+    # Default: Sydney-orgASUX-Playground-LinuxSSH.pem
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      MyFavLinuxAMISmall: ami-0de53d8956e8dcf80
+    us-east-2:
+      MyFavLinuxAMISmall: ami-02bcbb802e03574ba
+    ap-southeast-1:
+      MyFavLinuxAMISmall: ami-0b5a47f8865280111
+    ap-southeast-2:
+      MyFavLinuxAMISmall: ami-04481c741a0311bbb
+
+Resources:
+
+  OrgAsuxEC2Instance:  ## This key should actually be ${ASUX::MyEC2InstanceName} ########################################
+    Type: 'AWS::EC2::Instance'
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          Standup:
+            - Standup
+          StandUpInstallAndRun:
+            - Standup
+            - Install
+            - Configure
+            - Services
+            - Upload
+        Standup:
+          packages:
+            yum:
+              amazon-efs-utils: []
+              tcsh: []
+              git: []
+              maven: []
+        Install: {}
+        Configure: {}
+        Services:
+          sysvinit:
+            httpd:
+              enabled: 'false'
+              ensureRunning: 'false'
+            sendmail:
+              enabled: false'
+              ensureRunning: 'false'
+        Upload: {}
+
+    Properties:
+      ###  If NOT specified, an Availability Zone will be automatically chosen for you based on the load balancing criteria for the region.
+###    See Subnet property below.
+#      AvailabilityZone: !GetAtt   ## The value of the property returned by the aws cloudformation describe-stacks command
+#      - !ImportValue
+#          Ref: MyPublicAZ1
+#      - AvailabilityZone
+#        Ref: DefaultAZ
+
+      # AWS CFN ERROR: Network-interfaces and an instance-level 'SubnetId' CANNOT be specified on the same request (Status Code: 400; Error Code: InvalidParameterCombination)
+      # SubnetId: !ImportValue
+      #    Ref: MyPublicSubnet1
+      NetworkInterfaces: 
+        ### This one line *BELOW* distinguishes the 2 files MyEC2wEFS-cloudformation.yaml & MyEC2PrivatewEFS-cloudformation.yaml
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          GroupSet:
+            - !ImportValue
+                Ref: MySSHSecurityGroup
+          SubnetId: !ImportValue
+              Ref: MyPublicSubnet1
+      # AWS CFN ERROR: Network interfaces and an instance-level security-groups CANNOT be specified on the same request (Status Code: 400; Error Code: InvalidParameterCombination)
+      # SecurityGroupIds:
+      #   - !ImportValue
+      #       Ref: MySSHSecurityGroup
+
+      InstanceType: !Ref FreeEC2InstanceType
+
+      ImageId: !FindInMap
+        - RegionMap
+        - Ref: 'AWS::Region'
+        - MyFavLinuxAMISmall
+      BlockDeviceMappings:
+        - DeviceName: /dev/sdc
+          Ebs:
+            DeleteOnTermination: 'true'
+            VolumeSize:
+              Ref: FreeEC2EBSVolumeSize
+      IamInstanceProfile:
+        Ref: MyIamInstanceProfiles
+      Monitoring:
+        Ref: needsMonitoring
+
+      KeyName:
+        Ref: MySSHKeyName
+
+      Tags:
+        - Key: APPLNAME
+          Value: !Ref 'AWS::StackId'
+        - Key: LOCATION
+          Value: !Ref 'AWS::Region'
+        - Key: CHRGCODE
+          Value: org.ASUX
+        - Key: ITOWNER
+          Value: sarma
+        - Key: BIZOWNER
+          Value: sarma
+        - Key: ARCHLAYER
+          Value: Batch
+        - Key: ENV
+          Value: Playground
+        - Key: SNAPSHOTS
+          Value: 'No'
+        - Key: USERBASE
+          Value: admin
+        - Key: DISTRLIST
+          Value: tosarma@gmail.com
+        - Key: SVCGRP
+          Value: org.ASUX
+        - Key: VALIDATED
+          Value: 'No'
+
+### Warning: For YAML, AWS-CFN is very very picky.  Make sure the Base64 and Fn::Join are EXACTLY as in the following 2 LINES.
+      UserData: !Base64 
+        'Fn::Join':
+          - ''
+          - - |
+              #!/bin/bash -xe
+            - |
+              ### See this output @ /var/log/cloud-init-output.log
+            - >
+              echo '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+              @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+            - |
+              date '+%Y-%m-%d %H:%M:%S'
+            - >
+              # See page 284 of UG - on how to Install the files and packages
+              from the metadata
+            - |
+              yum -y update
+            - |
+              yum install -y aws-cfn-bootstrap
+            - |
+              # Install the files and packages from the metadata
+            - '/opt/aws/bin/cfn-init -v '
+            - '         --stack '
+            - !Ref 'AWS::StackName'
+            - '         --resource '
+            - !Ref MyEC2InstanceName
+            - '         --configsets Standup '
+            - '         --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+            - |
+              mkdir /var/build
+            - |
+              chown ec2-user /var/build
+            - |+
+
+            - |
+              mkdir /mnt/development
+            - |
+              chown ec2-user /mnt/development
+            - |+
+
+            - EC2_REGION=
+            - !Ref 'AWS::Region'
+            - |+
+
+            - |
+              mkdir -p $DIR_TGT
+            - |
+              chown ec2-user $DIR_TGT
+            - |
+              ### !!!!! WARNING !!!!!!!!: Sudo BELOW should be VERY LAST command
+            - >
+              ### SECURITY-BestPractice: When you work with shared AMIs, a best
+              practice is to disable direct root logins. To do this, issue the
+              following command:
+            - |
+              sudo passwd -l root
+            - |
+              ### This ABOVE command does NOT impact the use of sudo.
+            - |
+              ### !!!!! WARNING !!!!!!!!: Sudo BELOW should be VERY LAST command
+
+### EOF
