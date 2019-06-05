@@ -1,0 +1,154 @@
+#!/bin/false
+### This is to be sourced by TCSH, to allow me to use PARAMETRIZED values for PARAMETERS to pass to AWS CloudFormation CLI commands
+
+set AWSCLIPROFILE=sarmaapi
+set FLDR=/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/AWSCloudFormation-MyTemplates/ 
+echo "CWD = $cwd"
+echo -n "Cntrl-C if the CFN templates files are NOT in $FLDR  ?>"; set ANS="$<"
+
+set PEMFILENAME=Playground-Linux-FreeEC2.pem
+set PEMFILENAME=USEast2-orgASUX-Linux-SSH.pem
+set PEMFILENAME=Sydney-orgASUX-Playground-LinuxSSH.pem
+set PEMFILENAME=Singapore-orgASUX-Playground-LinuxSSH.pem
+
+###===========================================================
+set MYAWSREGION=ap-southeast-2
+echo "(Example: Sydney, USEast1, ap-southeast-1, Singapore, APSouthEast2 ..) "
+echo -n "WHat is the AWS-REGION  :>";  set MYAWSREGION=$<
+
+echo -n "WHat is the application-name (Example: CryptoLinuxWkstn/ OrgAsuxEC2Instance ) :>";  set MyApplName=$<
+
+###===========================================================
+set MyOrgName=orgASUX
+set MyEnvironment=Playground
+set MyDistrList=tosarma@gmail.com
+
+###====================== REGIONS LIST =======================
+set USEast1=us-east-1
+set USEast2=us-east-2
+set USWest1=us-west-1
+set USWest2=us-west-2
+set CACentral1=ca-central-1
+
+set EUNorth1=eu-north-1
+set EUWest1=eu-west-1
+set EUWest2=eu-west-2
+set EUWest3=eu-west-3
+set EUCentral1=eu-central-1
+
+set SAEast1=sa-east-1
+set APSouth1=ap-south-1
+set Mumbai=ap-south-1
+
+set APNortheast1=ap-northeast-1
+set APNorthEast1=ap-northeast-1
+set APNortheast2=ap-northeast-2
+set APNorthEast2=ap-northeast-2
+
+set APSoutheast1=ap-southeast-1
+set APSouthEast1=ap-southeast-1
+set APSoutheast2=ap-southeast-2
+set APSouthEast2=ap-southeast-2
+
+set Singapore=ap-southeast-1
+set Sydney=ap-southeast-2
+
+###===========================================================
+
+#__ echo ${MYAWSREGION}
+set EXPR='set AWSREGION=${'
+set EXPR="${EXPR}${MYAWSREGION}"
+set EXPR="${EXPR}}"
+( eval ${EXPR} ) >& /dev/null
+if ( $status != 0 ) then
+	set AWSREGION=${MYAWSREGION}
+else
+	eval ${EXPR}   ## This will not set the value of AWSREGION in this shell's process.
+endif
+echo -n "The official value of AWS REGION = ${AWSREGION}.  Correct?"; set ANS=$<
+
+###===========================================================
+set MyStackNamePrefix="${MyOrgName}-${MyEnvironment}-${MYAWSREGION}"
+
+set SG_SSH_Suffix="SG-LinuxSSH"
+set SG_EFS_Suffix="SG-EFS"
+
+###===========================================================
+###-----------------------------------------------------------
+###===========================================================
+### The following are EXPORTS from CloudFormation templates
+set CFNEX_VPC="${MyStackNamePrefix}-VPCID"
+set CFNEX_PublicSubnetAZ="${MyStackNamePrefix}-AZ-ID"
+
+set CFNEX_CommonSubnet="${MyStackNamePrefix}-Subnet"    ### Some CFN-Templates like EFS will append "-1-ID"  "-2-ID" etc.. ..
+set CFNEX_CommonPublicSubnet="${MyStackNamePrefix}-PublicSubnet"    ### Some CFN-Templates like EFS will append "-1-ID"  "-2-ID" etc.. ..
+set CFNEX_CommonPrivatSubnet="${MyStackNamePrefix}-PrivatcSubnet"    ### Some CFN-Templates like EFS will append "-1-ID"  "-2-ID" etc.. ..
+set CFNEX_PublicSubnet1="${CFNEX_CommonSubnet}-1-ID"
+set CFNEX_PublicSubnet2="${CFNEX_CommonSubnet}-2-ID"
+set CFNEX_PublicSubnet3="${CFNEX_CommonSubnet}-3-ID"
+set CFNEX_PublicSubnet4="${CFNEX_CommonSubnet}-4-ID"
+set CFNEX_PublicSubnet5="${CFNEX_CommonSubnet}-5-ID"
+set CFNEX_PrivatSubnet1="${CFNEX_CommonPrivatSubnet}-1-ID"
+set CFNEX_PrivatSubnet2="${CFNEX_CommonPrivatSubnet}-2-ID"
+set CFNEX_PrivatSubnet3="${CFNEX_CommonPrivatSubnet}-3-ID"
+set CFNEX_PrivatSubnet4="${CFNEX_CommonPrivatSubnet}-4-ID"
+set CFNEX_PrivatSubnet5="${CFNEX_CommonPrivatSubnet}-5-ID"
+
+set CFNEX_EFSID="${MyStackNamePrefix}-EFSCommon-1"
+set CFNEX_SG_EFS="${MyStackNamePrefix}-${SG_EFS_Suffix}-1"
+set CFNEX_SG_SSH="${MyStackNamePrefix}-${SG_SSH_Suffix}-1"
+
+###===========================================================
+###-----------------------------------------------------------
+###===========================================================
+set PARAMS_STD=( ParameterKey=MyOrgName,ParameterValue=${MyOrgName} ParameterKey=MyEnvironment,ParameterValue=${MyEnvironment} ParameterKey=MyDistrList,ParameterValue=${MyDistrList} ParameterKey=MyStackNamePrefix,ParameterValue=${MyStackNamePrefix}  )
+
+set PARAMS_STDVPC=( ${PARAMS_STD}  ParameterKey=MyVPC,ParameterValue=${CFNEX_VPC}-1 )
+set PARAMS_STDVPC=( ${PARAMS_STD}  ParameterKey=MyVPC,ParameterValue=${CFNEX_VPC} )
+
+set PARAMS_STD_AZ=( ${PARAMS_STDVPC}  ParameterKey=MyPublicSubnetAZ1,ParameterValue=${CFNEX_PublicSubnetAZ}-1 )
+### set PARAMS_STD_COMMONSUBNET=( ${PARAMS_STDVPC}  ParameterKey=MyCommonSubnetID,ParameterValue=${CFNEX_CommonSubnet} )
+set PARAMS_STD_3PUBLICSUBNET=( ${PARAMS_STDVPC}  ParameterKey=MyPublicSubnet1,ParameterValue=${CFNEX_PublicSubnet1} ParameterKey=MyPublicSubnet2,ParameterValue=${CFNEX_PublicSubnet2} ParameterKey=MyPublicSubnet3,ParameterValue=${CFNEX_PublicSubnet3} )
+set PARAMS_STD_5PUBLICSUBNET=( ${PARAMS_STD_3PUBLICSUBNET}  ParameterKey=MyPublicSubnet4,ParameterValue=${CFNEX_PublicSubnet4} ParameterKey=MyPublicSubnet5,ParameterValue=${CFNEX_PublicSubnet5} )
+
+set PARAMS_STDAPP=( ${PARAMS_STDVPC}  ParameterKey=MyApplName,ParameterValue=${MyApplName} )
+set PARAMS_EC2=( ${PARAMS_STD_3PUBLICSUBNET}  ParameterKey=MyEC2InstanceName,ParameterValue=${MyApplName} )
+
+###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+echo ''; echo;
+
+echo 'aws cloudformation create-stack --region "${AWSREGION}" --profile ${AWSCLIPROFILE} --stack-name "${MyStackNamePrefix}-VPC-1" --template-body file://${FLDR}/MyNetwork-cloudformation.yaml --parameters ${PARAMS_STD}'
+
+echo 'aws cloudformation create-stack --region "${AWSREGION}" --profile ${AWSCLIPROFILE} --stack-name "${MyStackNamePrefix}-${SG_SSH_Suffix}-1" --template-body file://${FLDR}/MySGforSSH-cloudformation.yaml --parameters ${PARAMS_STDVPC}'
+echo 'aws cloudformation create-stack --region "${AWSREGION}" --profile ${AWSCLIPROFILE} --stack-name "${MyStackNamePrefix}-${SG_EFS_Suffix}-1" --template-body file://${FLDR}/MySGforEFS-cloudformation.yaml --parameters ${PARAMS_STDVPC}'
+
+echo 'aws cloudformation create-stack --region "${AWSREGION}" --profile ${AWSCLIPROFILE} --stack-name "${MyStackNamePrefix}-EFS-1" --template-body file://${FLDR}/MyEFS-cloudformation.yaml --parameters ${PARAMS_STD_5PUBLICSUBNET} ParameterKey=MyEFSSecurityGroup,ParameterValue=${CFNEX_SG_EFS} '
+
+echo 'aws cloudformation create-stack --region "${AWSREGION}" --profile ${AWSCLIPROFILE} --stack-name "${MyStackNamePrefix}-${MyApplName}-1" --template-body file://${FLDR}/MyEC2wEFS-cloudformation.yaml \
+--parameters ${PARAMS_EC2} ParameterKey=MySSHSecurityGroup,ParameterValue=${CFNEX_SG_SSH} ParameterKey=MyEFSSecurityGroup,ParameterValue=${CFNEX_SG_EFS} ParameterKey=MyEFSID,ParameterValue=${CFNEX_EFSID} ParameterKey=MySSHKeyName,ParameterValue=${PEMFILENAME} '
+
+echo 'aws cloudformation create-stack --region "${AWSREGION}" --profile ${AWSCLIPROFILE} --stack-name "${MyStackNamePrefix}-${MyApplName}-1" --template-body file://${FLDR}/MyEC2barebones-cloudformation.yaml \
+--parameters ${PARAMS_EC2} ParameterKey=MySSHSecurityGroup,ParameterValue=${CFNEX_SG_SSH} ParameterKey=MySSHKeyName,ParameterValue=${PEMFILENAME} '
+
+# echo 'aws cloudformation create-stack --region "${AWSREGION}" --profile ${AWSCLIPROFILE} --stack-name "${MyStackNamePrefix}-${MyApplName}-1" --template-body file://${FLDR}/AAAAAAAAAAPPPPPPPP-LLLLAAAYYYEEERRR-cloudformation.yaml \
+#	 --parameters ${PARAMS_STD_3PUBLICSUBNET} \
+#	 ParameterKey=MySSHSecurityGroup,ParameterValue=${CFNEX_SG_SSH} \
+#	 ParameterKey=MyEFSSecurityGroup,ParameterValue=${CFNEX_SG_EFS} \
+#	 ParameterKey=MyEFSID,ParameterValue=${CFNEX_EFSID} \
+#	 ParameterKey=MySSHKeyName,ParameterValue=${PEMFILENAME} '
+
+echo;
+echo delete-stack --stack-name "${MyStackNamePrefix}-${MyApplName}-1"
+echo delete-stack --stack-name "${MyStackNamePrefix}-EFS-1"
+echo delete-stack --stack-name "${MyStackNamePrefix}-${SG_EFS_Suffix}-1"
+echo delete-stack --stack-name "${MyStackNamePrefix}-${SG_SSH_Suffix}-1"
+echo delete-stack --stack-name "${MyStackNamePrefix}-VPC-1"
+### ParameterKey=SubnetIDs,ParameterValue=SubnetID1\\,SubnetID2
+
+###===========================================================
+echo ${MyStackNamePrefix}-VPC-1
+echo ${MyStackNamePrefix}-${SG_SSH_Suffix}-1
+echo ${MyStackNamePrefix}-${SG_EFS_Suffix}-1
+echo ${MyStackNamePrefix}-${MyApplName}-1
+
+### EoF
