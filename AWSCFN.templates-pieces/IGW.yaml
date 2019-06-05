@@ -1,0 +1,37 @@
+  MyInternetGateway:
+    Description: >-
+      REMEMBER: an IGW is associated with entire VPC.  Only NATs are associated
+      with a single public-subnet.
+    Type: 'AWS::EC2::InternetGateway'
+    Properties:
+      Tags:
+        - Key: APPLNAME
+          Value: !Ref 'AWS::StackId'
+        - Key: LOCATION
+          Value: !Ref 'AWS::Region'
+        - Key: CHRGCODE
+          Value: org.ASUX
+        - Key: ITOWNER
+          Value: sarma
+        - Key: BIZOWNER
+          Value: sarma
+        - Key: ARCHLAYER
+          Value: Files
+        - Key: ENV
+          Value: Playground
+        - Key: SNAPSHOTS
+          Value: 'No'
+        - Key: USERBASE
+          Value: admin
+        - Key: DISTRLIST
+          Value: tosarma@gmail.com
+        - Key: SVCGRP
+          Value: org.ASUX
+        - Key: VALIDATED
+          Value: 'No'
+    DependsOn:
+      - MyPublicSubnetAZ1
+      - MyPublicSubnetAZ2
+      - MyPublicSubnetAZ3
+
+#EOF

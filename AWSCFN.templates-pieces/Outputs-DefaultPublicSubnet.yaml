@@ -1,0 +1,8 @@
+  DefaultPublicSubnet${ASUX::AWSAZNumber}:
+    Description: The subnet no.${ASUX::AWSAZNumber}'s ID to use for public web servers
+    Value: !Ref MyPublicSubnetAZ${ASUX::AWSAZNumber}  ## The value of the property returned by the aws cloudformation describe-stacks command
+    Condition: doesExistSubnet${ASUX::AWSAZNumber}
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${MyStackNamePrefix}-Subnet-${ASUX::AWSAZNumber}-ID'  ## For each AWS account, Export names must be unique within a region.
+
+#EOF

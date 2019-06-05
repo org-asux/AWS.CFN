@@ -1,0 +1,10 @@
+  MyPublicSubnetNetworkAclAssociation1:
+    Type: 'AWS::EC2::SubnetNetworkAclAssociation'
+    Condition: doesExistSubnet1
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ1
+      NetworkAclId: !GetAtt
+        - MyVPC
+        - DefaultNetworkAcl
+
+#EOF

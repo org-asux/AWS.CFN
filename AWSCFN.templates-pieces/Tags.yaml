@@ -1,0 +1,25 @@
+      Tags:
+        - Key: APPLNAME
+          Value: ${ASUX::ApplName}
+        - Key: LOCATION
+          Value: !Ref 'AWS::Region'
+        - Key: CHRGCODE
+          Value: ${ASUX::Tag_ChargeCode}
+        - Key: ITOWNER
+          Value: ${ASUX::Tag_ITOwner}
+        - Key: BIZOWNER
+          Value: ${ASUX::Tag_BizOwner}
+        - Key: ARCHLAYER
+          Value: ${ASUX::ArchLayer}
+        - Key: ENV
+          Value: ${ASUX::Environment}
+        - Key: SNAPSHOTS
+          Value: 'No'
+        - Key: USERBASE
+          Value: ${ASUX::Tag_UserBase}
+        - Key: DISTRLIST
+          Value: ${ASUX::Tag_DistrList}
+        - Key: SVCGRP
+          Value: ${ASUX::Tag_SvcGrp}
+        - Key: VALIDATED
+          Value: ${ASUX::isRegulated}

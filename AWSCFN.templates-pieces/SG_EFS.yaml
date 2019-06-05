@@ -1,0 +1,70 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Just creates a Security-Group - for enabling use of EFS (Elastic File System).
+  THat's it.  FYI - There is a companion CFN-template for SSH SG.
+  This is a CFN Template that I created from scratch.
+Parameters:
+  MyOrgName:
+    Description: "What is the Organization a.k.a. the prefix for the stack?  Example: orgASUX"
+    Type: String
+    Default: orgASUX
+  MyEnvironment:
+    Description: "What environment is this? For, TAG Name=ENV"
+    Type: String
+    Default: Playground
+  MyDistrList:
+    Description: "What is the distribution list to which all email-notifications - re: this stack's resources - will be sent to?"
+    Type: String
+    Default: tosarma@gmail.com
+
+  Stacks_GroupPrefix:
+    Description: No Default-value!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${MyAWSRegion}"
+    Type: String
+
+  MyVPC:
+    Description: "Make sure this VPC-ID-Ref matches EXACTLY with the EXPORT-OUTPUT of another Stack"
+    Type: String
+##    Bummer: AWS CloudFormation REQUIRES simple strings for DEFAULT value
+##    Default: !ImportValue !Sub "${MyOrgName}-${MyEnvironment}-${AWS::Region}-${AWS::StackName}"
+##    Default: "orgASUX-SydneyVPC-VPCID"
+
+##  DummyPromptForStackName:
+##    Description: "Copy n paste the default value --> as the name of the Stack"
+##    Type: String
+##    Default: !Sub "${OrgName}-${MyEnvironment}-${AWS::Region}-${SG_EFS_Suffix}-1"
+
+Resources:
+  SG_SSH_${ASUX::Environment}_${ASUX::AppName}:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow EFS access to a Linux EC2 instance hosting org.ASUX components
+      VpcId: !ImportValue 
+        Ref: MyVPC
+##      VpcId: !ImportValue: !Sub "${MyOrgName}-${MyEnvironment}-${AWS::Region}-${AWS::StackName}"
+##      VpcId: !ImportValue   ## You can't use the short form of !ImportValue when it contains a !Sub. The following example is valid for AWS CloudFormation, but not valid for YAML:
+##        !Sub "${MyOrgName}-SydneyVPC-VPCID"
+##      VpcId: !ImportValue "OrgASUX-SydneyVPC-VPCID"
+      SecurityGroupIngress:    ## to allow NO Protocol (a.k.a. No internet-traffic at all): IpProtocol: "-1"
+      - IpProtocol: tcp
+        FromPort: 2049
+        ToPort: 2049
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:    ## to allow NO Protocol (a.k.a. No internet-traffic at all): IpProtocol: "-1"
+      - IpProtocol: -1
+##        FromPort: -1    ## An ICMP type number of -1 indicates a wildcard (i.e., any ICMP type number).
+##        ToPort: -1      ## An ICMP type number of -1 indicates a wildcard (i.e., any ICMP type number).
+        CidrIp: 0.0.0.0/0
+      Tags:
+
+
+
+Outputs:
+  SG_SSH_${ASUX::Environment}_${ASUX::AppName}: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
+    Description: Security Group for enabling EFS/NFS-traffic to Linux EC2 instances within ${ASUX::AppName}'s ${ASUX::Environment} environment
+    Value: !Ref SG_SSH_${ASUX::Environment}_${ASUX::AppName}   ## The value of the property returned by the aws cloudformation describe-stacks command
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${Stacks_GroupPrefix}-SG-EFS-${ASUX::Environment}-1'  ## For each AWS account, Export names must be unique within a region.
+      ## Alternatively, the Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-VPC-1"
+      ##      But.. how will you replace the "1" at the end of the name in above line??????
+
+### EOF

@@ -1,0 +1,8 @@
+  MyPublicSubnetRouteTableAssociationAZ${ASUX::AWSAZNumber}:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: doesExistSubnet${ASUX::AWSAZNumber}
+    Properties:
+      SubnetId: !Ref MyPublicSubnetAZ${ASUX::AWSAZNumber}
+      RouteTableId: !Ref MyPublicRouteTable
+
+#EOF

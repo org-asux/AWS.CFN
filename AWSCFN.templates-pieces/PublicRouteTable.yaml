@@ -1,0 +1,8 @@
+  MyPublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    DependsOn:
+      - MyVPCGatewayAttachment
+    Properties:
+      VpcId: !Ref MyVPC
+
+#EOF

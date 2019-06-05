@@ -1,0 +1,10 @@
+Outputs:
+  VPCID: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
+    Description: VPC ID
+    Value: !Ref MyVPC   ## The value of the property returned by the aws cloudformation describe-stacks command
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${MyStackNamePrefix}-VPCID'  ## For each AWS account, Export names must be unique within a region.
+      ## Alternatively, the Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-VPC-1"
+      ##      But.. how will you replace the "1" at the end of the name in above line??????
+
+#EOF

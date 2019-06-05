@@ -1,0 +1,21 @@
+  MyPublicSubnetAZ${ASUX::AWSAZNumber}:
+    Description: >-
+      If you specify a true or false value for the property
+      AssignIpv6AddressOnCreation (whose default value = false), then
+      Ipv6CidrBlock property must be specified. - - - Also, Cannot provide Tag
+      with Key=Name.
+    Type: 'AWS::EC2::Subnet'
+    Condition: doesExistSubnet1
+    Properties:
+      VpcId: !Ref ${ASUX::VPCName}
+      CidrBlock: 172.31.0.0/20
+      MapPublicIpOnLaunch: 'true'
+      ### MapPublicIpOnLaunch: !Ref EC2getsPublicIPByDefault
+      ### DefaultForAz: true  ## Apparently not supported for VPCs and Subnets that are NOT default ALREADY.
+      AvailabilityZone: ${ASUX::AWSAZName}
+      # AvailabilityZone: !Join
+      #   - ''
+      #   - - !Ref 'AWS::Region'
+      #     - ${ASUX::AZSuffix}  ## values like 'a' 'b' 'c' based on the # of AZs
+
+#EOF

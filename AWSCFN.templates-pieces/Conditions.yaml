@@ -1,0 +1,91 @@
+Conditions:
+  USEast1: !Equals
+    - !Ref 'AWS::Region'
+    - us-east-1
+  USEast2: !Equals
+    - !Ref 'AWS::Region'
+    - us-east-2
+  USWest1: !Equals
+    - !Ref 'AWS::Region'
+    - us-west-1
+  USWest2: !Equals
+    - !Ref 'AWS::Region'
+    - us-west-2
+
+  EUCentral1: !Equals
+    - !Ref 'AWS::Region'
+    - eu-central-1
+  EUWest1: !Equals
+    - !Ref 'AWS::Region'
+    - eu-west-1 
+  EUWest2: !Equals
+    - !Ref 'AWS::Region'
+    - eu-west-2
+  EUWest3: !Equals
+    - !Ref 'AWS::Region'
+    - eu-west-3
+  EUNorth1: !Equals
+    - !Ref 'AWS::Region'
+    - eu-north-1 
+
+  CACentral1: !Equals
+    - !Ref 'AWS::Region'
+    - ca-central-1
+  SAEast1: !Equals
+    - !Ref 'AWS::Region'
+    - sa-east-1
+
+  APSouth1: !Equals
+    - !Ref 'AWS::Region'
+    - ap-south-1
+  APNortheast1: !Equals
+    - !Ref 'AWS::Region'
+    - ap-northeast-1
+  APNortheast2: !Equals
+    - !Ref 'AWS::Region'
+    - ap-northeast-2
+  APSouthEast1: !Equals
+    - !Ref 'AWS::Region'
+    - ap-southeast-1
+  Sydney: !Equals
+    - !Ref 'AWS::Region'
+    - ap-southeast-2
+
+  AnyRegion: '!Or'
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition USWest1
+    - !Condition USWest2
+    - !Condition EUCentral1
+    - !Condition EUWest1
+    - !Condition EUWest2
+    - !Condition EUWest3
+    - !Condition EUNorth1
+    - !Condition CACentral1
+    - !Condition SAEast1
+    - !Condition APSouth1
+    - !Condition APNortheast1
+    - !Condition APNortheast2
+    - !Condition APSouthEast1
+    - !Condition Sydney
+
+  doesExistSubnet1: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition Sydney
+
+  doesExistSubnet2: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition Sydney
+
+  doesExistSubnet3: !Or
+    - !Condition USEast1
+    - !Condition USEast2
+    - !Condition Sydney
+
+  doesExistSubnet4: !Condition USEast1
+
+  doesExistSubnet5: !Condition USEast1
+
+#EOF
