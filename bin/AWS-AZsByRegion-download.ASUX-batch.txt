@@ -1,0 +1,40 @@
+### This is the file 'AWS-AZsByRegion-Batch.txt'
+### Run this command as:   asux.js yaml batch @ AWS-AZsByRegion-Batch.txt -i /dev/null -o -
+### You'll find files created under ${ASUX::AWSCFN.HOME}/config/inputs/.
+
+
+print ORGASUXHOME=${ASUX::ORGASUXHOME} \n
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+echo setProperty	AWSCFN.HOME=${ASUX::ORGASUXHOME}/AWS/CFN
+properties AWSLocationsRegion=${ASUX::AWSCFN.HOME}/config/AWSLocationsRegions.properties
+properties AWSRegionLocations=${ASUX::AWSCFN.HOME}/config/AWSRegionsLocations.properties
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+aws.sdk --list-regions --no-quote
+echo saveTo @${ASUX::AWSCFN.HOME}/config/inputs/AWSRegions.yaml
+sleep 2
+
+//--------------------------------------------------
+foreach
+	print ${ASUX::foreach.iteration.value} \n
+	setProperty AWSRegion=${ASUX::foreach.iteration.value}
+
+	setProperty AWSLocation=${ASUX::AWS-${ASUX::AWSRegion}}
+
+	aws.sdk --list-AZs      ${ASUX::AWSRegion} --no-quote
+	#______ print -
+	saveTo @${ASUX::AWSCFN.HOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
+	saveTo @${ASUX::AWSCFN.HOME}/config/inputs/AWS.AZlist-${ASUX::AWSLocation}.yaml
+end
+//--------------------------------------------------
+
+#______ useAsInput @./aws.AZs.json
+
+#EoF

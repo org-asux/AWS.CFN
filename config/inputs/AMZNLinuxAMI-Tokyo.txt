@@ -1,0 +1,2 @@
+ap-northeast-1LinuxAMI=amzn2-ami-hvm-2.0.20190508-x86_64-gp2
+TokyoLinuxAMI=amzn2-ami-hvm-2.0.20190508-x86_64-gp2

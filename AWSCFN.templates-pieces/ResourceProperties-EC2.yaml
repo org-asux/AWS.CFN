@@ -1,0 +1,45 @@
+    Properties:
+      ###  If NOT specified, an Availability Zone will be automatically chosen for you based on the load balancing criteria for the region.
+###    See Subnet property below.
+#      AvailabilityZone: !GetAtt   ## The value of the property returned by the aws cloudformation describe-stacks command
+#      - !ImportValue
+#          Ref: MyPublicAZ1
+#      - AvailabilityZone
+#        Ref: DefaultAZ
+
+      # AWS CFN ERROR: Network-interfaces and an instance-level 'SubnetId' CANNOT be specified on the same request (Status Code: 400; Error Code: InvalidParameterCombination)
+      # SubnetId: !ImportValue
+      #    Ref: MyPublicSubnet1
+      NetworkInterfaces: 
+        ### This one line *BELOW* distinguishes the 2 files MyEC2wEFS-cloudformation.yaml & MyEC2PrivatewEFS-cloudformation.yaml
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          GroupSet:
+            - !ImportValue
+                Ref: MySSHSecurityGroup
+          SubnetId: !ImportValue
+              Ref: MyPublicSubnet1
+      # AWS CFN ERROR: Network interfaces and an instance-level security-groups CANNOT be specified on the same request (Status Code: 400; Error Code: InvalidParameterCombination)
+      # SecurityGroupIds:
+      #   - !ImportValue
+      #       Ref: MySSHSecurityGroup
+
+      InstanceType: !Ref EC2InstanceType
+
+      ImageId: !Ref AWSAMIID
+
+      BlockDeviceMappings:
+        - DeviceName: /dev/sdc
+          Ebs:
+            DeleteOnTermination: 'true'
+            VolumeSize:
+              Ref: EC2EBSVolumeSize
+      IamInstanceProfile:
+        Ref: MyIamInstanceProfiles
+      Monitoring:
+        Ref: needsMonitoring
+
+      KeyName:
+        Ref: MySSHKeyName
+
+### EOF

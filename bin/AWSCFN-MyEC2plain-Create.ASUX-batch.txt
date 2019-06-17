@@ -1,0 +1,82 @@
+### This is the file 'AWSCFN-MyEC2plain-Create.ASUX-batch.txt'
+
+### The 1st thing you do - Is to define's the JOB-parameters
+### You can do it in 2 ways (or do both ways, as shown in next 3 lines below):-
+###	(1) Via a properties-file
+###	(2) or via setProperty
+
+setProperty SCRIPT=MyEC2plain
+
+properties JobPropsMaster=./jobset-Master.properties
+properties JobProps=./jobset-${ASUX::SCRIPT}.properties
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now load the common stuff - that's common to all jobs
+
+setProperty	AWSCFN.HOME=${ASUX::ORGASUXHOME}/AWS/CFN
+include @${ASUX::AWSCFN.HOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+### Now load the script-specific ___OVERRIDES___
+### Example: AWSCFN-CommonHeader.ASUX-batch.txt has "Tags" set to some (likely, invalid) default values.
+### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::SCRIPT}.properties
+
+properties TagDefaultsProps=./Tags-MyMaster.properties
+properties TagDefaultsProps=./Tags-${ASUX::SCRIPT}.properties
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Load the external inputs (in this case, the list of AZs for the region of interest)
+
+#________ aws.sdk --list-AZs      ${ASUX::AWSRegion}
+useAsInput @${ASUX::AWSCFN.HOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
+saveTo !AWSAZs
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now build the CFN script I want
+
+useAsInput @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/TopYaml.yaml
+saveTo !YAMLROOT
+
+yaml --insert / @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Parameters-EC2.yaml
+yaml --macro @/dev/null
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+makeNewRoot Resources
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/EC2.yaml
+yaml --macro @/dev/null
+
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Standup,packages  @Pkgs-ASUX.org-DEV-1.yaml --no-quote    --delimiter ,
+yaml --macro @/dev/null
+
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Services  @Svcs-ASUX.org-DEV-1.yaml --no-quote    --delimiter ,
+yaml --macro @/dev/null
+
+yaml --insert Resources,${ASUX::MyEC2InstanceName} @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/ResourceProperties-EC2.yaml --no-quote  --delimiter ,
+yaml --macro @/dev/null
+
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml  --delimiter ,
+yaml --macro @/dev/null
+
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/EC2-UserData.yaml  --delimiter ,
+yaml --macro @/dev/null
+
+saveTo !TopElemResources
+
+//--------------------------------------------------
+useAsInput !YAMLROOT
+yaml --insert / !TopElemResources
+yaml --macro @/dev/null
+saveTo !YAMLROOT
+
+
+#EoF

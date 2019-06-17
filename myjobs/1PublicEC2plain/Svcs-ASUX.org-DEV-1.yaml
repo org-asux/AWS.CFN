@@ -1,0 +1,13 @@
+### This content should be inserted via the command:-
+### asux.js yaml insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Services @${ASUX::AWSCFN.HOME}/myjobs/Svcs-ASUX.org-DEV-1.yaml --no-quote
+
+          sysvinit:
+            httpd:
+              enabled: 'false'
+              ensureRunning: 'false'
+            sendmail:
+              enabled: false'
+              ensureRunning: 'false'
+
+
+### EOF

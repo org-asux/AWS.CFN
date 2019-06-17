@@ -1,0 +1,41 @@
+### This is the file 'AWSCFN-CommonHeader.ASUX-batch.txt'
+
+#_____ print ORGASUXHOME=${ASUX::ORGASUXHOME} \n
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+setProperty	AWSCFN.HOME=${ASUX::ORGASUXHOME}/AWS/CFN
+#______ setProperty AWSCFN.HOME=/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+### AWSCFN project must create these following lines based on what files exist
+### In fact, the project must Not allow this batch file to run.. unless appropriate files exist.
+### Example: For creating a VPC, only the 1st two lines below are required
+### Example: For creating a new EC2 w EFS, all of the following 5 lines are required
+
+properties TagDefaultsProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-DEFAULTS.properties
+properties XWKProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-Network-DEFAULTS.properties
+properties EFSProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-EFS-DEFAULTS.properties
+properties SGProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-SG-DEFAULTS.properties
+properties EC2Props=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-EC2-DEFAULTS.properties
+
+properties DigitToAlphaProps=${ASUX::AWSCFN.HOME}/config/DigitToAlpha.properties
+properties AWSLocationsRegion=${ASUX::AWSCFN.HOME}/config/AWSLocationsRegions.properties
+properties AWSRegionLocations=${ASUX::AWSCFN.HOME}/config/AWSRegionsLocations.properties
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+setProperty AWSLocation=${ASUX::AWS-${ASUX::AWSRegion}}
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+#EoF

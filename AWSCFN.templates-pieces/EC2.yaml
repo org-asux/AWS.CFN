@@ -1,0 +1,21 @@
+  ${ASUX::MyEC2InstanceName}:
+    Type: 'AWS::EC2::Instance'
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          Standup:
+            - Standup
+          StandUpInstallAndRun:
+            - Standup
+            - Install
+            - Configure
+            - Services
+            - Upload
+        Standup:
+          packages: ### This will be populated by   ${ASUX::AWSCFN.HOME}/myjobs/Pkgs-ASUX.org-DEV-1.yaml
+        Install: []
+        Configure: []
+        Services:  ### This will be populated by   ${ASUX::AWSCFN.HOME}/myjobs/Svcs-ASUX.org-DEV-1.yaml
+        Upload: []
+
+#EOF

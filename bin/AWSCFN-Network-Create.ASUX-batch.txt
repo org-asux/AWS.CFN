@@ -1,0 +1,170 @@
+### This is the file 'AWSCFN-Network-Create.ASUX-batch.txt'
+
+### The 1st thing you do - Is to define's the JOB-parameters
+### You can do it in 2 ways (or do both ways, as shown in next 3 lines below):-
+###	(1) Via a properties-file
+###	(2) or via setProperty
+
+setProperty SCRIPT=MyNetwork
+
+properties JobPropsMaster=./jobset-Master.properties
+properties JobProps=./jobset-${ASUX::SCRIPT}.properties
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now load the common stuff - that's common to all jobs
+
+setProperty	AWSCFN.HOME=${ASUX::ORGASUXHOME}/AWS/CFN
+include @${ASUX::AWSCFN.HOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+### Now load the script-specific ___OVERRIDES___
+### Example: AWSCFN-CommonHeader.ASUX-batch.txt has "Tags" set to some (likely, invalid) default values.
+### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::SCRIPT}.properties
+
+properties TagDefaultsProps=./Tags-MyMaster.properties
+properties TagDefaultsProps=./Tags-${ASUX::SCRIPT}.properties
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Load the external inputs (in this case, the list of AZs for the region of interest)
+
+#________ aws.sdk --list-AZs      ${ASUX::AWSRegion}
+useAsInput @${ASUX::AWSCFN.HOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
+saveTo !AWSAZs
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now build the CFN script I want
+
+useAsInput @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/TopYaml.yaml
+saveTo !YAMLROOT
+
+yaml --insert / @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Parameters-VPCNetwork.yaml
+yaml --macro @/dev/null
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+
+makeNewRoot Conditions
+saveTo !Conditions
+
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !Conditions
+		yaml --insert Conditions @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Conditions-VPCNetwork.yaml
+		yaml --macro @/dev/null
+		saveTo !Conditions
+	end
+
+useAsInput !YAMLROOT
+yaml --insert / !Conditions
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+
+makeNewRoot Resources
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/VPC.yaml
+yaml --macro @/dev/null
+yaml --insert Resources,${ASUX::VPCName},Properties  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro @/dev/null
+saveTo !TopElemResources
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		#______print AZ no. ${ASUX::foreach.index} is: 
+		#______print ${ASUX::foreach.iteration.value}
+		
+		useAsInput !TopElemResources
+		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicSubnet.yaml
+		yaml --macro @/dev/null
+		yaml --insert 'Resources,MyPublicSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+		yaml --macro @/dev/null
+		saveTo !TopElemResources
+	end
+
+//--------------------------------------------------
+useAsInput !TopElemResources
+
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/IGW.yaml
+yaml --insert Resources,MyInternetGateway,Properties  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/IGWAttach.yaml
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicRouteTable.yaml
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicRoute.yaml
+saveTo !TopElemResources
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemResources
+		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicRouteForAZ.yaml
+		yaml --macro @/dev/null
+		saveTo !TopElemResources
+	end
+
+//--------------------------------------------------
+useAsInput !TopElemResources
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/ACLDefault.yaml
+saveTo !TopElemResources
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemResources
+		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicSubnetACLAssoc.yaml
+		yaml --macro @/dev/null
+		saveTo !TopElemResources
+	end
+
+//--------------------------------------------------
+useAsInput !TopElemResources
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/InboundHTTPNetworkAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/InboundSSHNetworkAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/InboundResponsePortsNetworkAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/OutBoundHTTPNetworkAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/OutBoundHTTPSNetworkAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/OutBoundResponsePortsNetworkAclEntry.yaml
+saveTo !TopElemResources
+
+useAsInput !YAMLROOT
+yaml --insert / !TopElemResources
+saveTo !YAMLROOT
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+makeNewRoot Outputs
+yaml --insert Outputs @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Outputs-VPC.yaml
+yaml --insert Outputs @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Outputs-DefaultAZ.yaml
+saveTo !TopElemOutputs
+
+//--------------------------------------------------
+	useAsInput !AWSAZs
+	foreach
+		useAsInput !TopElemOutputs
+		yaml --insert Outputs @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Outputs-DefaultPublicSubnet.yaml
+		yaml --macro @/dev/null
+		saveTo !TopElemOutputs
+	end
+
+//--------------------------------------------------
+useAsInput !YAMLROOT
+yaml --insert / !TopElemOutputs
+yaml --macro @/dev/null
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+
+#EoF

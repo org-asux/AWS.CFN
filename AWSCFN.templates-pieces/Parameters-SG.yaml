@@ -1,0 +1,27 @@
+Parameters:
+  MyStackNamePrefix:
+    Description: Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
+    Type: String
+    Default: ${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}
+
+  MyVPC:
+    Description: "Make sure this VPC-ID-Ref matches EXACTLY with the EXPORT-OUTPUT of another Stack"
+    Type: String
+###    Bummer: AWS CloudFormation REQUIRES simple strings for DEFAULT value
+###    Default: !ImportValue !Sub "${MyOrgName}-${MyEnvironment}-${AWS::Region}-${AWS::StackName}"
+###    Default: "orgASUX-SydneyVPC-VPCID"
+
+  # MyOrgName:
+  #   Description: "What is the Organization a.k.a. the prefix for the stack?  Example: orgASUX"
+  #   Type: String
+  #   Default: orgASUX
+  # MyEnvironment:
+  #   Description: "What environment is this? For, TAG Name=ENV"
+  #   Type: String
+  #   Default: Playground
+
+  # SGUniqueName:
+  #   Description: "In order to ensure that other components (like EC2 instances) will use the right SG, I need to create a __UNIQUE__ EXPORT-NAME for this SG"
+  #   Type: String
+
+#EOF
