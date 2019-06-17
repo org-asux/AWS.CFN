@@ -3,3 +3,10 @@
 CloudFormation-MyTemplates/JSON
 .DS_Store
 **/.DS_Store
+AWSCloudFormation-MyTemplates/JSON
+AWSCloudFormation-MyTemplates/JSON/*.json
+AWSCloudFormation-MyTemplates/JSON/*BACKUP
+**/*BACKUP
+**/*.json
+AWSCFN.templates-pieces/Conditions full-listing.yaml
+**/testExclamation.yaml
