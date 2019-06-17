@@ -23,35 +23,8 @@ set MyOrgName=orgASUX
 set MyEnvironment=Playground
 set MyDistrList=tosarma@gmail.com
 
-###====================== REGIONS LIST =======================
-set USEast1=us-east-1
-set USEast2=us-east-2
-set USWest1=us-west-1
-set USWest2=us-west-2
-set CACentral1=ca-central-1
-
-set EUNorth1=eu-north-1
-set EUWest1=eu-west-1
-set EUWest2=eu-west-2
-set EUWest3=eu-west-3
-set EUCentral1=eu-central-1
-
-set SAEast1=sa-east-1
-set APSouth1=ap-south-1
-set Mumbai=ap-south-1
-
-set APNortheast1=ap-northeast-1
-set APNorthEast1=ap-northeast-1
-set APNortheast2=ap-northeast-2
-set APNorthEast2=ap-northeast-2
-
-set APSoutheast1=ap-southeast-1
-set APSouthEast1=ap-southeast-1
-set APSoutheast2=ap-southeast-2
-set APSouthEast2=ap-southeast-2
-
-set Singapore=ap-southeast-1
-set Sydney=ap-southeast-2
+###====================== REGIONS: Human-Friendly ALIASES =======================
+\grep -v '^#' /Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/config/AWSLocationsRegions.properties | \grep -v '^$' | \sed -e 's/^AWS-/set /' | source /dev/stdin
 
 ###===========================================================
 

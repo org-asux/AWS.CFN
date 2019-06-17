@@ -1,8 +1,8 @@
-  MyPublicSubnetRouteTableAssociationAZ${ASUX::AWSAZNumber}:
+  MyPublicSubnetRouteTableAssociationAZ${ASUX::foreach.index+1}:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
-    Condition: doesExistSubnet${ASUX::AWSAZNumber}
+    Condition: doesExistSubnet${ASUX::foreach.index+1}
     Properties:
-      SubnetId: !Ref MyPublicSubnetAZ${ASUX::AWSAZNumber}
+      SubnetId: !Ref MyPublicSubnetAZ${ASUX::foreach.index+1}
       RouteTableId: !Ref MyPublicRouteTable
 
 #EOF

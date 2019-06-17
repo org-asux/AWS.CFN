@@ -3,7 +3,7 @@
     DependsOn:
       - MyInternetGateway
     Properties:
-      VpcId: !Ref MyVPC
+      VpcId: !Ref ${ASUX::VPCName}
       InternetGatewayId: !Ref MyInternetGateway
 
 #EOF
