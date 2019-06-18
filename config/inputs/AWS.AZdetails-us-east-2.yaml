@@ -1,0 +1,18 @@
+- ZoneName: us-east-2a
+  ZoneId: use2-az1
+  State: available
+  RegionName: us-east-2
+  Messages: [
+    ]
+- ZoneName: us-east-2b
+  ZoneId: use2-az2
+  State: available
+  RegionName: us-east-2
+  Messages: [
+    ]
+- ZoneName: us-east-2c
+  ZoneId: use2-az3
+  State: available
+  RegionName: us-east-2
+  Messages: [
+    ]

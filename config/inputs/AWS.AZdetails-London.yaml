@@ -1,0 +1,18 @@
+- ZoneName: eu-west-2a
+  ZoneId: euw2-az2
+  State: available
+  RegionName: eu-west-2
+  Messages: [
+    ]
+- ZoneName: eu-west-2b
+  ZoneId: euw2-az3
+  State: available
+  RegionName: eu-west-2
+  Messages: [
+    ]
+- ZoneName: eu-west-2c
+  ZoneId: euw2-az1
+  State: available
+  RegionName: eu-west-2
+  Messages: [
+    ]

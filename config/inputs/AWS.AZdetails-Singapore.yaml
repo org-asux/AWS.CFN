@@ -1,0 +1,18 @@
+- ZoneName: ap-southeast-1a
+  ZoneId: apse1-az1
+  State: available
+  RegionName: ap-southeast-1
+  Messages: [
+    ]
+- ZoneName: ap-southeast-1b
+  ZoneId: apse1-az2
+  State: available
+  RegionName: ap-southeast-1
+  Messages: [
+    ]
+- ZoneName: ap-southeast-1c
+  ZoneId: apse1-az3
+  State: available
+  RegionName: ap-southeast-1
+  Messages: [
+    ]

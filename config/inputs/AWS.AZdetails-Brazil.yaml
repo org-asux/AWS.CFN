@@ -1,0 +1,12 @@
+- ZoneName: sa-east-1a
+  ZoneId: sae1-az1
+  State: available
+  RegionName: sa-east-1
+  Messages: [
+    ]
+- ZoneName: sa-east-1c
+  ZoneId: sae1-az3
+  State: available
+  RegionName: sa-east-1
+  Messages: [
+    ]

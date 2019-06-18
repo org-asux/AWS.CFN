@@ -1,0 +1,12 @@
+- ZoneName: ca-central-1a
+  ZoneId: cac1-az1
+  State: available
+  RegionName: ca-central-1
+  Messages: [
+    ]
+- ZoneName: ca-central-1b
+  ZoneId: cac1-az2
+  State: available
+  RegionName: ca-central-1
+  Messages: [
+    ]

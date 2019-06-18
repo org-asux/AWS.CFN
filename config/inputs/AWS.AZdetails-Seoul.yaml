@@ -1,0 +1,18 @@
+- ZoneName: ap-northeast-2a
+  ZoneId: apne2-az1
+  State: available
+  RegionName: ap-northeast-2
+  Messages: [
+    ]
+- ZoneName: ap-northeast-2b
+  ZoneId: apne2-az2
+  State: available
+  RegionName: ap-northeast-2
+  Messages: [
+    ]
+- ZoneName: ap-northeast-2c
+  ZoneId: apne2-az3
+  State: available
+  RegionName: ap-northeast-2
+  Messages: [
+    ]

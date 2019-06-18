@@ -1,0 +1,24 @@
+- ZoneName: us-west-2a
+  ZoneId: usw2-az2
+  State: available
+  RegionName: us-west-2
+  Messages: [
+    ]
+- ZoneName: us-west-2b
+  ZoneId: usw2-az1
+  State: available
+  RegionName: us-west-2
+  Messages: [
+    ]
+- ZoneName: us-west-2c
+  ZoneId: usw2-az3
+  State: available
+  RegionName: us-west-2
+  Messages: [
+    ]
+- ZoneName: us-west-2d
+  ZoneId: usw2-az4
+  State: available
+  RegionName: us-west-2
+  Messages: [
+    ]
