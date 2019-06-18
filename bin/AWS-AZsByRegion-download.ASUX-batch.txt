@@ -28,10 +28,16 @@ foreach
 
 	setProperty AWSLocation=${ASUX::AWS-${ASUX::AWSRegion}}
 
+	#-----------------
 	aws.sdk --list-AZs      ${ASUX::AWSRegion} --no-quote
 	#______ print -
 	saveTo @${ASUX::AWSCFN.HOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
 	saveTo @${ASUX::AWSCFN.HOME}/config/inputs/AWS.AZlist-${ASUX::AWSLocation}.yaml
+
+	#-----------------
+	aws.sdk --describe-AZs      ${ASUX::foreach.iteration.value} --no-quote
+	saveTo @${ASUX::AWSCFN.HOME}/config/inputs/AWS.AZdetails-${ASUX::AWSRegion}.yaml
+	saveTo @${ASUX::AWSCFN.HOME}/config/inputs/AWS.AZdetails-${ASUX::AWSLocation}.yaml
 end
 //--------------------------------------------------
 
