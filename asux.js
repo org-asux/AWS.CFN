@@ -62,13 +62,13 @@ CmdLine.on('option:verbose', function () {
   process.env.VERBOSE = this.verbose;
 });
 
-CmdLine.on('command:vpn-gen', function () {
-  COMMAND="vpn-gen";
+CmdLine.on('command:vpc-gen', function () {
+  COMMAND="vpc-gen";
   processCFNCmd(COMMAND);
 });
 
-CmdLine.on('command:sshsg-gen', function () {
-  COMMAND="sshsg-gen";
+CmdLine.on('command:sg-ssh-gen', function () {
+  COMMAND="sg-ssh-gen";
   processCFNCmd(COMMAND);
 });
 
@@ -98,39 +98,54 @@ CmdLine.parse(process.argv);
 
 function processCFNCmd( _CMD) {
 
-  const bIsMavenInstalled = chkMavenInstalled();
-  const DependenciesFile=__dirname + "/etc/classpaths/"+ CMDGRP +"-cmd.dependencies";
-  const CLASSPATH = genDependencyCLASSPATH( DependenciesFile, bIsMavenInstalled );
-  
-  // ${CMDCLASS} is defined inside this properties file
-  const props = require ( `${__dirname}/etc/js-source/${CMDGRP}.js-source` )
+    // const bIsMavenInstalled = chkMavenInstalled();
+    // const DependenciesFile=__dirname + "/etc/classpaths/"+ CMDGRP +"-cmd.dependencies";
+    // const CLASSPATH = genDependencyCLASSPATH( DependenciesFile, bIsMavenInstalled );
+    
+    // // ${CMDCLASS} is defined inside this properties file
+    // const props = require ( `${__dirname}/etc/js-source/${CMDGRP}.js-source` )
 
-	//--------------------
-	// pre-scripts (Before running ./cmdline/asux.js)
-	EXECUTESHELLCMD.runPreScripts(); // ignore any exit code from these PRE-scripts
+    // //--------------------
+    // // pre-scripts (Before running ./cmdline/asux.js)
+    // EXECUTESHELLCMD.runPreScripts(); // ignore any exit code from these PRE-scripts
 
-  //--------------------
-  var cmdArgs = copyCmdLineArgs( _CMD );
+    // //--------------------
+    // // copyCmdLineArgs() is defined within ORGASUXHOME/asux-common.js
+    var cmdArgs = copyCmdLineArgs(  _CMD,  /* _bInsertDoubleHyphen */ false, /* _bAddCmd2Params */ false );
 
-	cmdArgs.splice( 0, 0, '-cp' ); // insert ./asux.js as JAVA's 1st cmdline parameter
-  cmdArgs.splice( 1, 0, CLASSPATH ); // insert CLASSPATH as JAVA's  2nd cmdline parameter
-  cmdArgs.splice( 2, 0, "-DORGASUXHOME="+ORGASUXHOME );
-	cmdArgs.splice( 3, 0, props['CMDCLASS'] ); // insert CMDCLASS=org.ASUX.yaml.Cmd as JAVA's  3rd cmdline parameter
-  if (process.env.VERBOSE) console.log( `${__filename} : within /tmp:\n\tjava ` + cmdArgs.join(' ') +"\n" );
+    // cmdArgs.splice( 0, 0, '-cp' ); // insert ./asux.js as JAVA's 1st cmdline parameter
+    // cmdArgs.splice( 1, 0, CLASSPATH ); // insert CLASSPATH as JAVA's  2nd cmdline parameter
+    // cmdArgs.splice( 2, 0, "-DORGASUXHOME="+ORGASUXHOME );
+    // cmdArgs.splice( 3, 0, props['CMDCLASS'] ); // insert CMDCLASS=org.ASUX.yaml.Cmd as JAVA's  3rd cmdline parameter
+    // if (process.env.VERBOSE) console.log( `${__filename} : within /tmp:\n\tjava ` + cmdArgs.join(' ') +"\n" );
 
-  const retCode = EXECUTESHELLCMD.executeSharingSTDOUT ( INITIAL_CWD, 'java', cmdArgs, true, process.env.VERBOSE, false, null);
-  process.exitCode = retCode;
+    if (process.env.VERBOSE) console.log( __filename +": Cmd Line params are: '" + cmdArgs.join(' ') +"'" );
 
-  if ( retCode == 0 ) {
-    if (process.env.VERBOSE) console.log( "\n"+ __filename +": Done!");
-    // process.exitCode = 0;
-  }else{
-    if (process.env.VERBOSE) console.error( '\n'+ __filename +": Failed with error-code "+ retCode +" for: java "+ cmdArgs.join(' '));
-    // process.exit(retCode);
-  }
+    // const retCode = EXECUTESHELLCMD.executeSharingSTDOUT ( INITIAL_CWD, 'java', cmdArgs, true, process.env.VERBOSE, false, null );
 
-	//--------------------
-	EXECUTESHELLCMD.runPostScripts(); // ignore any exit code from these Post-scripts
+    var parentDir = ""+__dirname;
+    parentDirArr = parentDir.split(PATH.sep);
+    parentDirArr.pop();
+    if (process.env.VERBOSE) console.log( "REGULAR variable: parentDirArr='" + parentDirArr.join('/') +"'." );
+    process.env.AWSHOME=""+parentDirArr.join('/'); // for use by all scripts under ORGASUXHOME/AWS/CFN .. so it know where this asux.js is.
+
+    process.env.AWSCFNHOME=__dirname; // for use by all scripts under ORGASUXHOME/AWS/CFN .. so it know where this asux.js is.
+    if (process.env.VERBOSE) console.log( "Environment variables: AWSHOME=" + process.env.AWSHOME +", AWSCFNHOME=" + process.env.AWSCFNHOME +"\n" );
+
+    const scriptFullPath = process.env.AWSCFNHOME+"/bin/"+_CMD +".sh";
+    const retCode = EXECUTESHELLCMD.executeSharingSTDOUT ( INITIAL_CWD, scriptFullPath, cmdArgs, true, process.env.VERBOSE, false, process.env );
+    process.exitCode = retCode;
+
+    if ( retCode == 0 ) {
+      if (process.env.VERBOSE) console.log( "\n"+ __filename +": Done!");
+      // process.exitCode = 0;
+    }else{
+      console.error( '\n'+ __filename +": Failed with error-code "+ retCode +" for: "+ scriptFullPath +" "+ cmdArgs.join(' '));
+      process.exitCode = retCode;
+    }
+
+    //--------------------
+    EXECUTESHELLCMD.runPostScripts(); // ignore any exit code from these Post-scripts
 
 } // end function processCFNCmd
 
