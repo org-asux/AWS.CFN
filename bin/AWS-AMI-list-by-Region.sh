@@ -11,10 +11,25 @@ fi
 unset VERBOSE
 
 ###------------------------------
+
+### The following line did NOT work on Windows
+# CmdPathGuess="${BASH_SOURCE[0]}"
+
+CmdPathGuess="$0"
+# echo $CmdPathGuess
+SCRIPTFLDR_RELATIVE="$(dirname "$CmdPathGuess")"
 SCRIPTFULLFLDRPATH="$( cd "$(dirname "$0")" ; pwd -P )"
+if [ "${VERBOSE}" == "1" ]; then echo SCRIPTFULLFLDRPATH=${SCRIPTFULLFLDRPATH}; fi
+#____	if [ "${SCRIPTFLDR_RELATIVE}" != "." ]; then
+#____	fi
+
 .   ${SCRIPTFULLFLDRPATH}/common.sh
 
-CACHEDOUTPUT="${AWSCFNFLDR}/config/inputs/AMZNLinuxAMI-${AWSLocation}.txt"
+###=============================================================
+###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+###=============================================================
+
+CACHEDOUTPUT="${AWSCFNHOME}/config/inputs/AMZNLinuxAMI-${AWSLocation}.txt"
 if [ -z ${CACHEDOUTPUT+x} ]; then  ### if [ -z "$var" ]    <-- does NOT distinguish between 'unset var' & var=""
 	unset NOTHING; # Do nothing.
 else
