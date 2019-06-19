@@ -5,7 +5,7 @@
 ###	(1) Via a properties-file
 ###	(2) or via setProperty
 
-setProperty SCRIPT=MyNetwork
+setProperty SCRIPT=vpc
 
 properties JobPropsMaster=./jobset-Master.properties
 properties JobProps=./jobset-${ASUX::SCRIPT}.properties
