@@ -5,7 +5,7 @@
 ###	(1) Via a properties-file
 ###	(2) or via setProperty
 
-setProperty SCRIPT=MySGSSH
+setProperty SCRIPT=sg-ssh
 
 properties JobPropsMaster=./jobset-Master.properties
 properties JobProps=./jobset-${ASUX::SCRIPT}.properties
@@ -56,7 +56,7 @@ yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/SG_SSH.yam
 yaml --macro @/dev/null
 yaml --macro @/dev/null   ### Don't know why.  If I do NOT run this twice, I get a duplicate YAML element for /Resources/SGSSHPlayground1/Properties
 
-yaml --insert Resources,SGSSH${ASUX::Environment}${ASUX::SGUniqueName},Properties  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --insert Resources,SGSSH${ASUX::Environment},Properties  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 yaml --macro @/dev/null
 saveTo !TopElemResources
 
