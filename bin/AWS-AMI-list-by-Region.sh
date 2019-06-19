@@ -81,10 +81,10 @@ addAWSParams 'virtualization-type' 'hvm'
 ### https://aws.amazon.com/blogs/compute/query-for-the-latest-amazon-linux-ami-ids-using-aws-systems-manager-parameter-store/
 ### aws ec2 describe-images --owners amazon --filters "Name=name,Values=amzn*" --query 'sort_by(Images, &CreationDate)[].Name'
 
-### echo aws ec2 describe-images --filters ${arrEcho[@]} --owners amazon --profile sarmaapi --region ${AWSRegion} --query "'sort_by(Images, &CreationDate)[].Name'" 
+### echo aws ec2 describe-images --filters ${arrEcho[@]} --owners amazon --profile ${AWSprofile} --region ${AWSRegion} --query "'sort_by(Images, &CreationDate)[].Name'" 
 ### echo "tr '\\" "t' '\\""\n' | \\grep ${YYYYMM} | \\grep -v 'ecs' | \\grep -v nat | \\grep -v ".-arm" | \\grep 'gp2$' | \\grep 'amzn2'"
 
-aws ec2 describe-images --filters ${arr[@]} --owners amazon --profile sarmaapi --region ${AWSRegion} --query 'sort_by(Images, &CreationDate)[].Name' | tr '\t' '\n' | \grep ${YYYYMM} | \grep -v 'ecs' | \grep -v nat | \grep -v ".-arm" | \grep 'gp2$' | \grep 'amzn2' > /tmp/$$
+aws ec2 describe-images --filters ${arr[@]} --owners amazon --profile ${AWSprofile} --region ${AWSRegion} --query 'sort_by(Images, &CreationDate)[].Name' | tr '\t' '\n' | \grep ${YYYYMM} | \grep -v 'ecs' | \grep -v nat | \grep -v ".-arm" | \grep 'gp2$' | \grep 'amzn2' > /tmp/$$
 sed -e "s/^/${AWSRegion}LinuxAMI=/" < /tmp/$$
 sed -e "s/^/${AWSLocation}LinuxAMI=/" < /tmp/$$
 \rm /tmp/$$
