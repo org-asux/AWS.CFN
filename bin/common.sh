@@ -60,9 +60,11 @@ else
 	fi
 fi
 
-if [ ! -e ${AWSPROFILE} ]; then
-        echo "AWS login credentials missing in a file ${AWSPROFILE}"
+if [ ! -e ${AWSprofile} ]; then
+	if [ -z ${AWSprofile+x} ]; then  ### if [ -z "$AWSprofile" ]    <-- does NOT distinguish between 'unset AWSprofile' & AWSprofile=""
+        echo "AWS login credentials missing in a file, and also AWSprofile is NOT set"
         exit 7
+	fi
 fi
 
 ###=============================================================
