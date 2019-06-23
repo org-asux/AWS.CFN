@@ -10,3 +10,4 @@ AWSCloudFormation-MyTemplates/JSON/*BACKUP
 **/*.json
 AWSCFN.templates-pieces/Conditions full-listing.yaml
 **/testExclamation.yaml
+**/AutoGen.properties
