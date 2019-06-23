@@ -67,6 +67,11 @@ CmdLine.on('command:vpc-gen', function () {
   processCFNCmd(COMMAND);
 });
 
+CmdLine.on('command:subnets-gen', function () {
+  COMMAND="subnets-gen";
+  processCFNCmd(COMMAND);
+});
+
 CmdLine.on('command:sg-ssh-gen', function () {
   COMMAND="sg-ssh-gen";
   processCFNCmd(COMMAND);
