@@ -122,7 +122,7 @@ saveTo !YAMLROOT
 //=============================================================
 makeNewRoot Outputs
 yaml --insert Outputs @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Outputs-VPC.yaml
-yaml --insert Outputs @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Outputs-PublicRouteTable.yaml
+yaml --macro @/dev/null
 saveTo !TopElemOutputs
 
 //--------------------------------------------------
