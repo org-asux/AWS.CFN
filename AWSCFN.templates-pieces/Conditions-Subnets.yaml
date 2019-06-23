@@ -1,0 +1,5 @@
+  doesExistSubnet${ASUX::foreach.index+1}: !Equals ## This is a workaround to get 'true' as the condition-value
+    - ASUXorgWorks
+    - ASUXorgWorks
+
+#EOF

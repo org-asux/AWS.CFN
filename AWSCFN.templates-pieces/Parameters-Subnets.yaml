@@ -1,0 +1,23 @@
+Parameters:
+
+  MyStackNamePrefix:
+    Description: The prefix for almost ALL Exports by CFN-templates created by ASUX.org tools.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
+    Type: String
+    Default: ${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}
+
+  MyVPCName:
+    Description: Export ID of the VPC.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
+    Type: String
+    Default: ${ASUX::MyVPCStackPrefix}-VPCID
+
+  EC2getsPublicIPByDefault:
+    Description: Whether any EC2 instance created within this VPC automatically gets a PUBLIC-IP (accessible via internet)
+    Type: String
+    Default: 'false'
+
+  MyPublicRouteTable:
+    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${ASUX::MyStackNamePrefix}-PublicRouteTableID"
+    Type: String
+    Default: ${ASUX::MyVPCStackPrefix}-PublicRouteTableID
+
+#EOF
