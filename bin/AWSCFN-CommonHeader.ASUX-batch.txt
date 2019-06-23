@@ -18,6 +18,10 @@ setProperty	AWSCFN.HOME=${ASUX::ORGASUXHOME}/AWS/CFN
 ### Example: For creating a VPC, only the 1st two lines below are required
 ### Example: For creating a new EC2 w EFS, all of the following 5 lines are required
 
+
+properties TagDefaultsProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/job-DEFAULTS.properties
+
+
 properties TagDefaultsProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-DEFAULTS.properties
 properties XWKProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-Network-DEFAULTS.properties
 properties EFSProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-EFS-DEFAULTS.properties
@@ -32,7 +36,14 @@ properties AWSRegionLocations=${ASUX::AWSCFN.HOME}/config/AWSRegionsLocations.pr
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
 
+### Typically, AWSRegion is set __WELL BEFORE__ the defaults-files above.. so, this line below must be last line in this file.
+
 setProperty AWSLocation=${ASUX::AWS-${ASUX::AWSRegion}}
+
+setProperty MyVPCStackPrefix=${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}
+
+###------- Load properties CREATED via the vpc-gen.sh  subnets-gen.sh  sg-ssh.sh   and ec2plain.sh
+properties AutoGen.properties=./AutoGen.properties	### ${JobSetName}/AutoGen.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
