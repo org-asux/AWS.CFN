@@ -24,9 +24,10 @@ CFNContext=subnets
 
 .   ${SCRIPTFULLFLDRPATH}/cfngen-common-post.sh
 
-echo "In subnets-gen.sh arg # 3=$3"
-if [ $# -le 3 ] && [ [ "$3" == "public"] || ["$3" == "private"] ]; then
-	PublicOrPrivate=$3
+if [ "${VERBOSE}" == "1" ]; then echo "In subnets-gen.sh 3rd command line-arg = $2"; fi
+
+if [ $# -ge 2 ] && [[ "$2" == "public"  || "$2" == "private" ]]; then
+	PublicOrPrivate=$2
 else
 	echo "Usage: ${CmdPathGuess} $1 $2 <public|private>"
 	exit 4
