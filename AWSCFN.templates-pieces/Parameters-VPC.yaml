@@ -1,21 +1,7 @@
 Parameters:
-  MyStackNamePrefix:
+  MyVPCStackPrefix:
     Description: Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
     Type: String
     Default: ${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}
-
-  EC2getsPublicIPByDefault:
-    Description: Whether any EC2 instance created within this VPC automatically gets a PUBLIC-IP (accessible via internet)
-    Type: String
-    Default: 'false'
-
-  # MyOrgName:
-  #   Description: "What is the Organization a.k.a. the prefix for the stack?  Example: orgASUX"
-  #   Type: String
-  #   Default: orgASUX
-  # MyEnvironment:
-  #   Description: "What environment is this? For, TAG Name=ENV"
-  #   Type: String
-  #   Default: Playground
 
 #EOF

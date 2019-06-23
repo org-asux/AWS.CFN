@@ -3,6 +3,6 @@
     Value: !Ref MyPublicSubnetAZ${ASUX::foreach.index+1}  ## The value of the property returned by the aws cloudformation describe-stacks command
     Condition: doesExistSubnet${ASUX::foreach.index+1}
     Export:             ## The name of the resource output to be exported for a cross-stack reference.
-      Name: !Sub '${MyStackNamePrefix}-Subnet-${ASUX::foreach.index+1}-ID'  ## For each AWS account, Export names must be unique within a region.
+      Name: '${ASUX::MyStackNamePrefix}-Subnet-${ASUX::foreach.index+1}-ID'  ## For each AWS account, Export names must be unique within a region.
 
 #EOF

@@ -3,8 +3,9 @@
     Condition: doesExistSubnet${ASUX::foreach.index+1}
     Properties:
       SubnetId: !Ref MyPublicSubnetAZ${ASUX::foreach.index+1}
-      NetworkAclId: !GetAtt
-        - ${ASUX::VPCName}
-        - DefaultNetworkAcl
+      NetworkAclId: !ImportValue ${ASUX::MyVPCStackPrefix}-DefaultNetworkAclID
+      # NetworkAclId: !GetAtt
+      #   - !ImportValue ${ASUX::MyVPCName}
+      #   - DefaultNetworkAcl
 
 #EOF

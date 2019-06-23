@@ -25,7 +25,7 @@ Parameters:
   EC2InstanceType:
     Description: Sizing of New EC2 instance
     Type: String
-    Default: t2.micro
+    # Default: t2.micro
   AWSAMIID:
     Description: O/S specified as via a very precise ami ID
     Type: String

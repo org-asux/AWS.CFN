@@ -3,6 +3,7 @@
     Condition: doesExistSubnet${ASUX::foreach.index+1}
     Properties:
       SubnetId: !Ref MyPublicSubnetAZ${ASUX::foreach.index+1}
-      RouteTableId: !Ref MyPublicRouteTable
+      RouteTableId: !ImportValue
+        Ref: MyPublicRouteTable
 
 #EOF

@@ -4,9 +4,11 @@
       with a single public-subnet.
     Type: 'AWS::EC2::InternetGateway'
     Properties:
-    DependsOn:
-      - MyPublicSubnetAZ1
-      - MyPublicSubnetAZ2
-      - MyPublicSubnetAZ3
+
+    ### Since I'm creating VPCs and Subnets independently.. since I'm creating IGW __WITHIN__ the CFN-template for a VPC.. I cannot have the following dependencies
+    # DependsOn:
+    #   - MyPublicSubnetAZ1
+    #   - MyPublicSubnetAZ2
+    #   - MyPublicSubnetAZ3
 
 #EOF

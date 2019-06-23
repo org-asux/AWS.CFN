@@ -1,5 +1,7 @@
-  doesExistSubnet${ASUX::foreach.index+1}: !Equals ## This is a workaround to get 'true' as the condition-value
-    - ASUXorgWorks
-    - ASUXorgWorks
+  AlwaysTrue: !Not  ## This condition is GUARANTEED to be true, as 'MyStackNamePrefix' is a required parameter and if it's NULL the CFN-template will fail to execute anyway
+    - !Equals
+      - ''
+      - !Ref "MyVPCStackPrefix"
+
 
 #EOF
