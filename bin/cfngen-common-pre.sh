@@ -52,13 +52,17 @@ fi
 ### !!!!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!
 ### This code below to define the 'JobSetMaster' and to __LOAD__ the properties file pointed to by 'JobSetMaster' .. .. MUST precede the 'sourcing' of 'common.sh'
 
+###-----------------------
+### !!!!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!
+### This code below to __LOAD__ the 'job-DEFAULTS.properties' file  MUST __PRECEDE__ the __LOAD__ of 'jobset-Master.properties' (which is a file specific to your job)
+
+.  ${AWSCFNHOME}/config/defaults/job-DEFAULTS.properties
+
+###-----------------------
 JobSetMaster=jobset-Master.properties
 
 .	${JobSetName}/${JobSetMaster}
-# grep -v '^#' ${JobSetName}/${JobSetMaster} > /tmp/$$
-# . /tmp/$$
-# rm /tmp/$$
-#____ properties JobProps=./jobset-${ASUX::SCRIPT}.properties
+
 if [ "${VERBOSE}" == "1" ]; then
 	echo "[y] parsed file ${JobSetName}/${JobSetMaster}"
 	read -p '(1) enter to see what was loaded' USERRESPONSE
@@ -66,6 +70,8 @@ if [ "${VERBOSE}" == "1" ]; then
 	\grep -v '^#' ${JobSetName}/${JobSetMaster} | \grep -v '^$' ###------ | \sed -e 's/^AWS-/set /'
 	read -p '(1) enter to continue' USERRESPONSE
 fi
+
+#____ echo INSIDE cfngen-common-PRE.sh .. TripletConstants are ="${MyOrgName}-${MyEnvironment}-${AWSLocation}"
 
 ###=============================================================
 ###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -82,11 +88,13 @@ fi
 
 .   ${SCRIPTFULLFLDRPATH}/common.sh
 
+#____ echo INSIDE cfngen-common-PRE.sh .. TripletConstants are ="${MyOrgName}-${MyEnvironment}-${AWSLocation}"
+
 ###=============================================================
 ###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ###=============================================================
 
-#_____ \grep -v '^#' ${AWSCFNHOME}/config/AWSRegionsLocations.properties | \grep -v '^$' | \sed -e 's/^AWS-/set /' > /tmp/$$
+#_____ \grep -v '^#' ${AWSCFNHOME}/config/AWSRegionsLocations.properties | \grep -v '^$' | \sed -e 's/^AWS-/set /' > ${AUTOGENPROPSFILE}
 #_____ . /tmp/$$
 #_____ \rm /tmp/$$
 #_____ read -p '(3) enter to continue' USERRESPONSE
@@ -95,15 +103,39 @@ fi
 ###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 ###=============================================================
 
-### ------ These represent the 'EXPORTS' from executing the CFN-templates via 'aws cloudformation' commands ------
-MyVPCStackPrefix="${MyOrgName}-${MyEnvironment}-${AWSLocation}"
-MyStackNamePrefix="${MyVPCStackPrefix}-${JobSetName}${ITEMNUMBER}"  ### Attention: 'ITEMNUMBER' if it's NOT empty-string, will automatically have a '-' as it's 1st character
-VPCID="${MyVPCStackPrefix}-VPCID"			### ATTENTION!!   JobSets will HAVE to share a VPC.  All VPC components should be within the single JobSet.
-DefaultAZ=${MyVPCStackPrefix}-AZ-ID			### ATTENTION!!   DefaultAZ has a 1:1 relationship with a VPC.
+AUTOGENPROPSFILE=${JobSetName}/AutoGen.properties
 
-DefaultPublicSubnet1=${MyStackNamePrefix}-Subnet-1-ID
-MySSHSecurityGroup=${MyStackNamePrefix}-SG-LinuxSSH
-MySSHKeyName=${AWSRegion}-${MyOrgName}-${MyEnvironment}-LinuxSSH.pem
+echo MyVPCStackPrefix="${MyOrgName}-${MyEnvironment}-${AWSLocation}"	> ${AUTOGENPROPSFILE}   ### Attention: Its NOT '>>' (append2file).  Its create a __NEW__ File
+MyVPCStackPrefix="${MyOrgName}-${MyEnvironment}-${AWSLocation}"			### We need to ensure these variables ARE __FULLY__ defined, for the upcoming asux.js cmdline arguments.
+
+echo JobSetName="${JobSetName}"						>> ${AUTOGENPROPSFILE}
+echo ITEMNUMBER="${ITEMNUMBER}"						>> ${AUTOGENPROPSFILE}
+
+echo MyStackNamePrefix="${MyVPCStackPrefix}-${JobSetName}${ITEMNUMBER}"			>> ${AUTOGENPROPSFILE}
+MyStackNamePrefix="${MyVPCStackPrefix}-${JobSetName}${ITEMNUMBER}"		### We need to ensure these variables ARE __FULLY__ defined, for the upcoming asux.js cmdline arguments.
+
+echo VPCID="${MyVPCStackPrefix}-VPCID"				>> ${AUTOGENPROPSFILE}
+echo DefaultAZ=${MyVPCStackPrefix}-AZ-ID			>> ${AUTOGENPROPSFILE}
+
+echo DefaultPublicSubnet1="${MyStackNamePrefix}-Subnet-1-ID"		>> ${AUTOGENPROPSFILE}
+echo MySSHSecurityGroup="${MyStackNamePrefix}-SG-SSH"				>> ${AUTOGENPROPSFILE}
+echo MyIamInstanceProfiles=${MyIamInstanceProfiles}					>> ${AUTOGENPROPSFILE}
+echo MySSHKeyName="${AWSLocation}-${MyOrgName}-${MyEnvironment}-LinuxSSH.pem"		>> ${AUTOGENPROPSFILE}
+
+### ------ These represent the 'EXPORTS' from executing the CFN-templates via 'aws cloudformation' commands ------
+# MyVPCStackPrefix="${MyOrgName}-${MyEnvironment}-${AWSLocation}"
+# MyStackNamePrefix="${MyVPCStackPrefix}-${JobSetName}${ITEMNUMBER}"  ### Attention: 'ITEMNUMBER' if it's NOT empty-string, will automatically have a '-' as it's 1st character
+# VPCID="${MyVPCStackPrefix}-VPCID"			### ATTENTION!!   JobSets will HAVE to share a VPC.  All VPC components should be within the single JobSet.
+# DefaultAZ=${MyVPCStackPrefix}-AZ-ID			### ATTENTION!!   DefaultAZ has a 1:1 relationship with a VPC.
+
+# DefaultPublicSubnet1="${MyStackNamePrefix}-Subnet-1-ID"
+# MySSHSecurityGroup="${MyStackNamePrefix}-SG-LinuxSSH"
+# MySSHKeyName="${AWSRegion}-${MyOrgName}-${MyEnvironment}-LinuxSSH.pem"
+
+.	${AUTOGENPROPSFILE}
+
+#____ echo INSIDE cfngen-common-PRE.sh .. MyStackNamePrefix=${MyStackNamePrefix}
+
 
 if [ "${VERBOSE}" == "1" ]; then
 	echo MyVPCStackPrefix=${MyVPCStackPrefix}
