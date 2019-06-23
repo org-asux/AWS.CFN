@@ -46,7 +46,7 @@ saveTo !AWSAZs
 useAsInput @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/TopYaml.yaml
 saveTo !YAMLROOT
 
-yaml --insert / @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Parameters-VPCNetwork.yaml
+yaml --insert / @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Parameters-VPC.yaml
 yaml --macro @/dev/null
 saveTo !YAMLROOT
 
@@ -59,7 +59,7 @@ useAsInput !AWSAZs
 
 	foreach
 		useAsInput !Conditions
-		yaml --insert Conditions @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Conditions-VPCNetwork.yaml
+		yaml --insert Conditions @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Conditions-VPC.yaml
 		yaml --macro @/dev/null
 		saveTo !Conditions
 	end
@@ -78,65 +78,40 @@ yaml --macro @/dev/null
 saveTo !TopElemResources
 
 //--------------------------------------------------
-useAsInput !AWSAZs
-
-	foreach
-		#______print AZ no. ${ASUX::foreach.index} is: 
-		#______print ${ASUX::foreach.iteration.value}
-		
-		useAsInput !TopElemResources
-		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicSubnet.yaml
-		yaml --macro @/dev/null
-		yaml --insert 'Resources,MyPublicSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
-		yaml --macro @/dev/null
-		saveTo !TopElemResources
-	end
-
-//--------------------------------------------------
 useAsInput !TopElemResources
+
+### !!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!
+### Internet gateways per Region = 5.  This limit is directly correlated with the limit on 5 VPCs per Region.
 
 yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/IGW.yaml
 yaml --insert Resources,MyInternetGateway,Properties  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 
 yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/IGWAttach.yaml
+
 yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicRouteTable.yaml
+yaml --insert Resources,MyPublicRouteTable,Properties  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro @/dev/null
 yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicRoute.yaml
-saveTo !TopElemResources
 
-//--------------------------------------------------
-useAsInput !AWSAZs
-
-	foreach
-		useAsInput !TopElemResources
-		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicRouteForAZ.yaml
-		yaml --macro @/dev/null
-		saveTo !TopElemResources
-	end
-
-//--------------------------------------------------
-useAsInput !TopElemResources
 yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/ACLDefault.yaml
+yaml --insert Resources,MyDefaultNetworkAcl,Properties  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro @/dev/null
+
 saveTo !TopElemResources
 
 //--------------------------------------------------
-useAsInput !AWSAZs
-
-	foreach
-		useAsInput !TopElemResources
-		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicSubnetACLAssoc.yaml
-		yaml --macro @/dev/null
-		saveTo !TopElemResources
-	end
-
-//--------------------------------------------------
 useAsInput !TopElemResources
+
 yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/InboundHTTPNetworkAclEntry.yaml
 yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/InboundSSHNetworkAclEntry.yaml
 yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/InboundResponsePortsNetworkAclEntry.yaml
 yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/OutBoundHTTPNetworkAclEntry.yaml
 yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/OutBoundHTTPSNetworkAclEntry.yaml
 yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/OutBoundResponsePortsNetworkAclEntry.yaml
+
 saveTo !TopElemResources
+
+//--------------------------------------------------
 
 useAsInput !YAMLROOT
 yaml --insert / !TopElemResources
@@ -147,17 +122,8 @@ saveTo !YAMLROOT
 //=============================================================
 makeNewRoot Outputs
 yaml --insert Outputs @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Outputs-VPC.yaml
-yaml --insert Outputs @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Outputs-DefaultAZ.yaml
+yaml --insert Outputs @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Outputs-PublicRouteTable.yaml
 saveTo !TopElemOutputs
-
-//--------------------------------------------------
-	useAsInput !AWSAZs
-	foreach
-		useAsInput !TopElemOutputs
-		yaml --insert Outputs @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Outputs-DefaultPublicSubnet.yaml
-		yaml --macro @/dev/null
-		saveTo !TopElemOutputs
-	end
 
 //--------------------------------------------------
 useAsInput !YAMLROOT
