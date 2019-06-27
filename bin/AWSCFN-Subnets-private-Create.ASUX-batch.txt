@@ -1,22 +1,22 @@
-### This is the file 'AWSCFN-Network-Create.ASUX-batch.txt'
+### This is the file 'AWSCFN-Subnets-private-Create.ASUX-batch.txt'
 
 ### The 1st thing you do - Is to define's the JOB-parameters
 ### You can do it in 2 ways (or do both ways, as shown in next 3 lines below):-
 ###	(1) Via a properties-file
 ###	(2) or via setProperty
 
-setProperty cfnJobTYPE=subnets
+setProperty ?cfnJobTYPE=subnets
 
-properties JobPropsMaster=./jobset-Master.properties
-properties JobProps=./jobset-${ASUX::cfnJobTYPE}.properties
+properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-Master.properties
+properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
 ### Now load the common stuff - that's common to all jobs
 
-setProperty	AWSCFN.HOME=${ASUX::ORGASUXHOME}/AWS/CFN
-include @${ASUX::AWSCFN.HOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
+#__ setProperty	AWSCFNHOME=${ASUX::ORGASUXHOME}/AWS/CFN
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -26,8 +26,8 @@ include @${ASUX::AWSCFN.HOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
 ### Example: AWSCFN-CommonHeader.ASUX-batch.txt has "Tags" set to some (likely, invalid) default values.
 ### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::cfnJobTYPE}.properties
 
-properties TagDefaultsProps=./Tags-MyMaster.properties
-properties TagDefaultsProps=./Tags-${ASUX::cfnJobTYPE}.properties
+properties Tags=${ASUX::JobSetName}/Tags-MyMaster.properties
+properties Tags=${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -35,7 +35,7 @@ properties TagDefaultsProps=./Tags-${ASUX::cfnJobTYPE}.properties
 ### Load the external inputs (in this case, the list of AZs for the region of interest)
 
 #________ aws.sdk --list-AZs      ${ASUX::AWSRegion}
-useAsInput @${ASUX::AWSCFN.HOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
+useAsInput @${ASUX::AWSCFNHOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
 saveTo !AWSAZs
 
 //=============================================================
@@ -43,10 +43,10 @@ saveTo !AWSAZs
 //=============================================================
 ### Now build the CFN script I want
 
-useAsInput @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/TopYaml.yaml
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/TopYaml.yaml
 saveTo !YAMLROOT
 
-yaml --insert / @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Parameters-Subnets.yaml
+yaml --insert / @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-Subnets.yaml
 yaml --macro @/dev/null
 saveTo !YAMLROOT
 
@@ -64,7 +64,7 @@ useAsInput !AWSAZs
 
 	foreach
 		useAsInput !Conditions
-		yaml --insert Conditions @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Conditions-Subnets.yaml
+		yaml --insert Conditions @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Conditions-Subnets.yaml
 		yaml --macro @/dev/null
 		saveTo !Conditions
 	end
@@ -81,19 +81,9 @@ useAsInput !AWSAZs
 		#______print ${ASUX::foreach.iteration.value}
 		
 		useAsInput !TopElemResources
-		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PrivateSubnet.yaml
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateSubnet.yaml
 		yaml --macro @/dev/null
-		yaml --insert 'Resources,MyPrivateSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
-		yaml --macro @/dev/null
-		saveTo !TopElemResources
-	end
-
-//--------------------------------------------------
-useAsInput !AWSAZs
-
-	foreach
-		useAsInput !TopElemResources
-		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PrivateRouteForAZ.yaml
+		yaml --insert 'Resources,MyPrivateSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 		yaml --macro @/dev/null
 		saveTo !TopElemResources
 	end
@@ -103,7 +93,17 @@ useAsInput !AWSAZs
 
 	foreach
 		useAsInput !TopElemResources
-		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PrivateSubnetACLAssoc.yaml
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateRouteForAZ.yaml
+		yaml --macro @/dev/null
+		saveTo !TopElemResources
+	end
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemResources
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateSubnetACLAssoc.yaml
 		yaml --macro @/dev/null
 		saveTo !TopElemResources
 	end
@@ -124,7 +124,7 @@ saveTo !TopElemOutputs
 	useAsInput !AWSAZs
 	foreach
 		useAsInput !TopElemOutputs
-		yaml --insert Outputs @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Outputs-DefaultPrivateSubnet.yaml
+		yaml --insert Outputs @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-DefaultPrivateSubnet.yaml
 		yaml --macro @/dev/null
 		saveTo !TopElemOutputs
 	end
