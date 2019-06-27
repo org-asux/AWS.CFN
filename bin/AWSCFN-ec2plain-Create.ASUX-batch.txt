@@ -7,16 +7,16 @@
 
 setProperty ?cfnJobTYPE=ec2plain
 
-properties JobPropsMaster=${ASUX::jobSetName}/jobset-Master.properties
-properties JobProps=${ASUX::jobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
+properties GLOBAL.VARIABLES=${ASUX::jobSetName}/jobset-Master.properties
+properties GLOBAL.VARIABLES=${ASUX::jobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
 ### Now load the common stuff - that's common to all jobs
 
-setProperty	AWSCFN.HOME=${ASUX::ORGASUXHOME}/AWS/CFN
-include @${ASUX::AWSCFN.HOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
+#__ setProperty	AWSCFNHOME=${ASUX::ORGASUXHOME}/AWS/CFN
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -26,8 +26,8 @@ include @${ASUX::AWSCFN.HOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
 ### Example: AWSCFN-CommonHeader.ASUX-batch.txt has "Tags" set to some (likely, invalid) default values.
 ### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::jobSetName}.properties
 
-properties TagDefaultsProps=${ASUX::jobSetName}/Tags-MyMaster.properties
-properties TagDefaultsProps=${ASUX::jobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
+properties Tags=${ASUX::jobSetName}/Tags-MyMaster.properties
+properties Tags=${ASUX::jobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -35,7 +35,7 @@ properties TagDefaultsProps=${ASUX::jobSetName}/Tags-${ASUX::cfnJobTYPE}.propert
 ### Load the external inputs (in this case, the list of AZs for the region of interest)
 
 #________ aws.sdk --list-AZs      ${ASUX::AWSRegion}
-useAsInput @${ASUX::AWSCFN.HOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
+useAsInput @${ASUX::AWSCFNHOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
 saveTo !AWSAZs
 
 //=============================================================
@@ -43,16 +43,16 @@ saveTo !AWSAZs
 //=============================================================
 ### Now build the CFN script I want
 
-useAsInput @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/TopYaml.yaml
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/TopYaml.yaml
 saveTo !YAMLROOT
 
-yaml --insert / @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Parameters-EC2.yaml
+yaml --insert / @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-EC2.yaml
 yaml --macro @/dev/null
 saveTo !YAMLROOT
 
 //--------------------------------------------------
 makeNewRoot Resources
-yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/EC2.yaml
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2.yaml
 yaml --macro @/dev/null
 
 yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Standup,packages  @Pkgs-ASUX.org-DEV-1.yaml --no-quote    --delimiter ,
@@ -61,13 +61,13 @@ yaml --macro @/dev/null
 yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Services  @Svcs-ASUX.org-DEV-1.yaml --no-quote    --delimiter ,
 yaml --macro @/dev/null
 
-yaml --insert Resources,${ASUX::MyEC2InstanceName} @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/ResourceProperties-EC2.yaml --no-quote  --delimiter ,
+yaml --insert Resources,${ASUX::MyEC2InstanceName} @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/ResourceProperties-EC2.yaml --no-quote  --delimiter ,
 yaml --macro @/dev/null
 
-yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml  --delimiter ,
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml  --delimiter ,
 yaml --macro @/dev/null
 
-yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/EC2-UserData.yaml  --delimiter ,
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2-UserData.yaml  --delimiter ,
 yaml --macro @/dev/null
 
 saveTo !TopElemResources

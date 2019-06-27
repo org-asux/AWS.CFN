@@ -40,7 +40,7 @@ fi
 CFNfile=/tmp/${CFNContext}
 
 ${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-${PublicOrPrivate}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}
-echo "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-subnets-${JobSetName}  --region ${AWSRegion} --profile \${AWSprofile} --template-body file://${CFNfile} " > ${CFNfile}.sh
+echo "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-subnets-${PublicOrPrivate}-${JobSetName}  --region ${AWSRegion} --profile \${AWSprofile} --template-body file://${CFNfile} " > ${CFNfile}.sh
 			#### !!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!!!! The STACK-NAME for VPC already has {ENVIRONMENT} in it.
 			#### !!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!!!! DO ___NOT___ ADD {JobSetName} to Stack-name
 			#### !!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!!!! The STACK-NAME expression is VERY different between VPC -vs- SG / EC2.. .. 

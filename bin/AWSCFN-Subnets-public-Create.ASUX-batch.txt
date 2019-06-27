@@ -7,16 +7,16 @@
 
 setProperty ?cfnJobTYPE=subnets
 
-properties JobPropsMaster=${ASUX::jobSetName}/jobset-Master.properties
-properties JobProps=${ASUX::jobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
+properties GLOBAL.VARIABLES=${ASUX::jobSetName}/jobset-Master.properties
+properties GLOBAL.VARIABLES=${ASUX::jobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
 ### Now load the common stuff - that's common to all jobs
 
-setProperty	AWSCFN.HOME=${ASUX::ORGASUXHOME}/AWS/CFN
-include @${ASUX::AWSCFN.HOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
+#__ setProperty	AWSCFNHOME=${ASUX::ORGASUXHOME}/AWS/CFN
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -26,8 +26,8 @@ include @${ASUX::AWSCFN.HOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
 ### Example: AWSCFN-CommonHeader.ASUX-batch.txt has "Tags" set to some (likely, invalid) default values.
 ### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::cfnJobTYPE}.properties
 
-properties TagDefaultsProps=${ASUX::jobSetName}/Tags-MyMaster.properties
-properties TagDefaultsProps=${ASUX::jobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
+properties Tags=${ASUX::jobSetName}/Tags-MyMaster.properties
+properties Tags=${ASUX::jobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -35,7 +35,7 @@ properties TagDefaultsProps=${ASUX::jobSetName}/Tags-${ASUX::cfnJobTYPE}.propert
 ### Load the external inputs (in this case, the list of AZs for the region of interest)
 
 #________ aws.sdk --list-AZs      ${ASUX::AWSRegion}
-useAsInput @${ASUX::AWSCFN.HOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
+useAsInput @${ASUX::AWSCFNHOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
 saveTo !AWSAZs
 
 //=============================================================
@@ -43,10 +43,10 @@ saveTo !AWSAZs
 //=============================================================
 ### Now build the CFN script I want
 
-useAsInput @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/TopYaml.yaml
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/TopYaml.yaml
 saveTo !YAMLROOT
 
-yaml --insert / @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Parameters-Subnets.yaml
+yaml --insert / @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-Subnets.yaml
 yaml --macro @/dev/null
 saveTo !YAMLROOT
 
@@ -64,7 +64,7 @@ useAsInput !AWSAZs
 
 	foreach
 		useAsInput !Conditions
-		yaml --insert Conditions @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Conditions-Subnets.yaml
+		yaml --insert Conditions @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Conditions-Subnets.yaml
 		yaml --macro @/dev/null
 		saveTo !Conditions
 	end
@@ -81,19 +81,9 @@ useAsInput !AWSAZs
 		#______print ${ASUX::foreach.iteration.value}
 		
 		useAsInput !TopElemResources
-		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicSubnet.yaml
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicSubnet.yaml
 		yaml --macro @/dev/null
-		yaml --insert 'Resources,MyPublicSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
-		yaml --macro @/dev/null
-		saveTo !TopElemResources
-	end
-
-//--------------------------------------------------
-useAsInput !AWSAZs
-
-	foreach
-		useAsInput !TopElemResources
-		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicRouteForAZ.yaml
+		yaml --insert 'Resources,MyPublicSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 		yaml --macro @/dev/null
 		saveTo !TopElemResources
 	end
@@ -103,7 +93,17 @@ useAsInput !AWSAZs
 
 	foreach
 		useAsInput !TopElemResources
-		yaml --insert Resources @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/PublicSubnetACLAssoc.yaml
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRouteForAZ.yaml
+		yaml --macro @/dev/null
+		saveTo !TopElemResources
+	end
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemResources
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicSubnetACLAssoc.yaml
 		yaml --macro @/dev/null
 		saveTo !TopElemResources
 	end
@@ -124,7 +124,7 @@ saveTo !TopElemOutputs
 	useAsInput !AWSAZs
 	foreach
 		useAsInput !TopElemOutputs
-		yaml --insert Outputs @${ASUX::AWSCFN.HOME}/AWSCFN.templates-pieces/Outputs-DefaultPublicSubnet.yaml
+		yaml --insert Outputs @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-DefaultPublicSubnet.yaml
 		yaml --macro @/dev/null
 		saveTo !TopElemOutputs
 	end
