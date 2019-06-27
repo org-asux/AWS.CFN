@@ -10,9 +10,12 @@
 //--------------------------
 var fs = require("fs");     // https://nodejs.org/api/fs.html#fs_fs_accesssync_path_mode 
 
-var ORGASUXHOME = process.env.ORGASUXHOME ? process.env.ORGASUXHOME : "/invalid/path/to/parentProject/org.ASUX";
+if ( ! process.env.ORGASUXHOME ) {
+  console.error("ERROR: You must define the ENVIRONMENT variable 'ORGASUXHOME' accurately.  A simple way is to run asux.js from the __ROOT__ (org.ASUX) project of the org.ASUX hierarchy-of-projects at GitHub.com." );
+  process.exit(99);
+}
 // file-included - Not a 'require'
-eval( fs.readFileSync( ORGASUXHOME+'/asux-common.js' ) + '' );
+eval( fs.readFileSync( process.env.ORGASUXHOME +'/asux-common.js' ) + '' );
 
 //==========================================================
 var CMDGRP="aws.cfn"; // this entire file is about this CMDGRP
@@ -103,49 +106,59 @@ CmdLine.parse(process.argv);
 
 function processCFNCmd( _CMD) {
 
-    // const bIsMavenInstalled = chkMavenInstalled();
-    // const DependenciesFile=__dirname + "/etc/classpaths/"+ CMDGRP +"-cmd.dependencies";
-    // const CLASSPATH = genDependencyCLASSPATH( DependenciesFile, bIsMavenInstalled );
-    
-    // // ${CMDCLASS} is defined inside this properties file
-    // const props = require ( `${__dirname}/etc/js-source/${CMDGRP}.js-source` )
-
-    // //--------------------
-    // // pre-scripts (Before running ./cmdline/asux.js)
-    // EXECUTESHELLCMD.runPreScripts(); // ignore any exit code from these PRE-scripts
-
-    // //--------------------
-    // // copyCmdLineArgs() is defined within ORGASUXHOME/asux-common.js
-    var cmdArgs = copyCmdLineArgs(  _CMD,  /* _bInsertDoubleHyphen */ false, /* _bAddCmd2Params */ false );
-
-    // cmdArgs.splice( 0, 0, '-cp' ); // insert ./asux.js as JAVA's 1st cmdline parameter
-    // cmdArgs.splice( 1, 0, CLASSPATH ); // insert CLASSPATH as JAVA's  2nd cmdline parameter
-    // cmdArgs.splice( 2, 0, "-DORGASUXHOME="+ORGASUXHOME );
-    // cmdArgs.splice( 3, 0, props['CMDCLASS'] ); // insert CMDCLASS=org.ASUX.yaml.Cmd as JAVA's  3rd cmdline parameter
-    // if (process.env.VERBOSE) console.log( `${__filename} : within /tmp:\n\tjava ` + cmdArgs.join(' ') +"\n" );
-
-    if (process.env.VERBOSE) console.log( __filename +": Cmd Line params are: '" + cmdArgs.join(' ') +"'" );
-
-    // const retCode = EXECUTESHELLCMD.executeSharingSTDOUT ( INITIAL_CWD, 'java', cmdArgs, true, process.env.VERBOSE, false, null );
-
     var parentDir = ""+__dirname;
     parentDirArr = parentDir.split(PATH.sep);
     parentDirArr.pop();
     if (process.env.VERBOSE) console.log( "REGULAR variable: parentDirArr='" + parentDirArr.join('/') +"'." );
-    process.env.AWSHOME=""+parentDirArr.join('/'); // for use by all scripts under ORGASUXHOME/AWS/CFN .. so it know where this asux.js is.
+    process.env.AWSHOME=""+parentDirArr.join('/'); // for use by all scripts under process.env.ORGASUXHOME/AWS/CFN .. so it know where this asux.js is.
 
-    process.env.AWSCFNHOME=__dirname; // for use by all scripts under ORGASUXHOME/AWS/CFN .. so it know where this asux.js is.
+    process.env.AWSCFNHOME=__dirname; // for use by all scripts under process.env.ORGASUXHOME/AWS/CFN .. so it know where this asux.js is.
     if (process.env.VERBOSE) console.log( "Environment variables: AWSHOME=" + process.env.AWSHOME +", AWSCFNHOME=" + process.env.AWSCFNHOME +"\n" );
 
-    const scriptFullPath = process.env.AWSCFNHOME+"/bin/"+_CMD +".sh";
-    const retCode = EXECUTESHELLCMD.executeSharingSTDOUT ( INITIAL_CWD, scriptFullPath, cmdArgs, true, process.env.VERBOSE, false, process.env );
+    const bIsMavenInstalled = chkMavenInstalled();
+    const DependenciesFile=__dirname + "/etc/classpaths/"+ CMDGRP +"-cmd.dependencies";
+    const CLASSPATH = genDependencyCLASSPATH( DependenciesFile, bIsMavenInstalled );
+    
+    // ${CMDCLASS} is defined inside this properties file
+    const props = require ( `${__dirname}/etc/js-source/${CMDGRP}.js-source` )
+
+    //--------------------
+    // pre-scripts (Before running ./cmdline/asux.js)
+    EXECUTESHELLCMD.runPreScripts(); // ignore any exit code from these PRE-scripts
+
+    //--------------------
+    var cmdArgs = copyCmdLineArgs( _CMD, /* _bInsertDoubleHyphen */ true, /* _bAddCmd2Params */ true );
+    // copyCmdLineArgs() is defined within process.env.ORGASUXHOME/asux-common.js
+  
+    cmdArgs.splice( 0, 0, '-cp' ); // insert ./asux.js as JAVA's 1st cmdline parameter
+    cmdArgs.splice( 1, 0, CLASSPATH ); // insert CLASSPATH as JAVA's  2nd cmdline parameter
+    cmdArgs.splice( 2, 0, "-DORGASUXHOME="+process.env.ORGASUXHOME );
+    cmdArgs.splice( 3, 0, "-DAWSHOME="+process.env.AWSHOME );
+    cmdArgs.splice( 4, 0, "-DAWSCFNHOME="+process.env.AWSCFNHOME );
+    cmdArgs.splice( 5, 0, props['CMDCLASS'] ); // insert CMDCLASS=org.ASUX.yaml.Cmd as JAVA's  3rd cmdline parameter
+    if (process.env.VERBOSE) console.log( `${__filename} : within /tmp:\n\tjava ` + cmdArgs.join(' ') +"\n" );
+
+    const retCode = EXECUTESHELLCMD.executeSharingSTDOUT ( INITIAL_CWD, 'java', cmdArgs, true, process.env.VERBOSE, false, null );
     process.exitCode = retCode;
 
+    //--------------------
+    // OLD CODE.. where this was invoking SHELL-Scripts within {AWSCFNHOME}/bin
+
+    // var cmdArgs = copyCmdLineArgs(  _CMD,  /* _bInsertDoubleHyphen */ false, /* _bAddCmd2Params */ false );
+    // // copyCmdLineArgs() is defined within process.env.ORGASUXHOME/asux-common.js
+    // if (process.env.VERBOSE) console.log( __filename +": Cmd Line params are: '" + cmdArgs.join(' ') +"'" );
+
+    // const scriptFullPath = process.env.AWSCFNHOME+"/bin/"+_CMD +".sh";
+    // const retCode = EXECUTESHELLCMD.executeSharingSTDOUT ( INITIAL_CWD, scriptFullPath, cmdArgs, true, process.env.VERBOSE, false, process.env );
+    // process.exitCode = retCode;
+
+    //--------------------
     if ( retCode == 0 ) {
       if (process.env.VERBOSE) console.log( "\n"+ __filename +": Done!");
       // process.exitCode = 0;
     }else{
-      console.error( '\n'+ __filename +": Failed with error-code "+ retCode +" for: "+ scriptFullPath +" "+ cmdArgs.join(' '));
+      if (process.env.VERBOSE) console.error( '\n'+ __filename +": Failed with error-code "+ retCode +" for: java "+ cmdArgs.join(' '));
+      // console.error( '\n'+ __filename +": Failed with error-code "+ retCode +" for: "+ scriptFullPath +" "+ cmdArgs.join(' '));
       process.exitCode = retCode;
     }
 

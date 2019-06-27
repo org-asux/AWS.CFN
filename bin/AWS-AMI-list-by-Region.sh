@@ -23,6 +23,12 @@ if [ "${VERBOSE}" == "1" ]; then echo SCRIPTFULLFLDRPATH=${SCRIPTFULLFLDRPATH}; 
 #____	if [ "${SCRIPTFLDR_RELATIVE}" != "." ]; then
 #____	fi
 
+ORGASUXHOME=${SCRIPTFULLFLDRPATH}			### /mnt/development/src/org.ASUX/AWS/CFN/bin
+ORGASUXHOME="$(dirname "$ORGASUXHOME")"		### /mnt/development/src/org.ASUX/AWS/CFN
+ORGASUXHOME="$(dirname "$ORGASUXHOME")"		### /mnt/development/src/org.ASUX/AWS
+ORGASUXHOME="$(dirname "$ORGASUXHOME")"		### /mnt/development/src/org.ASUX
+if [ "${VERBOSE}" == "1" ]; then echo ORGASUXHOME=${ORGASUXHOME}; fi
+
 .   ${SCRIPTFULLFLDRPATH}/common.sh
 
 ###=============================================================
@@ -30,11 +36,11 @@ if [ "${VERBOSE}" == "1" ]; then echo SCRIPTFULLFLDRPATH=${SCRIPTFULLFLDRPATH}; 
 ###=============================================================
 
 CACHEDOUTPUT="${AWSCFNHOME}/config/inputs/AMZNLinuxAMI-${AWSLocation}.txt"
-if [ -z ${CACHEDOUTPUT+x} ]; then  ### if [ -z "$var" ]    <-- does NOT distinguish between 'unset var' & var=""
-	unset NOTHING; # Do nothing.
-else
+if [ -e ${CACHEDOUTPUT} ] && [ -s ${CACHEDOUTPUT} ]; then  ### if [ -z "$var" ]    <-- does NOT distinguish between 'unset var' & var=""
 	cat ${CACHEDOUTPUT}
 	exit 0 ### !!!!!!!!!! ATTENTION !!!!!!!!!! Script exits here.
+else
+	unset NOTHING; # Do nothing.
 fi
 
 ###-------------------

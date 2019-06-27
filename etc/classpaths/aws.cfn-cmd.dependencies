@@ -1,0 +1,29 @@
+## Each INPUT-file must be generated using the command:-
+##      mvn -DoutputFile=${THISFILE}   dependency:tree
+## It should then be edited - to REMOVE the 1st 3 characters of each line.
+## To help others, copy these 5 header lines!   Add a few blank lines to make everyone feel comfortable editing this file!
+## That's it!
+
+org.asux:common:jar:1.0:compile
+org.asux:yaml:jar:1.0:compile
+org.yaml:snakeyaml:jar:1.24:compile
+org.asux:aws-cfn:jar:1.0
+
+com.opencsv:opencsv:jar:4.0:compile
+
+org.apache.commons:commons-lang3:jar:3.6:compile
+org.apache.commons:commons-text:jar:1.1:compile
+commons-cli:commons-cli:jar:1.4:compile
+commons-beanutils:commons-beanutils:jar:1.9.3:compile
+commons-logging:commons-logging:jar:1.2:compile
+commons-collections:commons-collections:jar:3.2.2:compile
+
+com.fasterxml.jackson.core:jackson-databind:jar:2.9.9:compile
+com.fasterxml.jackson.core:jackson-annotations:jar:2.9.0:compile
+com.fasterxml.jackson.core:jackson-core:jar:2.9.9:compile
+org.asux:yaml.nodeimpl:jar:1.0:compile
+
+junit:junit:jar:4.8.2:compile
+
+
+#EoF
