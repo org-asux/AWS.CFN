@@ -37,10 +37,7 @@ import org.ASUX.yaml.MemoryAndContext;
 import org.ASUX.yaml.CmdLineArgsBasic;
 import org.ASUX.yaml.CmdLineArgsBatchCmd;
 
-import org.ASUX.YAML.NodeImpl.BatchCmdProcessor;
-import org.ASUX.YAML.NodeImpl.NodeTools;
 import org.ASUX.YAML.NodeImpl.GenericYAMLWriter;
-import org.ASUX.YAML.NodeImpl.InputsOutputs;
 
 import java.io.InputStreamReader;
 import java.io.FileInputStream;
@@ -49,12 +46,9 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 import java.util.regex.*;
-import java.util.LinkedHashMap;
 import java.util.Properties;
 
 // https://yaml.org/spec/1.2/spec.html#id2762107
-import org.yaml.snakeyaml.nodes.NodeId;
-import org.yaml.snakeyaml.nodes.Node;
 import org.yaml.snakeyaml.DumperOptions; // https://bitbucket.org/asomov/snakeyaml/src/default/src/main/java/org/yaml/snakeyaml/DumperOptions.java
 
 import org.junit.Test;
@@ -155,217 +149,28 @@ public class CmdInvoker extends org.ASUX.YAML.NodeImpl.CmdInvoker {
 
         //---------------------------
         final BootstrapAndChecks boot = new BootstrapAndChecks( this.verbose, this.memoryAndContext.getAllPropsRef() );
-        boot.exec( cmdLA.getCmdName(), cmdLA.getJobSetName() );
+        boot.exec( cmdLA.getCmdName(), cmdLA.getJobSetName(), cmdLA.getItemNumber() );
+        final String cfnJobType = boot.getCFNJobType( cmdLA.getCmdName() );
+
         CmdProcessor processor = new CmdProcessor( this );
         if ( cmdLA.verbose ) new org.ASUX.common.Debug(cmdLA.verbose).printAllProps( HDR +" FULL DUMP of this.propsSetRef = ", this.memoryAndContext.getAllPropsRef() );
 
-        //---------------------------
-        final String cfnJobType = boot.getCFNJobType( cmdLA.getCmdName() );
-        String[] batchcmdargs = null;
+        //-------------------------------------
+        // 1st generate the YAML.
+        processor.genYAML( cmdLA, cfnJobType, boot.awscfnhome );
 
-        switch ( cmdLA.getCmdName() ) {
-        case VPC:
-            batchcmdargs =  processor.genVPCCmdLine( cmdLA, boot );
-            break;
-
-        case SUBNET:
-        case SGSSH:
-        case SGEFS:
-        case VPNCLIENT:
-        case UNDEFINED:
-
-        case EC2PLAIN:
-            // if (claMacro.verbose) System.out.println( HDR +" loading Props file [" + claMacro.propertiesFilePath + "]");
-            // assertTrue( claMacro.propertiesFilePath != null );
-
-            // switch ( cmdLA.cmdType ) {
-            //     case MACRO:     assertTrue( false ); // we can't get here with '_input' ..  _WITHOUT_ it being a _VALID_ YAML content.   So, so might as well as use 'MacroYamlProcessor'
-            //                     // macroStrPr = new MacroStringProcessor( claMacro.verbose, claMacro.showStats ); // does NOT use 'dumperopt'
-            //                     break;
-            //     case MACROYAML: macroYamlPr = new MacroYamlProcessor( claMacro.verbose, claMacro.showStats ); // does NOT use 'dumperopt'
-            //                     break;
-            //     default: assertTrue( false ); // should not be here.
-            // }
-
-            // Properties properties = null;
-            // if ( "!AllProperties".equals( claMacro.propertiesFilePath ) ) {
-            //     // do Nothing.   properties will remain set to 'null'
-            // } else {
-            //     final Object content = this.getDataFromReference( claMacro.propertiesFilePath );
-            //     if (content instanceof Properties) {
-            //         properties = (Properties) content;
-            //     }else {
-            //         throw new Exception( claMacro.propertiesFilePath +" is Not a java properties file, with the extension '.properties' .. or, it's contents (of type'"+ content.getClass().getName() +"')are Not compatible with java.util.Properties" );
-            //     }
-            // }
-
-            // if (claMacro.verbose) System.out.println( HDR +" about to start MACRO command using: [Props file [" + claMacro.propertiesFilePath + "]");
-            // Node outpData = null;
-            // switch ( cmdLA.cmdType ) {
-            //     case MACRO:     assertTrue( false ); // we can't get here with '_input' ..  _WITHOUT_ it being a _VALID_ YAML content.   So, so might as well as use 'MacroYamlProcessor'
-            //                     // outpData = macroStrPr.searchNReplace( raw-java.lang.String-from-where??, properties, this.memoryAndContext.getAllPropsRef() );
-            //                     break;
-            //     case MACROYAML: outpData = macroYamlPr.recursiveSearch( _inputNode, properties, this.memoryAndContext.getAllPropsRef() );
-            //                     break;
-            //     default: assertTrue( false ); // should not be here.
-            // }
-
-        default:
-            final String es = HDR +" Unimplemented command: " + cmdLA.toString();
-            System.err.println( es );
-            throw new Exception( es );
-        }
+        // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
+        processor.genCFNShellScript( cmdLA, cfnJobType );
 
         //-------------------------------------
-        final CmdLineArgsBatchCmd claBatch = new CmdLineArgsBatchCmd( batchcmdargs, org.ASUX.yaml.Enums.CmdEnum.BATCH, CmdLineArgsBasic.BATCHCMD[0], CmdLineArgsBasic.BATCHCMD[1], CmdLineArgsBasic.BATCHCMD[2], 1, "BatchFileName" );  // Note: there's a trick in the parameter-string.. as setArgName() assumes a single 'word' and puts a '<' & '>' around that single-word.
-        claBatch.parse( batchcmdargs );
-        if (this.verbose) System.out.println( HDR +" about to start BATCH command [" + claBatch + "]");
-
-        claBatch.verbose = this.verbose;
-        claBatch.quoteType = cmdLA.quoteType;
-        claBatch.YAMLLibrary = cmdLA.YAMLLibrary;
-
-        //-------------------------------------
-        // invoking org.ASUX.YAML.NodeImpl.CmdInvoker() is too generic.. especially, when I am clear as daylight that I want to invoke --batch command.
-        // final org.ASUX.YAML.NodeImpl.CmdInvoker nodeImplCmdInvoker = org.ASUX.YAML.NodeImpl.CmdInvoker(
-        //             this.verbose, false,  _cmdInvoker.getMemoryAndContext(), (DumperOptions)_cmdInvoker.getLibraryOptionsObject() );
-        // final Object outputAsIs = this.processCommand( cmdlineargs, inputNode );
-// above 3 lines  -versus-  below 3 lines
-        final BatchCmdProcessor batcher = new BatchCmdProcessor( claBatch.verbose, claBatch.showStats, claBatch.quoteType, this.dumperopt );
-        batcher.setMemoryAndContext( this.getMemoryAndContext() );
-        if ( cmdLA.verbose ) new org.ASUX.common.Debug(cmdLA.verbose).printAllProps( HDR +" FULL DUMP of this.propsSetRef = ", this.getMemoryAndContext().getAllPropsRef() );
-
-        final Node emptyInput = NodeTools.getEmptyYAML( this.dumperopt );
-        final Node outpData2 = batcher.go( claBatch.batchFilePath, emptyInput );
-        if ( this.verbose ) System.out.println( HDR +" outpData2 =" + outpData2 +"\n\n");
-
-        final String outpfile   = "/tmp/"+ cfnJobType +".yaml";
-        InputsOutputs.saveDataIntoReference( "@"+ outpfile, outpData2, null, this.getYamlWriter(), this.dumperopt, claBatch.verbose );
-
-        //-------------------------------------
-        switch ( cmdLA.getCmdName() ) {
-            case VPC:
-                processor.genVPCCFNShellScript( cmdLA, boot );
-                break;
-    
-            case SUBNET:
-            case SGSSH:
-            case SGEFS:
-            case VPNCLIENT:
-            case UNDEFINED:
-            case EC2PLAIN:
-
-            default:
-            final String es = HDR +" Unimplemented command: " + cmdLA.toString();
-            System.err.println( es );
-            throw new Exception( es );
-        }
-
-        //-------------------------------------
-        return outpData2;
+        // super.class (org.ASUX.yaml.CmdInvoker) requires that this method return something.
+        // Cmd.java for this project does Not care about the return-value of this method (unlike Cmd.java for other ASUX.org projects like org.ASUX.yaml)
+        return null;
     }
 
-    //==============================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //==============================================================================
-
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
-
-    // /**
-    //  * know which YAML-parsing/emitting library was chosen by user.  Ideally used within a Batch-Yaml script / BatchCmdProcessor.java
-    //  * @return the YAML-library in use. See {@link YAML_Libraries} for legal values to this parameter
-    //  */
-    // @Override
-    // public YAML_Libraries getYamlLibrary() {
-    //     // !!!!!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!!
-    //     // The body should be an EXACT __COPY__ of  org.ASUX.YAML.NodeImpl.CmdInvoker's method.
-    //     // We can't invoke that other method, and have it set instance-variables here
-    //     final YAML_Libraries sclib = this.YAMLScanner.getYamlLibrary();
-    //     assertTrue( sclib == this.YAMLWriter.getYamlLibrary() );
-    //     return sclib;
-    // }
-
-    // /**
-    //  * Allows you to set the YAML-parsing/emitting library of choice.  Ideally used within a Batch-Yaml script.
-    //  * @param _l the YAML-library to use going forward. See {@link YAML_Libraries} for legal values to this parameter
-    //  */
-    // @Override
-    // public void setYamlLibrary( final YAML_Libraries _l ) {
-    //     // !!!!!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!!
-    //     // The body should be an EXACT __COPY__ of  org.ASUX.YAML.NodeImpl.CmdInvoker's method.
-    //     // We can't invoke that other method, and have it set instance-variables here
-    //     if ( this.YAMLScanner == null || this.YAMLWriter == null )
-    //         this.init();
-    //     this.YAMLScanner.setYamlLibrary(_l);
-    //     this.YAMLWriter.setYamlLibrary(_l);
-    // }
-
-
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
-    // /**
-    //  *  <p>Example: For SnakeYAML-library based subclass of this, this should return DumperOptions.class</p>
-    //  *  <p>This is to be used primarily within org.ASUX.yaml.BatchCmdProcessor#onAnyCmd().</p>
-    //  *  @return name of class of the object that subclasses of {@link CmdInvoker} use, to configure YAML-Output (example: SnakeYAML uses DumperOptions)
-    //  */
-    // public Class<?> getLibraryOptionsClass() {
-    //     final String HDR = CLASSNAME + ": getLibraryOptionsClass(__CLASS__): ";
-    //     throw new RuntimeException( "Unimplemented method!"+ HDR );
-    // }
-
-    // /**
-    //  *  <p>Example: For SnakeYAML-library based subclass of this, this should return the reference to the instance of the class DumperOption</p>
-    //  *  <p>This is to be used primarily within org.ASUX.yaml.BatchCmdProcessor#onAnyCmd().</p>
-    //  * @return instance/object that subclasses of {@link CmdInvoker} use, to configure YAML-Output (example: SnakeYAML uses DumperOptions objects)
-    //  */
-    // public Object getLibraryOptionsObject() {
-    //     final String HDR = CLASSNAME + ": getLibraryOptionsObject(__OBJECT__): ";
-    //     throw new RuntimeException( "Unimplemented method!"+ HDR );
-    // }
-
-    //=================================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //=================================================================================
-
-    // /**
-    //  * This is a simpler facade/interface to {@link InputsOutputs#getDataFromReference}, for use by {@link org.ASUX.yaml.BatchCmdProcessor}
-    //  * @param _src a javalang.String value - either inline YAML/JSON, or a filename (must be prefixed with '@'), or a reference to a property within a Batch-file execution (must be prefixed with a '!')
-    //  * @return an object (either any of Node, SequenceNode, MapNode, ScalarNode ..)
-    //  * @throws FileNotFoundException if the filenames within _cmdLineArgs do NOT exist
-    //  * @throws IOException if the filenames within _cmdLineArgs give any sort of read/write troubles
-    //  * @throws Exception by ReplaceYamlCmd method and this nethod (in case of unknown command)
-    //  */
-    // public Object getDataFromReference( final String _src )
-    //                             throws FileNotFoundException, IOException, Exception
-    // {   final String HDR = CLASSNAME + ": getDataFromReference("+ _src +"): ";
-    //     // return InputsOutputs.getDataFromReference( _src, this.memoryAndContext, ???? this.getYamlScanner() ???, this.dumperopt, this.verbose );
-    //     throw new Exception( "Unimplemented method!"+ HDR );
-    // }
-
-    // //==============================================================================
-    // //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    // //==============================================================================
-
-    // /**
-    //  * This is a simpler facade/interface to {@link InputsOutputs#saveDataIntoReference}, for use by {@link org.ASUX.yaml.BatchCmdProcessor}
-    //  * @param _dest a javalang.String value - either a filename (must be prefixed with '@'), or a reference to a (new) property-variable within a Batch-file execution (must be prefixed with a '!')
-    //  * @param _input the object to be saved using the reference provided in _dest paramater
-    //  * @throws FileNotFoundException if the filenames within _cmdLineArgs do NOT exist
-    //  * @throws IOException if the filenames within _cmdLineArgs give any sort of read/write troubles
-    //  * @throws Exception by ReplaceYamlCmd method and this nethod (in case of unknown command)
-    //  */
-    // public void saveDataIntoReference( final String _dest, final Object _input )
-    //                         throws FileNotFoundException, IOException, Exception
-    // {   final String HDR = CLASSNAME + ": saveDataIntoReference("+ _dest +", _input): ";
-    //     // InputsOutputs.saveDataIntoReference( _dest, _input, this.memoryAndContext, this.getYamlWriter(), this.dumperopt, this.verbose );
-    //     throw new Exception( "Unimplemented method!"+ HDR );
-    // }
-
-    //==============================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //==============================================================================
 
     /**
      *  <p>This method needs to supplement org.ASUX.YAML.CmdInvoker.deepClone() as this subclass (org.ASUX.YAML.NodeImpl.CmdInvoker) has it's own transient instance-fields/variables.</p>
@@ -383,12 +188,12 @@ public class CmdInvoker extends org.ASUX.YAML.NodeImpl.CmdInvoker {
         return newCmdinvoker;
     }
 
-    //==============================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //==============================================================================
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
 
-    //==============================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //==============================================================================
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
 
 }
