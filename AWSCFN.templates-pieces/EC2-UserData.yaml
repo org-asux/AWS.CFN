@@ -26,7 +26,8 @@
             - '         --stack '
             - !Ref 'AWS::StackName'
             - '         --resource '
-            - !Ref ${ASUX::MyEC2InstanceName}
+####        - !Ref ${ASUX::MyEC2InstanceName}
+            -           ${ASUX::MyEC2InstanceName}
             - '         --configsets Standup '
             - '         --region '
             - !Ref 'AWS::Region'
