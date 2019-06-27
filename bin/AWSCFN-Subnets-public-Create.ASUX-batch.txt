@@ -1,4 +1,4 @@
-### This is the file 'AWSCFN-Network-Create.ASUX-batch.txt'
+### This is the file 'AWSCFN-Subnets-public-Create.ASUX-batch.txt'
 
 ### The 1st thing you do - Is to define's the JOB-parameters
 ### You can do it in 2 ways (or do both ways, as shown in next 3 lines below):-
@@ -7,8 +7,8 @@
 
 setProperty ?cfnJobTYPE=subnets
 
-properties GLOBAL.VARIABLES=${ASUX::jobSetName}/jobset-Master.properties
-properties GLOBAL.VARIABLES=${ASUX::jobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
+properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-Master.properties
+properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -26,8 +26,8 @@ include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
 ### Example: AWSCFN-CommonHeader.ASUX-batch.txt has "Tags" set to some (likely, invalid) default values.
 ### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::cfnJobTYPE}.properties
 
-properties Tags=${ASUX::jobSetName}/Tags-MyMaster.properties
-properties Tags=${ASUX::jobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
+properties Tags=${ASUX::JobSetName}/Tags-MyMaster.properties
+properties Tags=${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
