@@ -74,6 +74,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
     protected String jobSetName = "undefined-JobSetName";
     protected String itemNumber = "undefined-ItemNumber";
+    protected String publicOrPrivateSubnet = "NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable";
 
     public YAML_Libraries YAMLLibrary = YAML_Libraries.NodeImpl_Library; // some default value for now
 
@@ -279,7 +280,14 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             }
             if ( apacheCmdProcessor.hasOption( SUBNETSGEN ) ) {
                 this.cmdName = Enums.GenEnum.SUBNET;
-                this.jobSetName = apacheCmdProcessor.getOptionValue( SUBNETSGEN );
+                final String[] subnetsArgs = apacheCmdProcessor.getOptionValues( SUBNETSGEN );
+                // because we set .setArgs(2) above.. you can get the values for:- subnetsArgs[0] and subnetsArgs[1].
+                this.jobSetName = subnetsArgs[0]; // 1st of the 2 arguments for INSERT cmd.
+                this.publicOrPrivateSubnet = subnetsArgs[1];
+                if ( this.publicOrPrivateSubnet == null || ( ! this.publicOrPrivateSubnet.toLowerCase().matches("public|private") ) )
+                    throw new MissingOptionException("Command "+ SUBNETSGEN +" requires 2nd argument to be precisely 'public' or 'private'");
+                else
+                    this.publicOrPrivateSubnet = this.publicOrPrivateSubnet.toLowerCase();
             }
             if ( apacheCmdProcessor.hasOption( SGSSHGEN ) ) {
                 this.cmdName = Enums.GenEnum.SGSSH;
@@ -304,6 +312,12 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
             //-------------------------------------------
             this.itemNumber = apacheCmdProcessor.getOptionValue( ITEMNUMBER );
+            if ( this.itemNumber == null )
+                this.itemNumber = "";
+            else {
+                if ( ! this.itemNumber.startsWith("-") )
+                this.itemNumber = "-"+ this.itemNumber; // add a '-' hyphen prefix to the 'this.itemNumber'
+            }
 
             //-------------------------------------------
             if ( apacheCmdProcessor.getOptionValue(YAMLLIB) != null )
