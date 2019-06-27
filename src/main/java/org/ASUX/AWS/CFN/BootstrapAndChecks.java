@@ -94,9 +94,10 @@ public final class BootstrapAndChecks {
      *  Checks for critical environment variables and for critical cmdline parameters like AWSRegion. Then loads all Propertyfiles for the job.
      *  @param _cmdName  a value of type {@link Enums.GenEnum} - it should come from {@link CmdLineArgs#getCmdName()}
      *  @param _jobSetName a NotNull value that describes the 'job' and should represent a __SUBFOLDER__ within the current-working folder.
+     *  @param _itemNumber a NotNull value that describes the 'clone-ID' of the _jobSetName (if you repeatedly create CFN based on _jobSetName)
      *  @throws Exception on any missing variables or parameters
      */
-    public void exec( final Enums.GenEnum _cmdName, final String _jobSetName ) throws Exception
+    public void exec( final Enums.GenEnum _cmdName, final String _jobSetName, final String _itemNumber ) throws Exception
     {   final String HDR = CLASSNAME + ": go(_v," + _cmdName + ",_allProps): ";
 
         final Properties sysprops       = this.allPropsRef.get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
@@ -140,49 +141,48 @@ public final class BootstrapAndChecks {
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         final Properties globalProps = this.allPropsRef.get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        final Properties AWSRegionLocations = org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ AWSREGIONSLOCATIONS );
+        this.allPropsRef.put( "AWSRegionLocations", AWSRegionLocations );
+        // We need this specific '{AWSCFNHOME}/config/AWSRegionsLocations.properties' because we need to CONVERT a AWSRegion into an AWSLocation
 
         // --------------------
-        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ AWSREGIONSLOCATIONS) );
-        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ JOB_DEFAULTS) );
-        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/"+ JOBSET_MASTER) );
-        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/jobset-" + cfnJobTYPE + ".properties") );
+        // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ AWSREGIONSLOCATIONS ) );
+        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ JOB_DEFAULTS ) );
+        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/"+ JOBSET_MASTER ) );
+        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/jobset-" + cfnJobTYPE + ".properties" ) );
         if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
         // --------------------
-        globalProps.setProperty("cfnJobTYPE", cfnJobTYPE);
-        globalProps.setProperty("jobSetName", _jobSetName);
+        globalProps.setProperty( "cfnJobTYPE", cfnJobTYPE );
+        globalProps.setProperty( "JobSetName", _jobSetName );
+        globalProps.setProperty( "ItemNumber", _itemNumber );
+        if (this.verbose) System.out.println( HDR + "JobSetName=" + _jobSetName + " ItemNumber=" + _itemNumber );
 
         final String AWSLocation = Macros.evalThoroughly( this.verbose, "AWS-${ASUX::AWSRegion}", this.allPropsRef );
         final String MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}", this.allPropsRef );
-        globalProps.setProperty("AWSLocation", AWSLocation);
-        globalProps.setProperty("MyVPCStackPrefix", MyVPCStackPrefix);
-
-        final String JobSetName = globalProps.getProperty("JobSetName"); // Macros.evalThoroughly( this.verbose, "${ASUX::JobSetName}", globalProps );
-        final String ItemNumber = globalProps.getProperty("ItemNumber"); // Macros.evalThoroughly( this.verbose, "${ASUX::ItemNumber}", globalProps );
-        // globalProps.setProperty( "JobSetName", JobSetName );
-        // globalProps.setProperty( "ItemNumber", ItemNumber );
-        if (this.verbose) System.out.println(HDR + "JobSetName=" + JobSetName + " ItemNumber=" + ItemNumber);
+        globalProps.setProperty( "AWSLocation", AWSLocation );
+        globalProps.setProperty( "MyVPCStackPrefix", MyVPCStackPrefix );
 
         final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}--${ASUX::JobSetName}${ASUX::ItemNumber}", this.allPropsRef );
-        globalProps.setProperty("MyStackNamePrefix", MyStackNamePrefix);
-        if (this.verbose) System.out.println(HDR + "MyStackNamePrefix=" + MyStackNamePrefix);
+        globalProps.setProperty( "MyStackNamePrefix", MyStackNamePrefix );
+        if (this.verbose) System.out.println( HDR + "MyStackNamePrefix=" + MyStackNamePrefix );
 
         final String VPCID = MyVPCStackPrefix + "-VPCID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-VPCID", this.allPropsRef  );
         final String DefaultAZ = MyVPCStackPrefix + "-AZ-ID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-AZ-ID", this.allPropsRef );
-        globalProps.setProperty("VPCID", VPCID);
-        globalProps.setProperty("DefaultAZ", DefaultAZ);
-        if (this.verbose) System.out.println(HDR + "VPCID=" + VPCID + " DefaultAZ=" + DefaultAZ);
+        globalProps.setProperty( "VPCID", VPCID ) ;
+        globalProps.setProperty( "DefaultAZ", DefaultAZ );
+        if (this.verbose) System.out.println( HDR + "VPCID=" + VPCID + " DefaultAZ=" + DefaultAZ );
 
         final String DefaultPublicSubnet1 = MyStackNamePrefix + "-Subnet-1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", this.allPropsRef  );
         final String MySSHSecurityGroup = MyStackNamePrefix + "-SG-SSH"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-SG-SSH", this.allPropsRef  );
         // final String MyIamInstanceProfiles = Macros.evalThoroughly( this.verbose, "${ASUX::?????????????????}-"+HDR, this.allPropsRef );
         final String MySSHKeyName = Macros.evalThoroughly( this.verbose, "${ASUX::AWSLocation}-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-LinuxSSH.pem", this.allPropsRef );
-        globalProps.setProperty("DefaultPublicSubnet1", DefaultPublicSubnet1);
-        globalProps.setProperty("MySSHSecurityGroup", MySSHSecurityGroup);
-        globalProps.setProperty("MySSHKeyName", MySSHKeyName);
-        if (this.verbose) System.out.println(HDR + "DefaultPublicSubnet1=" + DefaultPublicSubnet1 + " MySSHSecurityGroup=" + MySSHSecurityGroup + " MySSHKeyName=" + MySSHKeyName);
+        globalProps.setProperty( "DefaultPublicSubnet1", DefaultPublicSubnet1 );
+        globalProps.setProperty( "MySSHSecurityGroup", MySSHSecurityGroup );
+        globalProps.setProperty( "MySSHKeyName", MySSHKeyName );
+        if (this.verbose) System.out.println( HDR + "DefaultPublicSubnet1=" + DefaultPublicSubnet1 + " MySSHSecurityGroup=" + MySSHSecurityGroup + " MySSHKeyName=" + MySSHKeyName );
 
-        if (this.verbose) System.out.println(HDR + "globalProps: Total # of entries = " + globalProps.size() + ".");
+        if (this.verbose) System.out.println( HDR + "globalProps: Total # of entries = " + globalProps.size() + "." );
 
     }
 
