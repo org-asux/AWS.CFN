@@ -38,7 +38,7 @@ export PATH=${PATH}:${ORGASUXHOME}
 
 if [ ! -e "${ORGASUXHOME}/asux.js" ]; then
 	>&2 echo "Please edit this file $0 to set the correct value of 'ORGASUXHOME'"
-	>&2 echo "	This command will fail until correction is made"
+	>&2 echo "	This command will fail until correction is made from current value of ${ORGASUXHOME}"
 	exit 5
 fi
 
