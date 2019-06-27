@@ -1,0 +1,1 @@
+aws cloudformation create-stack --stack-name org-ASUX-Playground-Tokyo-VPC  --region ap-northeast-1 --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=org-ASUX-Playground-Tokyo --template-body file:///tmp/vpc
