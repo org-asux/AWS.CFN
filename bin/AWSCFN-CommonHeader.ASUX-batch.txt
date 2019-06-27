@@ -6,8 +6,8 @@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
 
-setProperty	AWSCFN.HOME=${ASUX::ORGASUXHOME}/AWS/CFN
-#______ setProperty AWSCFN.HOME=/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN
+#__ setProperty	AWSCFNHOME=${ASUX::ORGASUXHOME}/AWS/CFN
+#______ setProperty AWSCFNHOME=/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -19,18 +19,19 @@ setProperty	AWSCFN.HOME=${ASUX::ORGASUXHOME}/AWS/CFN
 ### Example: For creating a new EC2 w EFS, all of the following 5 lines are required
 
 
-properties TagDefaultsProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/job-DEFAULTS.properties
+properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/job-DEFAULTS.properties
 
 
-properties TagDefaultsProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-DEFAULTS.properties
-properties XWKProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-Network-DEFAULTS.properties
-properties EFSProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-EFS-DEFAULTS.properties
-properties SGProps=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-SG-DEFAULTS.properties
-properties EC2Props=${ASUX::AWSCFN.HOME}/config/DEFAULTS/Tags-EC2-DEFAULTS.properties
+properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-DEFAULTS.properties
+properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-${ASUX::cfnJobTYPE}-DEFAULTS.properties
 
-properties DigitToAlphaProps=${ASUX::AWSCFN.HOME}/config/DigitToAlpha.properties
-properties AWSLocationsRegion=${ASUX::AWSCFN.HOME}/config/AWSLocationsRegions.properties
-properties AWSRegionLocations=${ASUX::AWSCFN.HOME}/config/AWSRegionsLocations.properties
+#____ properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-EFS-DEFAULTS.properties
+#____ properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-SG-DEFAULTS.properties
+#____ properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-EC2-DEFAULTS.properties
+
+properties DigitToAlphaProps=${ASUX::AWSCFNHOME}/config/DigitToAlpha.properties
+properties AWSLocationsRegion=${ASUX::AWSCFNHOME}/config/AWSLocationsRegions.properties
+properties AWSRegionLocations=${ASUX::AWSCFNHOME}/config/AWSRegionsLocations.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
