@@ -5,10 +5,10 @@
 ###	(1) Via a properties-file
 ###	(2) or via setProperty
 
-setProperty SCRIPT=vpc
+setProperty ?cfnJobTYPE=vpc
 
-properties JobPropsMaster=./jobset-Master.properties
-properties JobProps=./jobset-${ASUX::SCRIPT}.properties
+properties JobPropsMaster=${ASUX::jobSetName}/jobset-Master.properties
+properties JobProps=${ASUX::jobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -24,10 +24,10 @@ include @${ASUX::AWSCFN.HOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
 
 ### Now load the script-specific ___OVERRIDES___
 ### Example: AWSCFN-CommonHeader.ASUX-batch.txt has "Tags" set to some (likely, invalid) default values.
-### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::SCRIPT}.properties
+### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::cfnJobTYPE}.properties
 
-properties TagDefaultsProps=./Tags-MyMaster.properties
-properties TagDefaultsProps=./Tags-${ASUX::SCRIPT}.properties
+properties TagDefaultsProps=${ASUX::jobSetName}/Tags-MyMaster.properties
+properties TagDefaultsProps=${ASUX::jobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
