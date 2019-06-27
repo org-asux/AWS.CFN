@@ -43,7 +43,7 @@ setProperty AWSLocation=${ASUX::AWS-${ASUX::AWSRegion}}
 setProperty MyVPCStackPrefix=${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}
 
 ###------- Load properties CREATED via the vpc-gen.sh  subnets-gen.sh  sg-ssh.sh   and ec2plain.sh
-properties AutoGen.properties=./AutoGen.properties	### ${JobSetName}/AutoGen.properties
+#____	properties AutoGen.properties=./AutoGen.properties	### ${JobSetName}/AutoGen.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
