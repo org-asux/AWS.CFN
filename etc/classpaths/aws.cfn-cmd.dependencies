@@ -6,9 +6,11 @@
 
 org.asux:common:jar:1.0:compile
 org.asux:yaml:jar:1.0:compile
-org.yaml:snakeyaml:jar:1.24:compile
 org.asux:aws-cfn:jar:1.0
+org.asux:aws-sdk:jar:1.0
+org.asux:yaml.nodeimpl:jar:1.0
 
+org.yaml:snakeyaml:jar:1.24:compile
 com.opencsv:opencsv:jar:4.0:compile
 
 org.apache.commons:commons-lang3:jar:3.6:compile
@@ -25,5 +27,15 @@ org.asux:yaml.nodeimpl:jar:1.0:compile
 
 junit:junit:jar:4.8.2:compile
 
+
+com.amazonaws:aws-java-sdk-core:jar:1.11.541
+org.apache.httpcomponents:httpclient:jar:4.5.5
+org.apache.httpcomponents:httpcore:jar:4.4.10
+commons-codec:commons-codec:jar:1.10
+software.amazon.ion:ion-java:jar:1.2.0
+com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:jar:2.9.6
+joda-time:joda-time:jar:2.8.1
+com.amazonaws:aws-java-sdk-ec2:jar:1.11.541
+com.amazonaws:jmespath-java:jar:1.11.541
 
 #EoF
