@@ -46,7 +46,7 @@ CFNContext=ec2plain		### This defines which OTHER property files are loaded - - 
 
 AMIIDCache=${AWSCFNHOME}/config/inputs/AMZNLinux2_AMI_ID-${AWSLocation}.txt
 if [ -e ${AMIIDCache} ] && [ -s ${AMIIDCache} ]; then
-	AWSAMIID=`cat ${AMIIDCache}`
+	. ${AMIIDCache}
 else
 	### !!!! NOTE !!!!! ${EC2AMI_LookupKey} is set within the job-file ${JobSetName}/jobset-ec2plain.properties <<---------
 	### !! Note !! That value of the variable is determined by another script.       AWS/CFN/bin/AWS-AMI-list-by-Region.sh <AWSRegion>
@@ -66,14 +66,16 @@ fi
 CFNfile=/tmp/${CFNContext}
 
 ${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}
+
+mkdir -p ~/.aws
+echo "aws ec2 delete-key-pair --region ${AWSRegion} --profile \${AWSprofile} --key-name ${MySSHKeyName} " > ${CFNfile}.sh
+echo "aws ec2 create-key-pair --region ${AWSRegion} --profile \${AWSprofile} --key-name ${MySSHKeyName} > ~/.aws/${MySSHKeyName}" >> ${CFNfile}.sh
+
 PARAMS=" ParameterKey=MyPublicSubnet1,ParameterValue=${DefaultPublicSubnet1} "
 PARAMS="${PARAMS} ParameterKey=MySSHSecurityGroup,ParameterValue=${MySSHSecurityGroup} ParameterKey=MyIamInstanceProfiles,ParameterValue=${MyIamInstanceProfiles} "
 PARAMS="${PARAMS} ParameterKey=AWSAMIID,ParameterValue=${AWSAMIID} ParameterKey=EC2InstanceType,ParameterValue=${EC2InstanceType} "
 PARAMS="${PARAMS} ParameterKey=MySSHKeyName,ParameterValue=${MySSHKeyName} "
 
-mkdir -p ~/.aws
-echo "aws ec2 delete-key-pair --region ${AWSRegion} --profile \${AWSprofile} --key-name ${MySSHKeyName} " > ${CFNfile}.sh
-echo "aws ec2 create-key-pair --region ${AWSRegion} --profile \${AWSprofile} --key-name ${MySSHKeyName} > ~/.aws/${MySSHKeyName}" >> ${CFNfile}.sh
 echo "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-${JobSetName}-EC2-${MyEC2InstanceName}${ITEMNUMBER}  --region ${AWSRegion} --profile \${AWSprofile}  \
 		--parameters ${PARAMS} --template-body file://${CFNfile} " \
 		>> ${CFNfile}.sh
