@@ -49,27 +49,12 @@ public final class BootstrapAndChecks {
 
     public static final String CLASSNAME = BootstrapAndChecks.class.getName();
 
-    public static final String ORGASUXHOME = "ORGASUXHOME";
-    public static final String AWSHOME = "AWSHOME";
-    public static final String AWSCFNHOME = "AWSCFNHOME";
-
-    public static final String PROPERTIES_FOR_CFN = "cfn.properties"; // one of the many Properties objects within this.allPropsRef (see go())
-    public static final String PROPERTIES_FOR_JOB = "job.properties"; // one of the many Properties objects within this.allPropsRef (see go())
-
-    public static final String AWSREGIONSLOCATIONS = "config/AWSRegionsLocations.properties";
-    public static final String JOB_DEFAULTS = "/config/defaults/job-DEFAULTS.properties"; // under AWSCFNHOME
-    public static final String JOBSET_MASTER = "jobset-Master.properties"; // under '.' folder
-
     // =================================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // =================================================================================
 
-    public String orgasuxhome = "UNDEFINED";
-    public String awshome = "UNDEFINED";
-    public String awscfnhome = "UNDEFINED";
-
     public boolean verbose;
-    final LinkedHashMap<String, Properties> allPropsRef;
+    public EnvironmentParameters envParams;
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -82,7 +67,7 @@ public final class BootstrapAndChecks {
      */
     public BootstrapAndChecks( final boolean _verbose, final LinkedHashMap<String, Properties> _allProps  ) {
         this.verbose = _verbose;
-        this.allPropsRef = _allProps;
+        this.envParams = new EnvironmentParameters( _verbose, _allProps );
     }
 
     // =================================================================================
@@ -100,28 +85,27 @@ public final class BootstrapAndChecks {
     public void exec( final Enums.GenEnum _cmdName, final String _jobSetName, final String _itemNumber ) throws Exception
     {   final String HDR = CLASSNAME + ": go(_v," + _cmdName + ",_allProps): ";
 
-        final Properties sysprops       = this.allPropsRef.get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
-        this.orgasuxhome  = sysprops.getProperty("ORGASUXHOME");
-        this.awshome      = sysprops.getProperty("AWSHOME");
-        this.awscfnhome   = sysprops.getProperty("AWSCFNHOME");
-
-        if (orgasuxhome == null) {
-            throw new Exception("ERROR! " + ORGASUXHOME + " is NOT defined.");
-        }
-        if (awshome == null) {
-            throw new Exception("ERROR! " + AWSHOME + " is NOT defined.");
-        }
-        if (awscfnhome == null) {
-            throw new Exception("ERROR! " + AWSCFNHOME + " is NOT defined.");
-        }
-        if (this.verbose) System.out.println(HDR + "ORGASUXHOME=" + orgasuxhome + " AWSHOME=" + awshome + " AWSCFNHOME=" + awscfnhome  + " jobSetName=" + _jobSetName);
+        final Properties sysprops       = this.envParams.allPropsRef.get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
+        this.envParams.orgasuxhome  = sysprops.getProperty("ORGASUXHOME");
+        this.envParams.awshome      = sysprops.getProperty("AWSHOME");
+        this.envParams.awscfnhome   = sysprops.getProperty("AWSCFNHOME");
+        this.envParams.cfnJobTYPE   = getCFNJobType( _cmdName );
+        if (this.verbose) System.out.println( HDR + "cfnJobTYPE=" + this.envParams.cfnJobTYPE );
 
         // --------------------
-        String cfnJobTYPE = getCFNJobType( _cmdName );
-        if (this.verbose) System.out.println( HDR + "cfnJobTYPE=" + cfnJobTYPE );
+        if (this.envParams.orgasuxhome == null) {
+            throw new Exception("ERROR! " + this.envParams.ORGASUXHOME + " is NOT defined.");
+        }
+        if (this.envParams.awshome == null) {
+            throw new Exception("ERROR! " + this.envParams.AWSHOME + " is NOT defined.");
+        }
+        if (this.envParams.awscfnhome == null) {
+            throw new Exception("ERROR! " + this.envParams.AWSCFNHOME + " is NOT defined.");
+        }
+        if (this.verbose) System.out.println(HDR + "ORGASUXHOME=" + this.envParams.orgasuxhome + " AWSHOME=" + this.envParams.awshome + " AWSCFNHOME=" + this.envParams.awscfnhome  + " jobSetName=" + _jobSetName);
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        fileCheck( orgasuxhome, "/asux.js" );
+        fileCheck( this.envParams.orgasuxhome, "/asux.js" );
         // final File asux_js = new File( orgasuxhome +"/asux.js" );
         // if ( ! asux_js.exists() ) {
         //      final String es = "Please ensure the correct value of 'ORGASUXHOME' as thatfolder is missing the file/script 'asux.js', which is currently set to "+orgasuxhome;
@@ -131,56 +115,48 @@ public final class BootstrapAndChecks {
         //      throw new Exception( es );
         // }
 
-        fileCheck( awscfnhome, AWSREGIONSLOCATIONS );
+        fileCheck( this.envParams.awscfnhome, this.envParams.AWSREGIONSLOCATIONS );
         // Don't need checks for 'AWSprofile' (a.k.a. ~/.aws/.profile) as this check is done within org.ASUX.AWS-SDK project's code, prior to interacting with AWS-SDK.
 
         // --------------------
-        fileCheck( awscfnhome, JOB_DEFAULTS );
-        fileCheck( _jobSetName, JOBSET_MASTER );
-        fileCheck( _jobSetName, "jobset-" + cfnJobTYPE + ".properties" );
+        fileCheck( this.envParams.awscfnhome, this.envParams.JOB_DEFAULTS );
+        fileCheck( _jobSetName, this.envParams.JOBSET_MASTER );
+        fileCheck( _jobSetName, "jobset-" + this.envParams.cfnJobTYPE + ".properties" );
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        final Properties globalProps = this.allPropsRef.get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
-        final Properties AWSRegionLocations = org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ AWSREGIONSLOCATIONS );
-        this.allPropsRef.put( "AWSRegionLocations", AWSRegionLocations );
+        final Properties globalProps = this.envParams.allPropsRef.get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        final Properties AWSRegionLocations = org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.awscfnhome  +"/"+ this.envParams.AWSREGIONSLOCATIONS );
+        this.envParams.allPropsRef.put( "AWSRegionLocations", AWSRegionLocations );
         // We need this specific '{AWSCFNHOME}/config/AWSRegionsLocations.properties' because we need to CONVERT a AWSRegion into an AWSLocation
 
         // --------------------
         // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ AWSREGIONSLOCATIONS ) );
-        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ JOB_DEFAULTS ) );
-        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/"+ JOBSET_MASTER ) );
-        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/jobset-" + cfnJobTYPE + ".properties" ) );
+        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.awscfnhome  +"/"+ this.envParams.JOB_DEFAULTS ) );
+        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/"+ this.envParams.JOBSET_MASTER ) );
+        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/jobset-" + this.envParams.cfnJobTYPE + ".properties" ) );
         if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
         // --------------------
-        globalProps.setProperty( "cfnJobTYPE", cfnJobTYPE );
+        globalProps.setProperty( "cfnJobTYPE", this.envParams.cfnJobTYPE );
         globalProps.setProperty( "JobSetName", _jobSetName );
         globalProps.setProperty( "ItemNumber", _itemNumber );
         if (this.verbose) System.out.println( HDR + "JobSetName=" + _jobSetName + " ItemNumber=" + _itemNumber );
 
-        final String AWSLocation = Macros.evalThoroughly( this.verbose, "AWS-${ASUX::AWSRegion}", this.allPropsRef );
-        final String MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}", this.allPropsRef );
-        globalProps.setProperty( "AWSLocation", AWSLocation );
-        globalProps.setProperty( "MyVPCStackPrefix", MyVPCStackPrefix );
+        this.envParams.AWSRegion    = Macros.evalThoroughly( this.verbose, "${ASUX::AWSRegion}", this.envParams.allPropsRef );
+        this.envParams.AWSLocation  = Macros.evalThoroughly( this.verbose, "${ASUX::AWS-${ASUX::AWSRegion}}", this.envParams.allPropsRef );
+        this.envParams.MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}", this.envParams.allPropsRef );
+        globalProps.setProperty( "AWSLocation", this.envParams.AWSLocation );
+        globalProps.setProperty( "MyVPCStackPrefix", this.envParams.MyVPCStackPrefix );
 
-        final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}--${ASUX::JobSetName}${ASUX::ItemNumber}", this.allPropsRef );
-        globalProps.setProperty( "MyStackNamePrefix", MyStackNamePrefix );
-        if (this.verbose) System.out.println( HDR + "MyStackNamePrefix=" + MyStackNamePrefix );
+        this.envParams.MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-${ASUX::JobSetName}${ASUX::ItemNumber}", this.envParams.allPropsRef );
+        globalProps.setProperty( "MyStackNamePrefix", this.envParams.MyStackNamePrefix );
+        if (this.verbose) System.out.println( HDR + "MyStackNamePrefix=" + this.envParams.MyStackNamePrefix );
 
-        final String VPCID = MyVPCStackPrefix + "-VPCID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-VPCID", this.allPropsRef  );
-        final String DefaultAZ = MyVPCStackPrefix + "-AZ-ID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-AZ-ID", this.allPropsRef );
+        final String VPCID = this.envParams.MyVPCStackPrefix + "-VPCID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-VPCID", this.envParams.allPropsRef  );
+        final String DefaultAZ = this.envParams.MyVPCStackPrefix + "-AZ-ID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-AZ-ID", this.envParams.allPropsRef );
         globalProps.setProperty( "VPCID", VPCID ) ;
         globalProps.setProperty( "DefaultAZ", DefaultAZ );
         if (this.verbose) System.out.println( HDR + "VPCID=" + VPCID + " DefaultAZ=" + DefaultAZ );
-
-        final String DefaultPublicSubnet1 = MyStackNamePrefix + "-Subnet-1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", this.allPropsRef  );
-        final String MySSHSecurityGroup = MyStackNamePrefix + "-SG-SSH"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-SG-SSH", this.allPropsRef  );
-        // final String MyIamInstanceProfiles = Macros.evalThoroughly( this.verbose, "${ASUX::?????????????????}-"+HDR, this.allPropsRef );
-        final String MySSHKeyName = Macros.evalThoroughly( this.verbose, "${ASUX::AWSLocation}-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-LinuxSSH.pem", this.allPropsRef );
-        globalProps.setProperty( "DefaultPublicSubnet1", DefaultPublicSubnet1 );
-        globalProps.setProperty( "MySSHSecurityGroup", MySSHSecurityGroup );
-        globalProps.setProperty( "MySSHKeyName", MySSHKeyName );
-        if (this.verbose) System.out.println( HDR + "DefaultPublicSubnet1=" + DefaultPublicSubnet1 + " MySSHSecurityGroup=" + MySSHSecurityGroup + " MySSHKeyName=" + MySSHKeyName );
 
         if (this.verbose) System.out.println( HDR + "globalProps: Total # of entries = " + globalProps.size() + "." );
 
@@ -228,10 +204,10 @@ public final class BootstrapAndChecks {
      * @param _filename NotNull - can be a simple filename or a __RELATIVE__ path (under _RootFldr)
      * @throws Exception if the file and/or folder do Not exist.
      */
-    private static void fileCheck( final String _RootFldr, final String _filename ) throws Exception {
+    public static void fileCheck( final String _RootFldr, final String _filename ) throws Exception {
         final File fileObj = new File ( _RootFldr +"/"+ _filename );
-        if ( ! fileObj.exists() || ! fileObj.canRead() ) {
-            final String es = "ERROR! File "+ _filename +" missing/unreadable, under the folder-tree @ "+ _RootFldr;
+        if ( ! fileObj.exists() || ! fileObj.canRead() || fileObj.length() <= 0 ) {
+            final String es = "ERROR! File missing/unreadable/empty "+ _filename +", under the folder-tree @ "+ _RootFldr;
             System.err.println( es );
             System.err.println( "This command will fail until you correct this problem." );
             System.exit(5);
