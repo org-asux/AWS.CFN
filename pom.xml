@@ -74,11 +74,11 @@
             <artifactId>yaml.nodeimpl</artifactId>
             <version>1.0</version>
         </dependency>
-        <!-- <dependency>
+        <dependency>
             <groupId>org.asux</groupId>
-            <artifactId>yaml.nodeimpl</artifactId>
+            <artifactId>aws-sdk</artifactId>
             <version>1.0</version>
-        </dependency> -->
+        </dependency>
         <dependency>
             <!-- scope>test</scope -->
             <groupId>junit</groupId>
