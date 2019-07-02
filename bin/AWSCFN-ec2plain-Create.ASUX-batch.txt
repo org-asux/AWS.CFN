@@ -7,8 +7,8 @@
 
 setProperty ?cfnJobTYPE=ec2plain
 
-properties GLOBAL.VARIABLES=${ASUX::jobSetName}/jobset-Master.properties
-properties GLOBAL.VARIABLES=${ASUX::jobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
+properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-Master.properties
+properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -24,10 +24,10 @@ include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
 
 ### Now load the script-specific ___OVERRIDES___
 ### Example: AWSCFN-CommonHeader.ASUX-batch.txt has "Tags" set to some (likely, invalid) default values.
-### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::jobSetName}.properties
+### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::JobSetName}.properties
 
-properties Tags=${ASUX::jobSetName}/Tags-MyMaster.properties
-properties Tags=${ASUX::jobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
+properties Tags=${ASUX::JobSetName}/Tags-MyMaster.properties
+properties Tags=${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -55,10 +55,10 @@ makeNewRoot Resources
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2.yaml
 yaml --macro @/dev/null
 
-yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Standup,packages  @Pkgs-ASUX.org-DEV-1.yaml --no-quote    --delimiter ,
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Standup,packages  @${ASUX::JobSetName}/Pkgs-ASUX.org-DEV-1.yaml --no-quote    --delimiter ,
 yaml --macro @/dev/null
 
-yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Services  @Svcs-ASUX.org-DEV-1.yaml --no-quote    --delimiter ,
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Services  @${ASUX::JobSetName}/Svcs-ASUX.org-DEV-1.yaml --no-quote    --delimiter ,
 yaml --macro @/dev/null
 
 yaml --insert Resources,${ASUX::MyEC2InstanceName} @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/ResourceProperties-EC2.yaml --no-quote  --delimiter ,
