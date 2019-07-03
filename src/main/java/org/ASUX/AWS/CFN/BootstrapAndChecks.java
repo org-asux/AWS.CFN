@@ -85,7 +85,7 @@ public final class BootstrapAndChecks {
     public void exec( final Enums.GenEnum _cmdName, final String _jobSetName, final String _itemNumber ) throws Exception
     {   final String HDR = CLASSNAME + ": go(_v," + _cmdName + ",_allProps): ";
 
-        final Properties sysprops       = this.envParams.allPropsRef.get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
+        final Properties sysprops       = this.envParams.getAllPropsRef().get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
         this.envParams.orgasuxhome  = sysprops.getProperty("ORGASUXHOME");
         this.envParams.awshome      = sysprops.getProperty("AWSHOME");
         this.envParams.awscfnhome   = sysprops.getProperty("AWSCFNHOME");
@@ -94,13 +94,13 @@ public final class BootstrapAndChecks {
 
         // --------------------
         if (this.envParams.orgasuxhome == null) {
-            throw new Exception("ERROR! " + this.envParams.ORGASUXHOME + " is NOT defined.");
+            throw new Exception("ERROR! " + EnvironmentParameters.ORGASUXHOME + " is NOT defined.");
         }
         if (this.envParams.awshome == null) {
-            throw new Exception("ERROR! " + this.envParams.AWSHOME + " is NOT defined.");
+            throw new Exception("ERROR! " + EnvironmentParameters.AWSHOME + " is NOT defined.");
         }
         if (this.envParams.awscfnhome == null) {
-            throw new Exception("ERROR! " + this.envParams.AWSCFNHOME + " is NOT defined.");
+            throw new Exception("ERROR! " + EnvironmentParameters.AWSCFNHOME + " is NOT defined.");
         }
         if (this.verbose) System.out.println(HDR + "ORGASUXHOME=" + this.envParams.orgasuxhome + " AWSHOME=" + this.envParams.awshome + " AWSCFNHOME=" + this.envParams.awscfnhome  + " jobSetName=" + _jobSetName);
 
@@ -115,24 +115,24 @@ public final class BootstrapAndChecks {
         //      throw new Exception( es );
         // }
 
-        fileCheck( this.envParams.awscfnhome, this.envParams.AWSREGIONSLOCATIONS );
+        fileCheck( this.envParams.awscfnhome, EnvironmentParameters.AWSREGIONSLOCATIONS );
         // Don't need checks for 'AWSprofile' (a.k.a. ~/.aws/.profile) as this check is done within org.ASUX.AWS-SDK project's code, prior to interacting with AWS-SDK.
 
         // --------------------
-        fileCheck( this.envParams.awscfnhome, this.envParams.JOB_DEFAULTS );
-        fileCheck( _jobSetName, this.envParams.JOBSET_MASTER );
+        fileCheck( this.envParams.awscfnhome, EnvironmentParameters.JOB_DEFAULTS );
+        fileCheck( _jobSetName, EnvironmentParameters.JOBSET_MASTER );
         fileCheck( _jobSetName, "jobset-" + this.envParams.cfnJobTYPE + ".properties" );
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        final Properties globalProps = this.envParams.allPropsRef.get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
-        final Properties AWSRegionLocations = org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.awscfnhome  +"/"+ this.envParams.AWSREGIONSLOCATIONS );
-        this.envParams.allPropsRef.put( "AWSRegionLocations", AWSRegionLocations );
+        final Properties globalProps = this.envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        final Properties AWSRegionLocations = org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.awscfnhome  +"/"+ EnvironmentParameters.AWSREGIONSLOCATIONS );
+        this.envParams.getAllPropsRef().put( "AWSRegionLocations", AWSRegionLocations );
         // We need this specific '{AWSCFNHOME}/config/AWSRegionsLocations.properties' because we need to CONVERT a AWSRegion into an AWSLocation
 
         // --------------------
         // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ AWSREGIONSLOCATIONS ) );
-        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.awscfnhome  +"/"+ this.envParams.JOB_DEFAULTS ) );
-        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/"+ this.envParams.JOBSET_MASTER ) );
+        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.awscfnhome  +"/"+ EnvironmentParameters.JOB_DEFAULTS ) );
+        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/"+ EnvironmentParameters.JOBSET_MASTER ) );
         globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/jobset-" + this.envParams.cfnJobTYPE + ".properties" ) );
         if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
@@ -142,18 +142,18 @@ public final class BootstrapAndChecks {
         globalProps.setProperty( "ItemNumber", _itemNumber );
         if (this.verbose) System.out.println( HDR + "JobSetName=" + _jobSetName + " ItemNumber=" + _itemNumber );
 
-        this.envParams.AWSRegion    = Macros.evalThoroughly( this.verbose, "${ASUX::AWSRegion}", this.envParams.allPropsRef );
-        this.envParams.AWSLocation  = Macros.evalThoroughly( this.verbose, "${ASUX::AWS-${ASUX::AWSRegion}}", this.envParams.allPropsRef );
-        this.envParams.MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}", this.envParams.allPropsRef );
+        this.envParams.AWSRegion    = Macros.evalThoroughly( this.verbose, "${ASUX::AWSRegion}", this.envParams.getAllPropsRef() );
+        this.envParams.AWSLocation  = Macros.evalThoroughly( this.verbose, "${ASUX::AWS-${ASUX::AWSRegion}}", this.envParams.getAllPropsRef() );
+        this.envParams.MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}", this.envParams.getAllPropsRef() );
         globalProps.setProperty( "AWSLocation", this.envParams.AWSLocation );
         globalProps.setProperty( "MyVPCStackPrefix", this.envParams.MyVPCStackPrefix );
 
-        this.envParams.MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-${ASUX::JobSetName}${ASUX::ItemNumber}", this.envParams.allPropsRef );
+        this.envParams.MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-${ASUX::JobSetName}${ASUX::ItemNumber}", this.envParams.getAllPropsRef() );
         globalProps.setProperty( "MyStackNamePrefix", this.envParams.MyStackNamePrefix );
         if (this.verbose) System.out.println( HDR + "MyStackNamePrefix=" + this.envParams.MyStackNamePrefix );
 
-        final String VPCID = this.envParams.MyVPCStackPrefix + "-VPCID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-VPCID", this.envParams.allPropsRef  );
-        final String DefaultAZ = this.envParams.MyVPCStackPrefix + "-AZ-ID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-AZ-ID", this.envParams.allPropsRef );
+        final String VPCID = this.envParams.MyVPCStackPrefix + "-VPCID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-VPCID", this.envParams.getAllPropsRef()  );
+        final String DefaultAZ = this.envParams.MyVPCStackPrefix + "-AZ-ID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-AZ-ID", this.envParams.getAllPropsRef() );
         globalProps.setProperty( "VPCID", VPCID ) ;
         globalProps.setProperty( "DefaultAZ", DefaultAZ );
         if (this.verbose) System.out.println( HDR + "VPCID=" + VPCID + " DefaultAZ=" + DefaultAZ );
@@ -181,12 +181,14 @@ public final class BootstrapAndChecks {
             case SGEFS: // cfnJobTYPE="sg-efs"; break;
             case EC2PLAIN: // cfnJobTYPE="ec2plain"; break;
             case VPNCLIENT: // cfnJobTYPE="vpnclient"; break;
-            case UNDEFINED: // cfnJobTYPE="vpc"; break;
+            case FULLSTACK: // cfnJobTYPE="vpnclient"; break;
                 String cfnJobTYPE = _cmdName.toString();
                 cfnJobTYPE = cfnJobTYPE.replaceAll("-gen$", "").toLowerCase();
                 assertTrue( cfnJobTYPE != null );
                 return cfnJobTYPE;
                 // break;
+
+            case UNDEFINED: // cfnJobTYPE="vpc"; break;
             default:
                 final String es = HDR + "Internal Error: INCOMPLETE CODE.  Switch(_cmdName) for _cmdName=" + _cmdName.toString();
                 System.err.println(es);
@@ -214,14 +216,6 @@ public final class BootstrapAndChecks {
             throw new Exception( es );
         }
     }
-
-    //=================================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //=================================================================================
-
-    //=================================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //=================================================================================
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
