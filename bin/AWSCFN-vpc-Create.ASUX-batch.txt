@@ -7,8 +7,8 @@
 
 setProperty ?cfnJobTYPE=vpc
 
-properties GLOBAL.VARIABLES=${ASUX::jobSetName}/jobset-Master.properties
-properties GLOBAL.VARIABLES=${ASUX::jobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
+properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-Master.properties
+properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -26,8 +26,8 @@ include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
 ### Example: AWSCFN-CommonHeader.ASUX-batch.txt has "Tags" set to some (likely, invalid) default values.
 ### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::cfnJobTYPE}.properties
 
-properties Tags=${ASUX::jobSetName}/Tags-MyMaster.properties
-properties Tags=${ASUX::jobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
+properties Tags=${ASUX::JobSetName}/Tags-MyMaster.properties
+properties Tags=${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -73,7 +73,7 @@ saveTo !YAMLROOT
 makeNewRoot Resources
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/VPC.yaml
 yaml --macro @/dev/null
-yaml --insert Resources,${ASUX::VPCName},Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --insert Resources,${ASUX::MyVPCName},Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 yaml --macro @/dev/null
 saveTo !TopElemResources
 

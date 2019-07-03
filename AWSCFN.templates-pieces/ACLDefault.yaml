@@ -1,6 +1,6 @@
   MyDefaultNetworkAcl:
     Type: 'AWS::EC2::NetworkAcl'
     Properties:
-      VpcId: !Ref ${ASUX::VPCName}
+      VpcId: !Ref ${ASUX::MyVPCName}
 
 #EOF

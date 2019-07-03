@@ -3,6 +3,6 @@
     DependsOn:
       - MyVPCGatewayAttachment
     Properties:
-      VpcId: !Ref ${ASUX::VPCName}
+      VpcId: !Ref ${ASUX::MyVPCName}
 
 #EOF

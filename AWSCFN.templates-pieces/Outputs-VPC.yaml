@@ -1,6 +1,6 @@
   VPCID: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
     Description: VPC ID
-    Value: !Ref ${ASUX::VPCName}   ## The value of the property returned by the aws cloudformation describe-stacks command
+    Value: !Ref ${ASUX::MyVPCName}   ## The value of the property returned by the aws cloudformation describe-stacks command
     Export:             ## The name of the resource output to be exported for a cross-stack reference.
       Name: !Sub '${MyVPCStackPrefix}-VPCID'  ## For each AWS account, Export names must be unique within a region.
       ## Alternatively, the Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-VPC-1"
