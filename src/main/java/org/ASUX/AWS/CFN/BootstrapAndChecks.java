@@ -144,8 +144,8 @@ public final class BootstrapAndChecks {
 
         this.envParams.AWSRegion    = Macros.evalThoroughly( this.verbose, "${ASUX::AWSRegion}", this.envParams.getAllPropsRef() );
         this.envParams.AWSLocation  = Macros.evalThoroughly( this.verbose, "${ASUX::AWS-${ASUX::AWSRegion}}", this.envParams.getAllPropsRef() );
-        this.envParams.MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}", this.envParams.getAllPropsRef() );
         globalProps.setProperty( "AWSLocation", this.envParams.AWSLocation );
+        this.envParams.MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}", this.envParams.getAllPropsRef() );
         globalProps.setProperty( "MyVPCStackPrefix", this.envParams.MyVPCStackPrefix );
 
         this.envParams.MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-${ASUX::JobSetName}${ASUX::ItemNumber}", this.envParams.getAllPropsRef() );
