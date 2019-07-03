@@ -25,20 +25,24 @@ Resources:
       - IpProtocol: -1
         CidrIp: 0.0.0.0/0
       Tags:
-      - Key: APPLNAME
-        Value: NOTRELEVANT_FOR_SG_SSH
       - Key: LOCATION
-        Value: !Ref 'AWS::Region'
+        Value: ap-northeast-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: org-ASUX-Playground-Tokyo-simple-SG-SSH
+      - Key: APPLNAME
+        Value: SSH-into-LinuxEC2Instances
       - Key: CHRGCODE
         Value: org.ASUX
       - Key: ITOWNER
         Value: Sarma
       - Key: BIZOWNER
         Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
       - Key: ARCHLAYER
-        Value: Security
-      - Key: ENV
-        Value: Playground
+        Value: NetworkSecurity
       - Key: SNAPSHOTS
         Value: 'No'
       - Key: USERBASE

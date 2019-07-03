@@ -1,4 +1,4 @@
-  SGSSH${ASUX::Environment}:
+  SGSSH${ASUX::MyEnvironment}:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow SSH access to a Linux EC2 instance hosting org.ASUX components

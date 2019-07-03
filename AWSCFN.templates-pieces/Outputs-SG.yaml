@@ -1,8 +1,8 @@
   SGSSH${ASUX::MyEnvironment}: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
-    Description: Security Group for enabling SSH access to Linux EC2 instances for the ___UNKNOWN__ application(s) and EC2-instances within the ${ASUX::Environment} environment
-    Value: !Ref SGSSH${ASUX::Environment}   ## The value of the property returned by the aws cloudformation describe-stacks command
+    Description: Security Group for enabling SSH access to Linux EC2 instances for the ___UNKNOWN__ application(s) and EC2-instances within the ${ASUX::MyEnvironment} environment
+    Value: !Ref SGSSH${ASUX::MyEnvironment}   ## The value of the property returned by the aws cloudformation describe-stacks command
     Export:             ## The name of the resource output to be exported for a cross-stack reference.
-      Name: '${ASUX::MyVPCStackPrefix}-${ASUX::JobSetName}-SG-SSH${ASUX::ITEMNUMBER}'  ## For each AWS account, Export names must be unique within a region.
+      Name: '${ASUX::MyVPCStackPrefix}-${ASUX::JobSetName}-SG-SSH${ASUX::ItemNumber}'  ## For each AWS account, Export names must be unique within a region.
       ## Alternatively, the Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-VPC-1"
       ##      But.. how will you replace the "1" at the end of the name in above line??????
 
