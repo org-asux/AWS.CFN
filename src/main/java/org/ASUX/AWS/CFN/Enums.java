@@ -51,7 +51,9 @@ public final class Enums
      */
     public enum GenEnum {
 
-        VPC("VPC-gen"), SUBNET("Subnets-gen"), SGSSH("SG-SSH-gen"), SGEFS("SG-EFS-gen"), EC2PLAIN("EC2plain-gen"), VPNCLIENT("VPNClient-gen"), UNDEFINED("undefined");
+        VPC("VPC-gen"), SUBNET("Subnets-gen"), SGSSH("SG-SSH-gen"), SGEFS("SG-EFS-gen"), EC2PLAIN("EC2plain-gen"),
+        FULLSTACK("fullstack-gen"), VPNCLIENT("VPNClient-gen"),
+        UNDEFINED("undefined");
 
         private final String internalValue;
         public static final String CLASSNAME =GenEnum.class.getName();
