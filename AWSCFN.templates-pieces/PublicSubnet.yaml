@@ -7,7 +7,8 @@
     Type: 'AWS::EC2::Subnet'
     Condition: doesExistSubnet${ASUX::foreach.index+1}
     Properties:
-      VpcId: !ImportValue ${ASUX::MyVPCName}
+      VpcId: !ImportValue
+        Ref: MyVPCName
       CidrBlock: ${ASUX::CidrBlockAZ${ASUX::foreach.index+1}}
       MapPublicIpOnLaunch: !Ref EC2getsPublicIPByDefault
       ### DefaultForAz: true  ## Apparently not supported for VPCs and Subnets that are NOT default ALREADY.
