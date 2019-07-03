@@ -38,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import java.io.File;
+import java.io.Serializable;
 
 import static org.junit.Assert.*;
 
@@ -45,7 +46,9 @@ import static org.junit.Assert.*;
 /**
  * 
  */
-public final class EnvironmentParameters {
+public final class EnvironmentParameters implements Serializable {
+
+    private static final long serialVersionUID = 439L;
 
     public static final String CLASSNAME = EnvironmentParameters.class.getName();
 
@@ -64,19 +67,21 @@ public final class EnvironmentParameters {
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // =================================================================================
 
+    public boolean verbose;
+
     public String orgasuxhome   = "UNDEFINED";
     public String awshome       = "UNDEFINED";
     public String awscfnhome    = "UNDEFINED";
-
-    public boolean verbose;
-    public final LinkedHashMap<String, Properties> allPropsRef;
-
-    public String cfnJobTYPE    = "UNDEFINED";
 
     public String AWSRegion     = "UNDEFINED";
     public String AWSLocation   = "UNDEFINED";
     public String MyStackNamePrefix = "UNDEFINED";
     public String MyVPCStackPrefix  = "UNDEFINED";
+
+    public String cfnJobTYPE    = "UNDEFINED";
+
+    //---------------- PRIVATE ----------------
+    private transient LinkedHashMap<String, Properties> allPropsRef;   // this could have been 'final' too, but for the fact that this.deepClone() needs to reset it.
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -90,6 +95,47 @@ public final class EnvironmentParameters {
     public EnvironmentParameters( final boolean _verbose, final LinkedHashMap<String, Properties> _allProps  ) {
         this.verbose = _verbose;
         this.allPropsRef = _allProps;
+    }
+
+    //==============================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //==============================================================================
+
+    /**
+     * The getter-method to the ONLY private instance-variable of this class.
+     * @return NotNull instance, unless of course, logic-errors led to the constructor being called to set this.allPropsRef to null.
+     */
+    public LinkedHashMap<String, Properties> getAllPropsRef() {
+        return this.allPropsRef;
+    }
+
+    //==============================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //==============================================================================
+
+    /** This deepClone function is VERY MUCH necessary, as No cloning-code can handle 'transient' variables in this class.
+     *  @param _orig what you want to deep-clone
+     *  @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
+     */
+    public static EnvironmentParameters deepClone( EnvironmentParameters _orig ) {
+        try {
+            final EnvironmentParameters newobj = org.ASUX.common.Utils.deepClone( _orig );
+            newobj.deepCloneFix( _orig );
+            return newobj;
+        } catch (Exception e) {
+			e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping this on the user.
+            return null;
+        }
+    }
+
+    /**
+     * In order to allow deepClone() to work seamlessly up and down the class-hierarchy.. I should allow subclasses to EXTEND (Not semantically override) this method.
+     * @param _orig the original NON-Null object
+     */
+    protected void deepCloneFix( final EnvironmentParameters _orig ) {
+        // because this class has at least one TRANSIENT class-variable.. ..
+        // we need to 'restore' that object's transient variable to a 'replica'
+        this.allPropsRef = _orig.allPropsRef;
     }
 
     // =================================================================================
