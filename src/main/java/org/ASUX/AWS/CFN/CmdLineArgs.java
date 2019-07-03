@@ -59,10 +59,12 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
     protected static final String VPCGEN = "vpc-gen";
     protected static final String SUBNETSGEN = "subnets-gen";
-    protected static final String VPNCLIENTGEN = "vpnclient-gen";
     protected static final String SGSSHGEN = "sg-ssh-gen";
     protected static final String SGEFSGEN = "sg-efs-gen";
     protected static final String EC2PLAINGEN = "ec2plain-gen";
+
+    protected static final String VPNCLIENTGEN = "vpnclient-gen";
+    protected static final String FULLSTACKGEN = "fullstack-gen";
 
     protected static final String ITEMNUMBER = "itemNumber";
 
@@ -79,7 +81,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
     public YAML_Libraries YAMLLibrary = YAML_Libraries.NodeImpl_Library; // some default value for now
 
     //------------------------------------
-    protected final org.apache.commons.cli.Options options = new org.apache.commons.cli.Options();
+    protected transient final org.apache.commons.cli.Options options = new org.apache.commons.cli.Options();
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -128,6 +130,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
     /**
      *  <p>This method completely __OVERRIDES__ the super/parent-class' implementation of this method.</p>
+     *  <p>Why completely __OVERRIDES__?  because we do Not need the MANDATORY --inputfile and --outputfile cmdline-options that the super-class offers.</p>
      *  <p>Add cmd-line argument definitions (using apache.commons.cli.Options) for the instance-variables defined in this class.</p>
      *  @param options a Non-Null instance of org.apache.commons.cli.Options
      */
@@ -135,32 +138,16 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
     protected void defineCommonOptions( final Options options ) {
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         // This method completely OVERWRITES the super/parent-class' implementation of this method.
+        // Why completely __OVERRIDES__?
+        // Because..  we do Not need the MANDATORY --inputfile and --outputfile cmdline-options that the super-class offers.
+
         Option opt;
 
         opt= new Option("v", "verbose", false, "Show debug output");
         opt.setRequired(false);
         this.options.addOption(opt);
 
-        //----------------------------------
-        final OptionGroup grp = new OptionGroup();
-        final Option vpcgen = genOption( "vpc", VPCGEN, false, "create a new VPC", 1 );
-        final Option vpcclientgen = genOption( "vn", VPNCLIENTGEN, false, "create a new VPN-Client connection for a specific VPC", 1 );
-        final Option subnetsgen = genOption( "s", SUBNETSGEN, false, "create private or public subnets within a VPC", 2 );
-            subnetsgen.setArgName("JobSetName> <public|private"); // overwrite what was set within genOption()
-        final Option sgsshgen = genOption( "gs", SGSSHGEN, false, "create a SecurityGroup just to allow SSH access to a AMZN2-Linux EC2-instance", 1 );
-        final Option sgefsgen = genOption( "ge", SGEFSGEN, false, "create a SecurityGroup just to MOUNT an EFS onto a AMZN2-Linux EC2-instance", 1 );
-        final Option ec2plaingen = genOption( "e", EC2PLAINGEN, false, "create a new plain EC2-instance of AMZN2-Linux", 1 );
-        grp.addOption(vpcgen);
-        grp.addOption(vpcclientgen);
-        grp.addOption(subnetsgen);
-        grp.addOption(sgsshgen);
-        grp.addOption(sgefsgen);
-        grp.addOption(ec2plaingen);
-        grp.setRequired( true );
-
-        this.options.addOptionGroup( grp );
-
-        //----------------------------------
+        // //----------------------------------
         OptionGroup grp2 = new OptionGroup();
         Option noQuoteOpt = new Option("qn", NOQUOTE, false, "do Not use Quotes in YAML output");
         Option singleQuoteOpt = new Option("qs", SINGLEQUOTE, false, "use ONLY Single-quote when generating YAML output");
@@ -171,6 +158,32 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         grp2.setRequired(false);
 
         this.options.addOptionGroup( grp2 );
+
+        //----------------------------------
+        final OptionGroup grp = new OptionGroup();
+
+        final Option vpcgen = genOption( "vpc", VPCGEN, false, "create a new VPC", 1 );
+        final Option subnetsgen = genOption( "s", SUBNETSGEN, false, "create private or public subnets within a VPC", 2 );
+            subnetsgen.setArgName("JobSetName> <public|private"); // overwrite what was set within genOption()
+        final Option sgsshgen = genOption( "gs", SGSSHGEN, false, "create a SecurityGroup just to allow SSH access to a AMZN2-Linux EC2-instance", 1 );
+        final Option sgefsgen = genOption( "ge", SGEFSGEN, false, "create a SecurityGroup just to MOUNT an EFS onto a AMZN2-Linux EC2-instance", 1 );
+        final Option ec2plaingen = genOption( "e", EC2PLAINGEN, false, "create a new plain EC2-instance of AMZN2-Linux", 1 );
+
+        final Option vpcclientgen = genOption( "vn", VPNCLIENTGEN, false, "create a new VPN-Client connection for a specific VPC", 1 );
+        final Option fullstackgen = genOption( "fg", FULLSTACKGEN, false, "create a new stack that includes a VPC, subnets, SGs and an EC2 instance", 1 );
+
+        grp.addOption(vpcgen);
+        grp.addOption(subnetsgen);
+        grp.addOption(sgsshgen);
+        grp.addOption(sgefsgen);
+        grp.addOption(ec2plaingen);
+
+        grp.addOption(vpcclientgen);
+        grp.addOption(fullstackgen);
+
+        grp.setRequired( true );
+
+        this.options.addOptionGroup( grp );
 
         //----------------------------------
         opt = new Option("n", ITEMNUMBER, false, "if multiple copies, give this a unique ID-suffix like 1 or A ..etc..");
@@ -192,6 +205,9 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
     }
 
     //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
     private static Option genOption( final String _short, final String _long, final boolean _bool, final String description, final int _numArgs ) {
         final Option opt = new Option( _short, _long, _bool, description );
             opt.setArgs( _numArgs );
@@ -301,9 +317,14 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
                 this.cmdName = Enums.GenEnum.EC2PLAIN;
                 this.jobSetName = apacheCmdProcessor.getOptionValue( EC2PLAINGEN );
             }
+
             if ( apacheCmdProcessor.hasOption( VPNCLIENTGEN ) ) {
                 this.cmdName = Enums.GenEnum.VPNCLIENT;
                 this.jobSetName = apacheCmdProcessor.getOptionValue( VPNCLIENTGEN );
+            }
+            if ( apacheCmdProcessor.hasOption( FULLSTACKGEN ) ) {
+                this.cmdName = Enums.GenEnum.FULLSTACK;
+                this.jobSetName = apacheCmdProcessor.getOptionValue( FULLSTACKGEN );
             }
 
             if ( this.verbose ) System.out.println( HDR + this.toString() );
@@ -351,6 +372,49 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         }
 
     }
+
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    /** 
+     *  <p>This method exists to allow CmdProcessor to invoke commands 'on behalf of' the user.  This is needed specifially for the 'fullStack' command.</p>
+     *  <p>This deepClone function is VERY MUCH necessary, as No cloning-code can handle 'transient' variables in this class.</p>
+     *  @param _orig what you want to deep-clone
+     *  @param _newCmdName after cloning change the {@link #cmdName} to this
+     *  @param _newItemNumber after cloning change the {@link #itemNumber} to this
+     *  @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
+     */
+    public CmdLineArgs deepCloneWithChanges( final CmdLineArgs _orig, final Enums.GenEnum _newCmdName, final String _newItemNumber ) {
+        try {
+            final CmdLineArgs newobj = org.ASUX.common.Utils.deepClone( _orig );
+            newobj.deepCloneFix( _orig );
+            // after full cloning.. let's make some changes (per arguments provided.)
+            newobj.cmdName = _newCmdName;
+            if ( _newItemNumber != null )
+                newobj.itemNumber = _newItemNumber;
+            return newobj;
+        } catch (Exception e) {
+			e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping this on the user.
+            return null;
+        }
+    }
+
+    /**
+     * In order to allow deepClone() to work seamlessly up and down the class-hierarchy.. I should allow subclasses to EXTEND (Not semantically override) this method.
+     * @param _orig the original NON-Null object
+     */
+    protected void deepCloneFix( final CmdLineArgs _orig ) {
+        // because this class has at least one TRANSIENT class-variable.. ..
+        // we need to 'restore' that object's transient variable to a 'replica'
+        // this.options = _orig.options;
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
