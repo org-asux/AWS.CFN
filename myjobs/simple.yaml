@@ -1,0 +1,35 @@
+AWS:
+  MyOrgName: org-ASUX
+  MyEnvironment: Playground
+  AWSRegion: ap-northeast-1
+
+  VPC:
+    # VPCName: VPCbyASUXorg <-- why am I __forcing__ user to provide this?  Why not a DEFAULT value based on {MyOrgName}-{MyEnvironment}-{AWSLocation}-{user.name}
+    subnet:
+
+      SERVERS:
+        OrgASUXplayEC2plain: ### This is the name of the 1st SERVER.
+          EC2InstanceType: t2.micro
+          # public: no
+
+          IAM-roles:
+          - EC2-ReadWrite-to-S3
+
+          yum:
+          - amazon-efs-utils
+          - tcsh
+          - git
+          - maven
+
+          # rpm:
+            # amazon-efs-utils: []
+            # tcsh: []
+            # git: []
+            # maven: []
+          # configCustomCommands: 
+            # customCommand1: 
+            #   testShell: 
+            #     command: "echo \"$CFNTEST\" > /tmp/test.txt"
+            #     env: 
+            #       CFNTEST: "I come from CFN-template's configCustomCommands/customCommand1."
+            #     cwd: "/tmp"
