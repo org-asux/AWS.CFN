@@ -1,0 +1,85 @@
+AWSTemplateFormatVersion: "2010-09-09"
+  # https://www.brautaset.org/articles/2017/route-53-cloudformation.html
+  # REFERENCE: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-recordset.html
+  Parameters: 
+    DomainName: 
+      Type: String
+    TTL: 
+      Type: Number
+      Default: 600
+    A_RECORD_IPADDR: 
+      Type: String
+      Description: Numeric Public IP of EC2 or other compute instance
+    NewHostname: 
+      Type: String
+      Description: the new FQDN you want pointing to {A_RECORD_IPADDR}
+    # MxRecords:
+    #   Type: CommaDelimitedList
+    #   Description: A comma-separated list of entries for MX servers. Each entry should have a priority and domain name, separated by a space.
+    #   Default: 10 spool.mail.gandi.net,50 fb.mail.gandi.net
+    # ApexRecords:
+    #   Type: CommaDelimitedList
+    #   Description:  The default here is for GitHub Pages, cf https://help.github.com/articles/setting-up-an-apex-domain/
+    #   Default: 192.30.252.153,192.30.252.154
+    # CNAME_ExistingAddress:
+    #   Type: String
+    #   Description: Set up www.example.net as CNAME for this address
+    #   Default: stig.github.io
+
+  Resources: 
+    # Zone: 
+    #   Type: 'AWS::Route53::HostedZone'
+    #   Properties:
+    #     Name: !Ref DomainName
+    #     HostedZoneConfig:
+    # Comment: !Join
+    #   - " "
+    #   - ["My hosted zone for", !Ref DomainName]
+    # MxRecordSet:
+    #   Type: 'AWS::Route53::RecordSet'
+    #   Properties:
+    #     Name: !Ref DomainName
+    #     HostedZoneId: !Ref Zone
+    #     Type: MX
+    #     TTL: !Ref TTL
+    #     ResourceRecords: !Ref MxRecords
+    # ApexRecordSet:
+    #   Type: 'AWS::Route53::RecordSet'
+    #   Properties:
+    #     Name: !Ref DomainName
+    #     HostedZoneId: !Ref Zone
+    #     Type: A
+    #     TTL: !Ref TTL
+    #     ResourceRecords: !Ref ApexRecords
+
+    # WwwRecordSet:
+    #   Type: 'AWS::Route53::RecordSet'
+    #   Properties:
+    #     Name: !Join
+    #     - ""
+    #     - ['www.', !Ref DomainName, '.']
+    #     HostedZoneId: !Ref Zone
+    #     Type: CNAME
+    #     TTL: !Ref TTL
+    #     ResourceRecords:
+    # - !Ref CNAME_ExistingAddress
+
+    ARecordSet:
+      Type: 'AWS::Route53::RecordSet'
+      Properties:
+        Name: !Join
+        - ""
+        - - 
+          - !Ref NewHostname
+          - '.'
+          - !Ref DomainName
+          - '.'
+        HostedZoneId:
+          Ref: Zone
+        Type: A
+        TTL:
+          Ref: TTL
+        ResourceRecords:
+      - !Ref A_RECORD_IPADDR
+
+#EOF

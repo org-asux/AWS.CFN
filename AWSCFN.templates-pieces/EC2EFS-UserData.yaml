@@ -1,0 +1,83 @@
+
+### Warning: For YAML, AWS-CFN is very very picky.  Make sure the Base64 and Fn::Join are EXACTLY as in the following 2 LINES.
+
+      UserData: !Base64 
+        'Fn::Join':
+          - ''
+          - - |
+              #!/bin/bash -xe
+            - |
+              ### See this output @ /var/log/cloud-init-output.log
+            - >
+              echo '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+              @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+            - |
+              date '+%Y-%m-%d %H:%M:%S'
+            - >
+              # See page 284 of UG - on how to Install the files and packages from the metadata
+            - |
+              yum -y update
+            - |
+              yum install -y aws-cfn-bootstrap
+            - |
+              mkdir /var/build
+            - |
+              chown ec2-user /var/build
+            - |+
+
+            - |
+              mkdir /mnt/development
+            - |
+              chown ec2-user /mnt/development
+            - |+
+
+            - EC2_REGION=
+            - !Ref 'AWS::Region'
+            - |+
+
+            - |
+              DIR_MNTTGT=/mnt/efs/
+            - EFS_FILE_SYSTEM_ID=
+            - !ImportValue
+                Ref: MyEFSID
+            - |+
+
+            - |
+              mkdir -p $DIR_MNTTGT
+            - |
+              chown ec2-user $DIR_MNTTGT
+            - |
+              ### DIR_SRC=$EFS_FILE_SYSTEM_ID.efs.$EC2_REGION.amazonaws.com
+            - |
+              mount -t efs -o tls $EFS_FILE_SYSTEM_ID:/     $DIR_MNTTGT
+            - |
+              chown ec2-user $DIR_MNTTGT
+            - |+
+
+            - |
+              # Make sure this is the 2nd-last command in the UserData, as .. in case it fails (which is very likely, due to Config-set errors/typos), the rest of the script has executed.
+            - |
+              # Install the files and packages from the metadata associated with the EC2-instance's Resource/Properties/
+            - '/opt/aws/bin/cfn-init -v '
+            - '         --stack '
+            - !Ref 'AWS::StackName'
+            - '         --resource '
+####        - !Ref ${ASUX::MyEC2InstanceName} <-- Don't do this, if the Name of EC2 instance under Reasource: matches ${ASUX::MyEC2InstanceName}
+            -           ${ASUX::MyEC2InstanceName}
+            - '         --configsets ${ASUX::EC2CFNInit_ConfigSet} '
+            - '         --region '
+            - !Ref 'AWS::Region'
+            - |+
+
+            - |
+              ### !!!!! WARNING !!!!!!!!: Sudo BELOW should be VERY LAST command
+            - >
+              ### SECURITY-BestPractice: When you work with shared AMIs, a best practice is to disable direct root logins. To do this, issue the following command:
+            - |
+              sudo passwd -l root
+            - |
+              ### This ABOVE command does NOT impact the use of sudo.
+            - |
+              ### !!!!! WARNING !!!!!!!!: Sudo ABOVE should be VERY LAST command
+
+### EOF
