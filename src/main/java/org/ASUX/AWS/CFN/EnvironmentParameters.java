@@ -60,7 +60,7 @@ public final class EnvironmentParameters implements Serializable {
     public static final String PROPERTIES_FOR_JOB = "job.properties"; // one of the many Properties objects within this.allPropsRef (see go())
 
     public static final String AWSREGIONSLOCATIONS = "config/AWSRegionsLocations.properties";
-    public static final String JOB_DEFAULTS = "/config/defaults/job-DEFAULTS.properties"; // under AWSCFNHOME
+    public static final String JOB_DEFAULTS = "/config/DEFAULTS/job-DEFAULTS.properties"; // under AWSCFNHOME
     public static final String JOBSET_MASTER = "jobset-Master.properties"; // under '.' folder
 
     // =================================================================================
