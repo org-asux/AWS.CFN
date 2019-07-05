@@ -83,7 +83,7 @@ public final class BootstrapAndChecks {
      *  @throws Exception on any missing variables or parameters
      */
     public void exec( final Enums.GenEnum _cmdName, final String _jobSetName, final String _itemNumber ) throws Exception
-    {   final String HDR = CLASSNAME + ": go(_v," + _cmdName + ",_allProps): ";
+    {   final String HDR = CLASSNAME + ": exec(_v," + _cmdName + ",_allProps): ";
 
         final Properties sysprops       = this.envParams.getAllPropsRef().get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
         this.envParams.orgasuxhome  = sysprops.getProperty("ORGASUXHOME");
@@ -121,7 +121,7 @@ public final class BootstrapAndChecks {
         // --------------------
         fileCheck( this.envParams.awscfnhome, EnvironmentParameters.JOB_DEFAULTS );
         fileCheck( _jobSetName, EnvironmentParameters.JOBSET_MASTER );
-        fileCheck( _jobSetName, "jobset-" + this.envParams.cfnJobTYPE + ".properties" );
+        // fileCheck( _jobSetName, "jobset-" + this.envParams.cfnJobTYPE + ".properties" ); // we can't do this for all cfnJobTYPE
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         final Properties globalProps = this.envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
@@ -133,7 +133,20 @@ public final class BootstrapAndChecks {
         // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ AWSREGIONSLOCATIONS ) );
         globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.awscfnhome  +"/"+ EnvironmentParameters.JOB_DEFAULTS ) );
         globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/"+ EnvironmentParameters.JOBSET_MASTER ) );
-        globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/jobset-" + this.envParams.cfnJobTYPE + ".properties" ) );
+        switch ( _cmdName ) {
+            case EC2PLAIN:
+            case VPC:
+            case SGSSH:
+            case SUBNET:
+                            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/jobset-" + this.envParams.cfnJobTYPE + ".properties" ) );
+                            break;
+            case FULLSTACK: // do Nothing for this
+                            break;
+            case UNDEFINED:
+            default:        final String es = " Unimplemented command: " + _cmdName;
+                            System.err.println( HDR + es );
+                            throw new Exception( es );
+        }
         if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
         // --------------------
