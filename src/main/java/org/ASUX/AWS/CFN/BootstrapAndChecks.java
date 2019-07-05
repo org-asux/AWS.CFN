@@ -146,14 +146,14 @@ public final class BootstrapAndChecks {
         this.envParams.AWSLocation  = Macros.evalThoroughly( this.verbose, "${ASUX::AWS-${ASUX::AWSRegion}}", this.envParams.getAllPropsRef() );
         globalProps.setProperty( "AWSLocation", this.envParams.AWSLocation );
         this.envParams.MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}", this.envParams.getAllPropsRef() );
-        globalProps.setProperty( "MyVPCStackPrefix", this.envParams.MyVPCStackPrefix );
+        globalProps.setProperty( EnvironmentParameters.MYVPCSTACKPREFIX, this.envParams.MyVPCStackPrefix );
 
-        this.envParams.MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-${ASUX::JobSetName}${ASUX::ItemNumber}", this.envParams.getAllPropsRef() );
+        this.envParams.MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-${ASUX::JobSetName}${ASUX::ItemNumber}", this.envParams.getAllPropsRef() );
         globalProps.setProperty( "MyStackNamePrefix", this.envParams.MyStackNamePrefix );
         if (this.verbose) System.out.println( HDR + "MyStackNamePrefix=" + this.envParams.MyStackNamePrefix );
 
-        final String VPCID = this.envParams.MyVPCStackPrefix + "-VPCID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-VPCID", this.envParams.getAllPropsRef()  );
-        final String DefaultAZ = this.envParams.MyVPCStackPrefix + "-AZ-ID"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}-AZ-ID", this.envParams.getAllPropsRef() );
+        final String VPCID = this.envParams.MyVPCStackPrefix + "-VPCID"; // Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-VPCID", this.envParams.getAllPropsRef()  );
+        final String DefaultAZ = this.envParams.MyVPCStackPrefix + "-AZ-ID"; // Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-AZ-ID", this.envParams.getAllPropsRef() );
         globalProps.setProperty( "VPCID", VPCID ) ;
         globalProps.setProperty( "DefaultAZ", DefaultAZ );
         if (this.verbose) System.out.println( HDR + "VPCID=" + VPCID + " DefaultAZ=" + DefaultAZ );
