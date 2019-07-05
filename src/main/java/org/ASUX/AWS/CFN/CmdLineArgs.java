@@ -388,6 +388,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
      *  @param _orig what you want to deep-clone
      *  @param _newCmdName after cloning change the {@link #cmdName} to this-value
      *  @param _newItemNumber after cloning change the {@link #itemNumber} to this-value
+     *  @param _publicOrPrivateSubnet make sure to pass in either "public" or "private" (case sensitive) _ONLY_
      *  @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
      */
     public static CmdLineArgs deepCloneWithChanges( final CmdLineArgs _orig, final Enums.GenEnum _newCmdName, final String _newItemNumber, final String _publicOrPrivateSubnet ) {
