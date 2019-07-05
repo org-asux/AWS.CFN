@@ -85,8 +85,13 @@ CmdLine.on('command:ec2plain-gen', function () {
   processCFNCmd(COMMAND);
 });
 
-CmdLine.on('command:dns-gen', function () {
-  COMMAND="dns-gen";
+CmdLine.on('command:fullstack-gen', function () {
+  COMMAND="fullstack-gen";
+  processCFNCmd(COMMAND);
+});
+
+CmdLine.on('command:vpnclient-gen', function () {
+  COMMAND="vpnclient-gen";
   processCFNCmd(COMMAND);
 });
 
