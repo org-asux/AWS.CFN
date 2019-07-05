@@ -1,0 +1,21 @@
+  DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: Z2NF71MJ75KYXK
+      #___ HostedZoneName: ${ASUX::MyDomainName}.    #__ Ref! MyDomainName                    ### Don't forget the period at the end.
+      #   Ref: DomainName
+      Comment: DNS name for my instance.
+      Name: ${ASUX::MyEC2InstanceName}.${ASUX::MyDomainName}.                            ### Don't forget the period at the end.
+      #___ Name: !Join ['', [!Ref 'MyEC2InstanceName', '.', !Ref 'MyDomainName', '.']]   ### Don't forget the period at the end.
+      # Name: !Join
+      # - ''
+      # - - ${ASUX::MyEC2InstanceName}
+      #   - '.'
+      #   - ${ASUX::MyDomainName}
+      #   - '.'                       ### Don't forget the period at the end.
+      Type: A
+      TTL: '900'
+      ResourceRecords:
+      - !GetAtt ${ASUX::MyEC2InstanceName}.PublicIp
+
+#EOF
