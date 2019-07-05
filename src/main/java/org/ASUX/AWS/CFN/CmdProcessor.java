@@ -108,13 +108,15 @@ public final class CmdProcessor
      *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
      *  @param _cfnJobType a NotNull String (created by {@link BootstrapAndChecks#getCFNJobType})
-     *  @param _awscfnhome a NotNull String (typically, obtained as: new BootstrapAndChecks().awscfnhome)
+     *  @param _envParams a NotNull object (created by {@link BootstrapAndChecks#exec})
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
-    public void genYAML( final CmdLineArgs _cmdLA, final String _cfnJobType, final String _awscfnhome ) throws IOException, Exception
+    public void genYAML( final CmdLineArgs _cmdLA, final String _cfnJobType, final EnvironmentParameters _envParams ) throws IOException, Exception
     {
         final String HDR = CLASSNAME + ": genYAML(..,"+ _cfnJobType +",..): ";
+        final Properties globalProps    = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose );
 
         String batchFilePath = null;
         {
@@ -123,7 +125,7 @@ public final class CmdProcessor
             // case VPC:
             //     // batchcmdargs =  processor.genVPCCmdLine( _cmdLA, _boot );
             //     // final String[] batchcmdargs = { "--batch",
-            //     //                                 "@"+ _boot.awscfnhome +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt",
+            //     //                                 "@"+ _envParams.awscfnhome +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt",
             //     //                                 "-i", "/dev/null", // dummy value for '-i'
             //     //                                 "-o", "/dev/null" // this '-o' does Not matter, as we'll be getting the output as the return-value of batcher.go()
             //     //                             }; // without the '-i' and '-o' the 'claBatch.parse()' will fail below.
@@ -139,18 +141,25 @@ public final class CmdProcessor
 
         //-------------------------------------
         switch ( _cmdLA.getCmdName() ) {
+            case EC2PLAIN:
+                            final String MyDomainName       = globalProps.getProperty( EnvironmentParameters.MYDOMAINNAME );
+                            if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName );
+                            final String Rt53HostedZoneId   = awssdk.getHostedZoneId( _envParams.AWSRegion, MyDomainName );
+                            if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName + " Rt53HostedZoneId " + Rt53HostedZoneId  );
+                            globalProps.setProperty( EnvironmentParameters.MYRT53HOSTEDZONEID, Rt53HostedZoneId ); // will define ${ASUX::MyRt53HostedZoneId}
+                            // fall thru below.
             case VPC:
             case SGSSH:
-            case EC2PLAIN:
-            case FULLSTACK:
-                            batchFilePath = "@"+ _awscfnhome +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
+                            batchFilePath = "@"+ _envParams.awscfnhome +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
                             break;
-            case SUBNET:    final Properties globalProps = this.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+            case SUBNET:
                             assertTrue( _cmdLA.publicOrPrivateSubnet != null && _cmdLA.publicOrPrivateSubnet.length() > 0 ); // CmdLineArgs.class guarantees that it will be 'public' or 'private', if NOT NULL.
                             globalProps.setProperty( "PublicOrPrivate", _cmdLA.publicOrPrivateSubnet );
                             if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
-                            batchFilePath = "@"+ _awscfnhome +"/bin/AWSCFN-"+_cfnJobType+"-"+_cmdLA.publicOrPrivateSubnet+"-Create.ASUX-batch.txt";
+                            batchFilePath = "@"+ _envParams.awscfnhome +"/bin/AWSCFN-"+_cfnJobType+"-"+_cmdLA.publicOrPrivateSubnet+"-Create.ASUX-batch.txt";
+                            break;
+            case FULLSTACK:
                             break;
             // case SGEFS:     batchFilePath = ;       break;
             // case VPNCLIENT: batchFilePath = ;       break;
@@ -159,24 +168,37 @@ public final class CmdProcessor
             default:        final String es = HDR +" Unimplemented command: " + _cmdLA.toString();
                             System.err.println( es );
                             throw new Exception( es );
-        }
+        } // switch
 
         //-------------------------------------
-        // invoking org.ASUX.YAML.NodeImpl.CmdInvoker() is too generic.. especially, when I am clear as daylight that I want to invoke --batch command.
-        // final org.ASUX.YAML.NodeImpl.CmdInvoker nodeImplCmdInvoker = org.ASUX.YAML.NodeImpl.CmdInvoker(
-        //             this.verbose, false,  _cmdInvoker.getMemoryAndContext(), (DumperOptions)_cmdInvoker.getLibraryOptionsObject() );
-        // final Object outputAsIs = nodeImplCmdInvoker.processCommand( cmdlineargs, inputNode );
+        switch ( _cmdLA.getCmdName() ) {
+            case EC2PLAIN:
+            case VPC:
+            case SGSSH:
+            case SUBNET:
+            case SGEFS:
+            case VPNCLIENT:
+                // invoking org.ASUX.YAML.NodeImpl.CmdInvoker() is too generic.. especially, when I am clear as daylight that I want to invoke --batch command.
+                // final org.ASUX.YAML.NodeImpl.CmdInvoker nodeImplCmdInvoker = org.ASUX.YAML.NodeImpl.CmdInvoker(
+                //             this.verbose, false,  _cmdInvoker.getMemoryAndContext(), (DumperOptions)_cmdInvoker.getLibraryOptionsObject() );
+                // final Object outputAsIs = nodeImplCmdInvoker.processCommand( cmdlineargs, inputNode );
 // above 3 lines  -versus-  below 3 lines
-        final BatchCmdProcessor batcher = new BatchCmdProcessor( _cmdLA.verbose, /* showStats */ false, _cmdLA.quoteType, this.cmdinvoker.dumperopt );
-        batcher.setMemoryAndContext( this.cmdinvoker.getMemoryAndContext() ); // this will invoke.. batcher.initProperties()
-        if ( _cmdLA.verbose ) new org.ASUX.common.Debug(_cmdLA.verbose).printAllProps( HDR +" FULL DUMP of propsSetRef = ", this.getAllPropsRef() );
+                final BatchCmdProcessor batcher = new BatchCmdProcessor( _cmdLA.verbose, /* showStats */ false, _cmdLA.quoteType, this.cmdinvoker.dumperopt );
+                batcher.setMemoryAndContext( this.cmdinvoker.getMemoryAndContext() ); // this will invoke.. batcher.initProperties()
+                if ( _cmdLA.verbose ) new org.ASUX.common.Debug(_cmdLA.verbose).printAllProps( HDR +" FULL DUMP of propsSetRef = ", _envParams.getAllPropsRef() );
 
-        final Node emptyInput = NodeTools.getEmptyYAML( this.cmdinvoker.dumperopt );
-        final Node outpData2 = batcher.go( batchFilePath, emptyInput );
-        if ( this.verbose ) System.out.println( HDR +" outpData2 =" + outpData2 +"\n\n");
+                final Node emptyInput = NodeTools.getEmptyYAML( this.cmdinvoker.dumperopt );
+                final Node outpData2 = batcher.go( batchFilePath, emptyInput );
+                if ( this.verbose ) System.out.println( HDR +" outpData2 =" + outpData2 +"\n\n");
 
-        final String outpfile   = "/tmp/"+ _cfnJobType +".yaml";
-        InputsOutputs.saveDataIntoReference( "@"+ outpfile, outpData2, null, this.cmdinvoker.getYamlWriter(), this.cmdinvoker.dumperopt, _cmdLA.verbose );
+                final String outpfile   = "/tmp/"+ _cfnJobType +".yaml";
+                InputsOutputs.saveDataIntoReference( "@"+ outpfile, outpData2, null, this.cmdinvoker.getYamlWriter(), this.cmdinvoker.dumperopt, _cmdLA.verbose );
+                break;
+            case FULLSTACK:
+            case UNDEFINED:
+            default:
+                            break;
+        } // switch
     }
 
     //=================================================================================
@@ -204,6 +226,8 @@ public final class CmdProcessor
         // final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}--${ASUX::JobSetName}${ASUX::ItemNumber}", this.allPropsRef );
         final String MyStackNamePrefix = globalProps.getProperty( "MyStackNamePrefix" );
 
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose );
+
         String preStr = null;
         switch ( _cmdLA.getCmdName() ) {
         case VPC:       preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-VPC  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey="+EnvironmentParameters.MYVPCSTACKPREFIX+",ParameterValue=${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"} --template-body file://"+ outpfile;
@@ -212,10 +236,10 @@ public final class CmdProcessor
                         break;
         case SGSSH:     preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
                         break;
-        case EC2PLAIN:  // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, _awscfnhome +"/config/inputs/AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", this.getAllPropsRef() );
+        case EC2PLAIN:  // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, _awscfnhome +"/config/inputs/AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _envParams.getAllPropsRef() );
                         // final Properties AMIIDCacheProps = org.ASUX.common.Utils.parseProperties( "@"+ AMIIDCachePropsFileName );
                         // this.allPropsRef.put( "AMIIDCache", AWSRegionLocations );
-                        // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, "AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", this.getAllPropsRef() );
+                        // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, "AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _envParams.getAllPropsRef() );
                         final String AMIIDCachePropsFileName = "AMZNLinux2_AMI_ID-"+ _envParams.AWSLocation +".txt";
                         try {
                             BootstrapAndChecks.fileCheck( _envParams.awscfnhome +"/config/inputs", AMIIDCachePropsFileName );
@@ -223,7 +247,7 @@ public final class CmdProcessor
                             // Will contain a SINGLE row like:-     AWSAMIID=ami-084040f99a74ce8c3
                         } catch (Exception e) {
                             if ( e.getMessage().startsWith("ERROR! File missing/unreadable/empty") ) {
-                                final String EC2AMI_AMZN2Linux_LookupKey = Macros.evalThoroughly( this.verbose, "${ASUX::EC2AMI_AMZN2Linux_LookupKey}", this.getAllPropsRef() );
+                                final String EC2AMI_AMZN2Linux_LookupKey = Macros.evalThoroughly( this.verbose, "${ASUX::EC2AMI_AMZN2Linux_LookupKey}", _envParams.getAllPropsRef() );
                                 // The ABOVE 'EC2AMI_AMZN2Linux_LookupKey' is typically defined in AWSCFNHOME/config/DEFAULTS/job-DEFAULTS.propertied
                                 System.out.println( HDR +"Need your _MANUAL_HELP_ in Querying AWS to figure out .. what the AMI-ID for "+ EC2AMI_AMZN2Linux_LookupKey +" is, in the Location "+ _envParams.AWSLocation +"." );
                                 System.out.println( HDR +"aws ssm get-parameters --names '/aws/service/ami-amazon-linux-latest/"+ EC2AMI_AMZN2Linux_LookupKey +"' --region "+ _envParams.AWSRegion +" --profile ${AWSprofile} --output json" );
@@ -236,7 +260,7 @@ public final class CmdProcessor
                                 throw e;
                         } // try-catch
 
-                        final String DefaultPublicSubnet1 = MyStackNamePrefix + "-Subnet-1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", this.getAllPropsRef()  );
+                        final String DefaultPublicSubnet1 = MyStackNamePrefix + "-Subnet-1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", _envParams.getAllPropsRef()  );
                         final String MySSHSecurityGroup = MyStackNamePrefix + "-SG-SSH"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-SG-SSH", this.allPropsRef  );
                         final String MySSHKeyName = Macros.evalThoroughly( this.verbose, "${ASUX::AWSLocation}-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-LinuxSSH.pem", _envParams.getAllPropsRef() );
                         // final String MyIamInstanceProfiles = Macros.evalThoroughly( this.verbose, "${ASUX::?????????????????}-"+HDR, this.allPropsRef );
@@ -257,7 +281,6 @@ public final class CmdProcessor
                         preStr ="aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::"+EnvironmentParameters.MYEC2INSTANCENAME+"}"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} "+
                                 "--profile ${AWSprofile} --parameters "+ params +" --template-body file://"+ outpfile;
 
-                        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose );
                         final List keys = awssdk.listKeyPairEC2   ( _envParams.AWSRegion, MySSHKeyName );
                         if ( keys.size() > 0 ) {
                             if (this.verbose) System.out.println( HDR + "The key exists with the name: "+ MySSHKeyName );
@@ -318,15 +341,28 @@ public final class CmdProcessor
                         final String MyOrgName      = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,MyOrgName" );
                         final String MyEnvironment  = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,MyEnvironment" );
                         final String AWSRegion      = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,AWSRegion" );
-                        final String VPCName        = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,VPC,VPCName" );
+                        // final String VPCName        = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,VPC,VPCName" );  I'm totally going to PREVENT end-user from specifying VPCName
+                        final String VPCName        = Macros.evalThoroughly( this.verbose, "${ASUX::VPCID}", _envParams.getAllPropsRef() ); // set by BootstrapAndChecks!  === _envParams.MyVPCStackPrefix + "-VPCID"
 
                         readcmd.searchYamlForPattern( inputNode, "AWS,VPC,subnet", "," );
-                        final Node subnet = readcmd.getOutput();
+                        final SequenceNode subnetSeqN = readcmd.getOutput();
+                        // we know readcmd always returns a LIST (because we could have one or more matches for ANY arbitratry YAML-Path-Expression.)
+                        final java.util.List<Node> subnetseqs = subnetSeqN.getValue();
+                        if ( subnetseqs.size() < 1 )
+                            throw new Exception( "Under 'subnet', a child-element labelled(LHS) 'SERVERS' must be provided" );
+                        final Node subnet = subnetseqs.get(0);
+// ????????????? We should loop over the subnetseqs
                         if ( this.verbose ) System.out.println( HDR +" subnet YAML-tree =\n" + NodeTools.Node2YAMLString( subnet ) +"\n" );
 
-                        readcmd.searchYamlForPattern( subnet, "subnet,SERVERS", "," );
-                        final Node servers = readcmd.getOutput();
-                        if ( this.verbose ) System.out.println( HDR +" SERVERS YAML-tree =\n" + NodeTools.Node2YAMLString( servers ) +"\n" );
+                        readcmd.searchYamlForPattern( subnet, "SERVERS", "," );
+                        final SequenceNode serversSeqN = readcmd.getOutput();
+                        // we know readcmd always returns a LIST (because we could have one or more matches for ANY arbitratry YAML-Path-Expression.)
+                        final java.util.List<Node> srvrseqs = serversSeqN.getValue();
+                        if ( srvrseqs.size() < 1 )
+                            throw new Exception( "Under 'subnet', a child-element labelled(LHS) 'SERVERS' must be provided" );
+// ????????????? We should loop over the srvrseqs
+                        final Node servers = srvrseqs.get(0);
+                        if ( this.verbose ) System.out.println( HDR +" SERVERS(plural) YAML-tree =\n" + NodeTools.Node2YAMLString( servers ) +"\n" );
 
                         String ec2instanceName = null;
                         if ( servers instanceof MappingNode ) {
@@ -336,7 +372,7 @@ public final class CmdProcessor
 
                             final MappingNode mapNode = (MappingNode) servers;
                             final java.util.List<NodeTuple> tuples = mapNode.getValue();
-                            // if ( this.verbose ) System.out.println( HDR +" SERVERS YAML-tree =\n" + NodeTools.Node2YAMLString( mapNode ) +"\n" );
+                            int ix = 0;
                             for( NodeTuple kv: tuples ) {
                                 final Node keyNode = kv.getKeyNode();
                                 assertTrue( keyNode instanceof ScalarNode );
@@ -344,12 +380,14 @@ public final class CmdProcessor
                                 final ScalarNode scalarKey = (ScalarNode) keyNode;
                                 ec2instanceName = scalarKey.getValue();
                                 final Node valNode = kv.getValueNode();
+                                if ( this.verbose ) System.out.println( HDR +" SERVER(#"+ix+") YAML-tree =\n" + NodeTools.Node2YAMLString( valNode ) +"\n" );
                                 if ( valNode instanceof MappingNode ) {
                                     parseServerInfo( (MappingNode) valNode, readcmd, _envParams, "Standup" );  // ????????????????????? Need to parametrize "Standup"
                                 } else {
                                     if ( this.verbose ) System.out.println( HDR +" (servers["+ ec2instanceName +"] instanceof MappingNode) is Not a mapping within:\n" + NodeTools.Node2YAMLString( mapNode ) + "\n");
                                     throw new Exception( "Invalid Node of type: "+ valNode.getNodeId() );
                                 }
+                                ix ++;
                             }
 
                         } else if ( servers instanceof SequenceNode ) {
@@ -407,10 +445,21 @@ public final class CmdProcessor
         }
 
         //----------------------------
-        final String postStr = Macros.evalThoroughly( this.verbose, preStr, this.getAllPropsRef() );
-        if ( this.verbose ) System.out.println( postStr ); // dump the cmd to execute the CFN script to stdout.
-        write2File( scriptfile, postStr );
-        org.ASUX.common.IOUtils.setFilePerms( this.verbose, scriptfile, true, true, true, true ); // rwx------ file-permissions
+        switch ( _cmdLA.getCmdName() ) {
+            case EC2PLAIN:
+            case VPC:
+            case SGSSH:
+            case SUBNET:
+                            final String postStr = Macros.evalThoroughly( this.verbose, preStr, _envParams.getAllPropsRef() );
+                            if ( this.verbose ) System.out.println( postStr ); // dump the cmd to execute the CFN script to stdout.
+                            write2File( scriptfile, postStr );
+                            org.ASUX.common.IOUtils.setFilePerms( this.verbose, scriptfile, true, true, true, true ); // rwx------ file-permissions
+                            break;
+            case FULLSTACK: // do Nothing for this
+            case UNDEFINED:
+            default:
+                            break;
+        }
     }
 
     //=================================================================================
@@ -491,15 +540,19 @@ public final class CmdProcessor
      *  @param _inputNode NotNull Node object
      *  @param _readcmd a NotNull instance
      *  @param _YAMLPath NotNull String representing a COMMA-Delimited YAML-Path-String
-     *  @return a Not-Null SequenceNode (or else a runtime-assertion-exception is thrown, as determined within {@link #getOnlyContent}
+     *  @return a possibly-Null Node (or else a runtime-assertion-exception is thrown, as determined within {@link #getOnlyContent}
      *  @throws Exception logic inside method will throw if the right YAML-structure is not provided, to read simple KV-pairs.
      */
-    private SequenceNode readNodeFromFullStackJobConfig( final Node _inputNode, final ReadYamlEntry _readcmd, final String _YAMLPath ) throws Exception {
+    private Node readNodeFromFullStackJobConfig( final Node _inputNode, final ReadYamlEntry _readcmd, final String _YAMLPath ) throws Exception {
         final String HDR = CLASSNAME + ": readNodeFromFullStackJobConfig(<Node>, "+ _YAMLPath +"): ";
         _readcmd.searchYamlForPattern( _inputNode, _YAMLPath, "," );
         final SequenceNode output = _readcmd.getOutput();
         if ( this.verbose ) System.out.println( HDR +" output =\n" + NodeTools.Node2YAMLString( output ) +"\n" );
-        return output;
+        final java.util.List<Node> seqs = output.getValue();
+        if ( seqs.size() <= 0 )
+            return null;
+        else
+            return seqs.get(0);
     }
 
     //=================================================================================
@@ -517,7 +570,9 @@ public final class CmdProcessor
      */
     private void parseServerInfo( final MappingNode _mapNode, final ReadYamlEntry _readcmd, final EnvironmentParameters _envParams, final String _cfnInitContext ) throws Exception {
         final String HDR = CLASSNAME + ": parseServerInfo(<mapNode>,"+ _cfnInitContext +"): ";
-        final Properties globalProps = this.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        if ( this.verbose ) System.out.println( HDR +" input is YAML-tree =\n" + NodeTools.Node2YAMLString( _mapNode ) +"\n" );
+
+        final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
 
         //-----------------
         final String EC2InstanceType      = readStringFromFullStackJobConfig( _mapNode, _readcmd, "EC2InstanceType" );
@@ -553,22 +608,22 @@ public final class CmdProcessor
         }
 
         //-----------------
-        final SequenceNode yum      = readNodeFromFullStackJobConfig( _mapNode, _readcmd, "yum" );
-        final SequenceNode rpm      = readNodeFromFullStackJobConfig( _mapNode, _readcmd, "rpm" );
-        final SequenceNode configCustomCommands = readNodeFromFullStackJobConfig( _mapNode, _readcmd, "configCustomCommands" );
+        final Node yum      = readNodeFromFullStackJobConfig( _mapNode, _readcmd, "yum" );
+        final Node rpm      = readNodeFromFullStackJobConfig( _mapNode, _readcmd, "rpm" );
+        final Node configCustomCommands = readNodeFromFullStackJobConfig( _mapNode, _readcmd, "configCustomCommands" );
         // final Node parent   = NodeTools.getNewSingleMap( "Packages", "", this.cmdinvoker.dumperopt );
         final java.util.List<NodeTuple> tuples = new LinkedList<NodeTuple>();
-        if ( yum != null && yum.getValue().size() > 0 ) {
+        if ( yum != null ) { // && yum.getValue().size() > 0 ) {
             final ScalarNode keyN = new ScalarNode( Tag.STR, "yum", null, null, this.cmdinvoker.dumperopt.getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
             final NodeTuple tuple = new NodeTuple( keyN, yum );
             tuples.add( tuple );
         }
-        if ( rpm != null && rpm.getValue().size() > 0 ) {
+        if ( rpm != null ) { // && rpm.getValue().size() > 0 ) {
             final ScalarNode keyN = new ScalarNode( Tag.STR, "rpm", null, null, this.cmdinvoker.dumperopt.getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
             final NodeTuple tuple = new NodeTuple( keyN, rpm );
             tuples.add( tuple );
         }
-        if ( configCustomCommands != null && configCustomCommands.getValue().size() > 0 ) {
+        if ( configCustomCommands != null ) { // && configCustomCommands.getValue().size() > 0 ) {
             final ScalarNode keyN = new ScalarNode( Tag.STR, "configCustomCommands", null, null, this.cmdinvoker.dumperopt.getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
             final NodeTuple tuple = new NodeTuple( keyN, configCustomCommands );
             tuples.add( tuple );
