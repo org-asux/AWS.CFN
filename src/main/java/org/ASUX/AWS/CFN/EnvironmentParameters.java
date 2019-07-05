@@ -63,8 +63,10 @@ public final class EnvironmentParameters implements Serializable {
     public static final String JOB_DEFAULTS = "/config/DEFAULTS/job-DEFAULTS.properties"; // under AWSCFNHOME
     public static final String JOBSET_MASTER = "jobset-Master.properties"; // under '.' folder
 
-    public static final String MYVPCSTACKPREFIX = "MyVPCStackPrefix";
-    public static final String MYEC2INSTANCENAME = "MyEC2InstanceName";
+    public static final String MYVPCSTACKPREFIX     = "MyVPCStackPrefix";
+    public static final String MYEC2INSTANCENAME    = "MyEC2InstanceName";
+    public static final String MYDOMAINNAME         = "MyDomainName";
+    public static final String MYRT53HOSTEDZONEID   = "MyRt53HostedZoneId";
 
     // =================================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
