@@ -45,9 +45,9 @@ import static org.junit.Assert.*;
 /**
  * 
  */
-public final class BootstrapAndChecks {
+public final class BootCheckAndConfig {
 
-    public static final String CLASSNAME = BootstrapAndChecks.class.getName();
+    public static final String CLASSNAME = BootCheckAndConfig.class.getName();
 
     // =================================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -65,7 +65,7 @@ public final class BootstrapAndChecks {
      * @param _verbose  Whether you want deluge of debug-output onto System.out.
      * @param _allProps a (NotNull) reference provided by CmdInvoker().memoryAndContext.getAllPropsRef().. or other source
      */
-    public BootstrapAndChecks( final boolean _verbose, final LinkedHashMap<String, Properties> _allProps  ) {
+    public BootCheckAndConfig( final boolean _verbose, final LinkedHashMap<String, Properties> _allProps  ) {
         this.verbose = _verbose;
         this.envParams = new EnvironmentParameters( _verbose, _allProps );
     }
@@ -82,15 +82,15 @@ public final class BootstrapAndChecks {
      *  @param _itemNumber a NotNull value that describes the 'clone-ID' of the _jobSetName (if you repeatedly create CFN based on _jobSetName)
      *  @throws Exception on any missing variables or parameters
      */
-    public void exec( final Enums.GenEnum _cmdName, final String _jobSetName, final String _itemNumber ) throws Exception
-    {   final String HDR = CLASSNAME + ": exec(_v," + _cmdName + ",_allProps): ";
+    public void check( final Enums.GenEnum _cmdName, final String _jobSetName, final String _itemNumber ) throws Exception
+    {   final String HDR = CLASSNAME + ": check(_v," + _cmdName + ",_allProps): ";
 
         final Properties sysprops       = this.envParams.getAllPropsRef().get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
-        this.envParams.orgasuxhome  = sysprops.getProperty("ORGASUXHOME");
-        this.envParams.awshome      = sysprops.getProperty("AWSHOME");
-        this.envParams.awscfnhome   = sysprops.getProperty("AWSCFNHOME");
-        this.envParams.cfnJobTYPE   = getCFNJobType( _cmdName );
-        if (this.verbose) System.out.println( HDR + "cfnJobTYPE=" + this.envParams.cfnJobTYPE );
+        this.envParams.orgasuxhome      = sysprops.getProperty("ORGASUXHOME");
+        this.envParams.awshome          = sysprops.getProperty("AWSHOME");
+        this.envParams.awscfnhome       = sysprops.getProperty("AWSCFNHOME");
+        this.envParams.cfnJobTYPEString = getCFNJobTypeAsString( _cmdName );
+        if (this.verbose) System.out.println( HDR + "cfnJobTYPEString=" + this.envParams.cfnJobTYPEString );
 
         // --------------------
         if (this.envParams.orgasuxhome == null) {
@@ -121,7 +121,29 @@ public final class BootstrapAndChecks {
         // --------------------
         fileCheck( this.envParams.awscfnhome, EnvironmentParameters.JOB_DEFAULTS );
         fileCheck( _jobSetName, EnvironmentParameters.JOBSET_MASTER );
-        // fileCheck( _jobSetName, "jobset-" + this.envParams.cfnJobTYPE + ".properties" ); // we can't do this for all cfnJobTYPE
+        // fileCheck( _jobSetName, "jobset-" + this.envParams.cfnJobTYPEString + ".properties" ); // we can't do this for all cfnJob-TYPEs
+    }
+
+    // =================================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // =================================================================================
+
+    // * @param _jobTYPE a string representing the context (example: vpn, sg-ssh, ec2plain).. which is then used to load the appropriate Config-file for User's SPECs.
+    /**
+     *  Checks for critical environment variables and for critical cmdline parameters like AWSRegion. Then loads all Propertyfiles for the job.
+     *  @param _cmdName  a value of type {@link Enums.GenEnum} - it should come from {@link CmdLineArgs#getCmdName()}
+     *  @param _jobSetName a NotNull value that describes the 'job' and should represent a __SUBFOLDER__ within the current-working folder.
+     *  @param _itemNumber a NotNull value that describes the 'clone-ID' of the _jobSetName (if you repeatedly create CFN based on _jobSetName)
+     *  @throws Exception on any missing variables or parameters
+     */
+    public void configure( final Enums.GenEnum _cmdName, final String _jobSetName, final String _itemNumber ) throws Exception
+    {   final String HDR = CLASSNAME + ": configure(_v," + _cmdName + ",_allProps): ";
+
+        final Properties sysprops       = this.envParams.getAllPropsRef().get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
+        this.envParams.orgasuxhome      = sysprops.getProperty("ORGASUXHOME");
+        this.envParams.awshome          = sysprops.getProperty("AWSHOME");
+        this.envParams.awscfnhome       = sysprops.getProperty("AWSCFNHOME");
+        this.envParams.cfnJobTYPEString = getCFNJobTypeAsString( _cmdName );
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         final Properties globalProps = this.envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
@@ -138,7 +160,7 @@ public final class BootstrapAndChecks {
             case VPC:
             case SGSSH:
             case SUBNET:
-                            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/jobset-" + this.envParams.cfnJobTYPE + ".properties" ) );
+                            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _jobSetName +"/jobset-" + this.envParams.cfnJobTYPEString + ".properties" ) );
                             break;
             case FULLSTACK: // do Nothing for this
                             break;
@@ -150,7 +172,7 @@ public final class BootstrapAndChecks {
         if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
         // --------------------
-        globalProps.setProperty( "cfnJobTYPE", this.envParams.cfnJobTYPE );
+        globalProps.setProperty( "cfnJobTYPE", this.envParams.cfnJobTYPEString );
         globalProps.setProperty( "JobSetName", _jobSetName );
         globalProps.setProperty( "ItemNumber", _itemNumber );
         if (this.verbose) System.out.println( HDR + "JobSetName=" + _jobSetName + " ItemNumber=" + _itemNumber );
@@ -185,23 +207,23 @@ public final class BootstrapAndChecks {
      *  @return a string that is always NOT NULL
      *  @throws Exception on any invalid input or for Incomplete-code scenarios
      */
-    public String getCFNJobType( final Enums.GenEnum _cmdName ) throws Exception
+    public static String getCFNJobTypeAsString( final Enums.GenEnum _cmdName ) throws Exception
     {   final String HDR = CLASSNAME + ": getJobType("+ _cmdName +"): ";
         switch (_cmdName) {
-            case VPC: // cfnJobTYPE="vpc"; break;
-            case SUBNET: // cfnJobTYPE="subnets"; break;
-            case SGSSH: // cfnJobTYPE="sg-ssh"; break;
-            case SGEFS: // cfnJobTYPE="sg-efs"; break;
-            case EC2PLAIN: // cfnJobTYPE="ec2plain"; break;
-            case VPNCLIENT: // cfnJobTYPE="vpnclient"; break;
-            case FULLSTACK: // cfnJobTYPE="vpnclient"; break;
-                String cfnJobTYPE = _cmdName.toString();
-                cfnJobTYPE = cfnJobTYPE.replaceAll("-gen$", "").toLowerCase();
-                assertTrue( cfnJobTYPE != null );
-                return cfnJobTYPE;
+            case VPC: // cfnJobTYPEString="vpc"; break;
+            case SUBNET: // cfnJobTYPEString="subnets"; break;
+            case SGSSH: // cfnJobTYPEString="sg-ssh"; break;
+            case SGEFS: // cfnJobTYPEString="sg-efs"; break;
+            case EC2PLAIN: // cfnJobTYPEString="ec2plain"; break;
+            case VPNCLIENT: // cfnJobTYPEString="vpnclient"; break;
+            case FULLSTACK: // cfnJobTYPEString="vpnclient"; break;
+                String cfnJobTYPEString = _cmdName.toString();
+                cfnJobTYPEString = cfnJobTYPEString.replaceAll("-gen$", "").toLowerCase();
+                assertTrue( cfnJobTYPEString != null );
+                return cfnJobTYPEString;
                 // break;
 
-            case UNDEFINED: // cfnJobTYPE="vpc"; break;
+            case UNDEFINED: // cfnJobTYPEString="vpc"; break;
             default:
                 final String es = HDR + "Internal Error: INCOMPLETE CODE.  Switch(_cmdName) for _cmdName=" + _cmdName.toString();
                 System.err.println(es);
