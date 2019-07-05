@@ -1,8 +1,8 @@
   DnsRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneId: Z2NF71MJ75KYXK
-      #___ HostedZoneName: ${ASUX::MyDomainName}.    #__ Ref! MyDomainName                    ### Don't forget the period at the end.
+      HostedZoneId: ${ASUX::MyRt53HostedZoneId} ### Something like Z2NF71MJ75KYXK (you can get this from Route53 console for your hosted-domain)
+      #___ HostedZoneName: ${ASUX::MyDomainName}.    #__ Ref! MyDomainName               ### Don't forget the period at the end.
       #   Ref: DomainName
       Comment: DNS name for my instance.
       Name: ${ASUX::MyEC2InstanceName}.${ASUX::MyDomainName}.                            ### Don't forget the period at the end.
