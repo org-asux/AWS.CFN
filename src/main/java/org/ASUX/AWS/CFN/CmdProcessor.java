@@ -201,16 +201,16 @@ public final class CmdProcessor
         final String scriptfile = "/tmp/"+ _envParams.cfnJobTYPE +".sh";
 
         final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
-        // final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyVPCStackPrefix}--${ASUX::JobSetName}${ASUX::ItemNumber}", this.allPropsRef );
+        // final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}--${ASUX::JobSetName}${ASUX::ItemNumber}", this.allPropsRef );
         final String MyStackNamePrefix = globalProps.getProperty( "MyStackNamePrefix" );
 
         String preStr = null;
         switch ( _cmdLA.getCmdName() ) {
-        case VPC:       preStr = "aws cloudformation create-stack --stack-name ${ASUX::MyVPCStackPrefix}-VPC  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${ASUX::MyVPCStackPrefix} --template-body file://"+ outpfile;
+        case VPC:       preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-VPC  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey="+EnvironmentParameters.MYVPCSTACKPREFIX+",ParameterValue=${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"} --template-body file://"+ outpfile;
                         break;
-        case SUBNET:    preStr = "aws cloudformation create-stack --stack-name ${ASUX::MyVPCStackPrefix}-subnets-"+ _cmdLA.publicOrPrivateSubnet +"-"+ _cmdLA.jobSetName + _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
+        case SUBNET:    preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.publicOrPrivateSubnet +"-"+ _cmdLA.jobSetName + _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
                         break;
-        case SGSSH:     preStr = "aws cloudformation create-stack --stack-name ${ASUX::MyVPCStackPrefix}-"+ _cmdLA.jobSetName +"-SG-SSH"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
+        case SGSSH:     preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
                         break;
         case EC2PLAIN:  // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, _awscfnhome +"/config/inputs/AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", this.getAllPropsRef() );
                         // final Properties AMIIDCacheProps = org.ASUX.common.Utils.parseProperties( "@"+ AMIIDCachePropsFileName );
@@ -254,7 +254,7 @@ public final class CmdProcessor
                                     " ParameterKey=EC2InstanceType,ParameterValue=${ASUX::EC2InstanceType} " +
                                     " ParameterKey=MySSHKeyName,ParameterValue=" + MySSHKeyName;
 
-                        preStr ="aws cloudformation create-stack --stack-name ${ASUX::MyVPCStackPrefix}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::MyEC2InstanceName}"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} "+
+                        preStr ="aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::"+EnvironmentParameters.MYEC2INSTANCENAME+"}"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} "+
                                 "--profile ${AWSprofile} --parameters "+ params +" --template-body file://"+ outpfile;
 
                         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose );
@@ -275,6 +275,11 @@ public final class CmdProcessor
                             write2File( localKeyPairFilePath, keyPairMaterial );
                             org.ASUX.common.IOUtils.setFilePerms( this.verbose, localKeyPairFilePath, true, true, false, true ); // rw------- file-permissions
                         }
+
+                        // https://www.brautaset.org/articles/2017/route-53-cloudformation.html
+                        // REFERENCE: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-recordset.html
+                        // https://medium.com/boltops/a-simple-introduction-to-aws-cloudformation-part-2-d6d95ed30328
+
                         break;
         case FULLSTACK:
                         // read AWS,MyOrgName --delimiter ,              (put it into GLOBAL.PROPERTIES)
@@ -323,7 +328,7 @@ public final class CmdProcessor
                         final Node servers = readcmd.getOutput();
                         if ( this.verbose ) System.out.println( HDR +" SERVERS YAML-tree =\n" + NodeTools.Node2YAMLString( servers ) +"\n" );
 
-                        String ec2instanceName;
+                        String ec2instanceName = null;
                         if ( servers instanceof MappingNode ) {
                             //       SERVERS:
                             //          OrgASUXplayEC2plain: ### This is the name of the 1st SERVER.
@@ -368,6 +373,9 @@ public final class CmdProcessor
                         } else { // !  (servers instanceof MappingNode)   &&   !  (servers instanceof SequenceNode) )
                             throw new Exception( "the content of "+ fullStackJob_Filename +" at the YAML-path: 'AWS,VPC,subnet,SERVERS' is neither MappingNode nor SequenceNode" );
                         }
+
+                        assertTrue( ec2instanceName != null );
+                        globalProps.setProperty( EnvironmentParameters.MYEC2INSTANCENAME, ec2instanceName );
 
                         //-------------------------------------
                         // _cmdLA.verbose       <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
