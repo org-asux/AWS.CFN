@@ -148,9 +148,10 @@ public class CmdInvoker extends org.ASUX.YAML.NodeImpl.CmdInvoker {
         }
 
         //---------------------------
-        final BootstrapAndChecks boot = new BootstrapAndChecks( this.verbose, this.memoryAndContext.getAllPropsRef() );
-        boot.exec( cmdLA.getCmdName(), cmdLA.getJobSetName(), cmdLA.getItemNumber() );
-        final String cfnJobType = boot.getCFNJobType( cmdLA.getCmdName() );
+        final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, this.memoryAndContext.getAllPropsRef() );
+        boot.check( cmdLA.getCmdName(), cmdLA.getJobSetName(), cmdLA.getItemNumber() );
+        boot.configure( cmdLA.getCmdName(), cmdLA.getJobSetName(), cmdLA.getItemNumber() );
+        final String cfnJobType = BootCheckAndConfig.getCFNJobTypeAsString( cmdLA.getCmdName() );
 
         CmdProcessor processor = new CmdProcessor( this );
         if ( cmdLA.verbose ) new org.ASUX.common.Debug(cmdLA.verbose).printAllProps( HDR +" FULL DUMP of this.propsSetRef = ", this.memoryAndContext.getAllPropsRef() );
