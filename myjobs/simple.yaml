@@ -2,6 +2,7 @@ AWS:
   MyOrgName: org-ASUX
   MyEnvironment: Playground
   AWSRegion: ap-northeast-1
+  MyDomainName: playground.asux.org
 
   VPC:
     # VPCName: VPCbyASUXorg <-- why am I __forcing__ user to provide this?  Why not a DEFAULT value based on {MyOrgName}-{MyEnvironment}-{AWSLocation}-{user.name}
@@ -12,7 +13,7 @@ AWS:
           EC2InstanceType: t2.micro
           # public: no
 
-          IAM-roles:
+          MyIAM-roles:
           - EC2-ReadWrite-to-S3
 
           yum:
