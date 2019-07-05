@@ -51,17 +51,33 @@ yaml --macro @/dev/null
 saveTo !YAMLROOT
 
 //--------------------------------------------------
+useAsInput ?!AWS-CFNInit-Standup
+print -
+useAsInput @${ASUX::JobSetName}/Pkgs-ASUX.org-DEV-1.yaml
+saveTo ?!AWS-CFNInit-Standup
+useAsInput ?!AWS-CFNInit-Standup
+print -
+
+useAsInput ?!AWS-CFNInit-Services
+print -
+useAsInput @${ASUX::JobSetName}/Svcs-ASUX.org-DEV-1.yaml
+saveTo ?!AWS-CFNInit-Services
+useAsInput ?!AWS-CFNInit-Services
+print -
+
+
+//--------------------------------------------------
 makeNewRoot Resources
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2.yaml
 yaml --macro @/dev/null
 
-yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Standup,packages  @${ASUX::JobSetName}/Pkgs-ASUX.org-DEV-1.yaml --no-quote    --delimiter ,
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Standup !AWS-CFNInit-Standup  --no-quote    --delimiter ,
 yaml --macro @/dev/null
 
-yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Services  @${ASUX::JobSetName}/Svcs-ASUX.org-DEV-1.yaml --no-quote    --delimiter ,
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Services  !AWS-CFNInit-Services --no-quote    --delimiter ,
 yaml --macro @/dev/null
 
-yaml --insert Resources,${ASUX::MyEC2InstanceName} @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/ResourceProperties-EC2.yaml --no-quote  --delimiter ,
+yaml --insert Resources,${ASUX::MyEC2InstanceName} @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2-ResourceProperties.yaml --no-quote  --delimiter ,
 yaml --macro @/dev/null
 
 yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml  --delimiter ,
