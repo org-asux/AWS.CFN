@@ -7,6 +7,7 @@ AWS:
   VPC:
     # VPCName: VPCbyASUXorg <-- why am I __forcing__ user to provide this?  Why not a DEFAULT value based on {MyOrgName}-{MyEnvironment}-{AWSLocation}-{user.name}
     subnet:
+      public: yes
 
       SERVERS:
         OrgASUXplayEC2plain: ### This is the name of the 1st SERVER.
@@ -17,10 +18,10 @@ AWS:
           - EC2-ReadWrite-to-S3
 
           yum:
-          - amazon-efs-utils
-          - tcsh
-          - git
-          - maven
+            amazon-efs-utils: []
+            tcsh: []
+            git: []
+            maven: []
 
           # rpm:
             # amazon-efs-utils: []
