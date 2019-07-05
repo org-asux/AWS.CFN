@@ -1,11 +1,28 @@
 ### This content should be inserted via the command:-
 ### asux.js yaml insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Standup,packages @${ASUX::AWSCFN.HOME}/myjobs/Pkgs-ASUX.org-DEV-1.yaml --no-quote
+### https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/customize-containers-ec2.html
 
+ ### Do NOT REMOVE or CHANGE ANYTHING ABOVE THIS LINE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+          packages: ### Do NOT REMOVE or CHANGE THIS LINE
             yum:
-              amazon-efs-utils: []
+              amazon-efs-utils: []    ### Put software-version #s inside the square-brackets
               tcsh: []
-              git: []
-              maven: []
+              git: []                 ### Put software-version #s inside the square-brackets
+              maven: []               ### Put software-version #s inside the square-brackets
 
+            # - amazon-efs-utils      ### !!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!! This format (simple YAML Sequenoce/array) will __NOT__ work with cfn-init
+            # - git                   ### !!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!! This format (simple YAML Sequenoce/array) will __NOT__ work with cfn-init
+            # - maven                 ### !!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!! This format (simple YAML Sequenoce/array) will __NOT__ work with cfn-init
+
+            # rpm:
+            #   amazon-efs-utils: []
+
+            # configCustomCommands: 
+              # customCommand1: 
+              #   testShell: 
+              #     command: "echo \"$CFNTEST\" > /tmp/test.txt"
+              #     env: 
+              #       CFNTEST: "I come from CFN-template's configCustomCommands/customCommand1."
+              #     cwd: "/tmp"
 
 ### EOF

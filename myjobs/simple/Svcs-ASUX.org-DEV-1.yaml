@@ -1,6 +1,10 @@
 ### This content should be inserted via the command:-
 ### asux.js yaml insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Services @${ASUX::AWSCFN.HOME}/myjobs/Svcs-ASUX.org-DEV-1.yaml --no-quote
 
+
+### https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/customize-containers-ec2.html
+
+
           sysvinit:
             httpd:
               enabled: 'false'

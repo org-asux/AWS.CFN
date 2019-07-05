@@ -14,25 +14,11 @@
             - |
               date '+%Y-%m-%d %H:%M:%S'
             - >
-              # See page 284 of UG - on how to Install the files and packages
-              from the metadata
+              # See page 284 of UG - on how to Install the files and packages from the metadata
             - |
               yum -y update
             - |
               yum install -y aws-cfn-bootstrap
-            - |
-              # Install the files and packages from the metadata
-            - '/opt/aws/bin/cfn-init -v '
-            - '         --stack '
-            - !Ref 'AWS::StackName'
-            - '         --resource '
-####        - !Ref ${ASUX::MyEC2InstanceName}
-            -           ${ASUX::MyEC2InstanceName}
-            - '         --configsets Standup '
-            - '         --region '
-            - !Ref 'AWS::Region'
-            - |+
-
             - |
               mkdir /var/build
             - |
@@ -50,15 +36,24 @@
             - |+
 
             - |
-              mkdir -p $DIR_TGT
+              # Make sure this is the 2nd-last command in the UserData, as .. in case it fails (which is very likely, due to Config-set errors/typos), the rest of the script has executed.
             - |
-              chown ec2-user $DIR_TGT
+              # Install the files and packages from the metadata associated with the EC2-instance's Resource/Properties/
+            - '/opt/aws/bin/cfn-init -v '
+            - '         --stack '
+            - !Ref 'AWS::StackName'
+            - '         --resource '
+####        - !Ref ${ASUX::MyEC2InstanceName} <-- Don't do this, if the Name of EC2 instance under Reasource: matches ${ASUX::MyEC2InstanceName}
+            -           ${ASUX::MyEC2InstanceName}
+            - '         --configsets ${ASUX::EC2CFNInit_ConfigSet} '
+            - '         --region '
+            - !Ref 'AWS::Region'
+            - |+
+
             - |
               ### !!!!! WARNING !!!!!!!!: Sudo BELOW should be VERY LAST command
             - >
-              ### SECURITY-BestPractice: When you work with shared AMIs, a best
-              practice is to disable direct root logins. To do this, issue the
-              following command:
+              ### SECURITY-BestPractice: When you work with shared AMIs, a best practice is to disable direct root logins. To do this, issue the following command:
             - |
               sudo passwd -l root
             - |
