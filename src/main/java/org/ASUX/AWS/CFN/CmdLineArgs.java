@@ -55,6 +55,8 @@ import static org.junit.Assert.*;
  */
 public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
+    private static final long serialVersionUID = 441L;
+
     public static final String CLASSNAME = CmdLineArgs.class.getName();
 
     protected static final String VPCGEN = "vpc-gen";
@@ -121,6 +123,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         return
         " --verbose="+verbose+" cmdName="+cmdName
         +" jobSetName="+jobSetName+" itemNumber="+itemNumber
+        + super.toString()
         ;
     }
 
@@ -149,9 +152,9 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
         // //----------------------------------
         OptionGroup grp2 = new OptionGroup();
-        Option noQuoteOpt = new Option("qn", NOQUOTE, false, "do Not use Quotes in YAML output");
-        Option singleQuoteOpt = new Option("qs", SINGLEQUOTE, false, "use ONLY Single-quote when generating YAML output");
-        Option doubleQuoteOpt = new Option("qd", DOUBLEQUOTE, false, "Use ONLY Double-quote when generating YAML output");
+        Option noQuoteOpt       = genOption("qn", NOQUOTE, false, "do Not use Quotes in YAML output", 0 );
+        Option singleQuoteOpt   = genOption("qs", SINGLEQUOTE, false, "use ONLY Single-quote when generating YAML output", 0 );
+        Option doubleQuoteOpt   = genOption("qd", DOUBLEQUOTE, false, "Use ONLY Double-quote when generating YAML output", 0 );
         grp2.addOption(noQuoteOpt);
         grp2.addOption(singleQuoteOpt);
         grp2.addOption(doubleQuoteOpt);
@@ -210,8 +213,9 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
     private static Option genOption( final String _short, final String _long, final boolean _bool, final String description, final int _numArgs ) {
         final Option opt = new Option( _short, _long, _bool, description );
-            opt.setArgs( _numArgs );
-            opt.setOptionalArg(false);
+        opt.setArgs( _numArgs );
+        opt.setOptionalArg(false);
+        if ( _numArgs > 0 )
             opt.setArgName( "JobSetName" );
         return opt;
     }
@@ -235,7 +239,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         // System.out.println( HDR + "Verbose="+this.verbose );
 
         //-------------------------------------------
-        if ( _apacheCmdProcessor.hasOption( NOQUOTE     ) ) super.quoteType = org.ASUX.yaml.Enums.ScalarStyle.PLAIN;
+        if ( _apacheCmdProcessor.hasOption( NOQUOTE     ) ) super.quoteType = org.ASUX.yaml.Enums.ScalarStyle.PLAIN; // this translates to 'null'
         if ( _apacheCmdProcessor.hasOption( SINGLEQUOTE ) ) super.quoteType = org.ASUX.yaml.Enums.ScalarStyle.SINGLE_QUOTED;
         if ( _apacheCmdProcessor.hasOption( DOUBLEQUOTE ) ) super.quoteType = org.ASUX.yaml.Enums.ScalarStyle.DOUBLE_QUOTED;
         if ( this.verbose ) System.out.println( HDR +"super.quoteType = "+super.quoteType.toString());
@@ -382,11 +386,11 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
      *  <p>This method exists to allow CmdProcessor to invoke commands 'on behalf of' the user.  This is needed specifially for the 'fullStack' command.</p>
      *  <p>This deepClone function is VERY MUCH necessary, as No cloning-code can handle 'transient' variables in this class.</p>
      *  @param _orig what you want to deep-clone
-     *  @param _newCmdName after cloning change the {@link #cmdName} to this
-     *  @param _newItemNumber after cloning change the {@link #itemNumber} to this
+     *  @param _newCmdName after cloning change the {@link #cmdName} to this-value
+     *  @param _newItemNumber after cloning change the {@link #itemNumber} to this-value
      *  @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
      */
-    public CmdLineArgs deepCloneWithChanges( final CmdLineArgs _orig, final Enums.GenEnum _newCmdName, final String _newItemNumber ) {
+    public static CmdLineArgs deepCloneWithChanges( final CmdLineArgs _orig, final Enums.GenEnum _newCmdName, final String _newItemNumber, final String _publicOrPrivateSubnet ) {
         try {
             final CmdLineArgs newobj = org.ASUX.common.Utils.deepClone( _orig );
             newobj.deepCloneFix( _orig );
@@ -394,9 +398,11 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             newobj.cmdName = _newCmdName;
             if ( _newItemNumber != null )
                 newobj.itemNumber = _newItemNumber;
+            if ( _publicOrPrivateSubnet != null )
+                newobj.publicOrPrivateSubnet = _publicOrPrivateSubnet;
             return newobj;
         } catch (Exception e) {
-			e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping this on the user.
+			e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping it on the user.
             return null;
         }
     }
