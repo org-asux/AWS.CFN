@@ -157,7 +157,7 @@ public class CmdInvoker extends org.ASUX.YAML.NodeImpl.CmdInvoker {
 
         //-------------------------------------
         // 1st generate the YAML.
-        processor.genYAML( cmdLA, cfnJobType, boot.envParams.awscfnhome );
+        processor.genYAML( cmdLA, cfnJobType, boot.envParams );
 
         // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
         processor.genCFNShellScript( cmdLA, boot.envParams );
