@@ -98,7 +98,7 @@ public final class CmdProcessorFullStack
      *  <p>Runs the command to generate CFN-Template YAML via: //${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}</p>
      *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
-     *  @param _envParams a NotNull object (created by {@link BootstrapAndChecks#exec})
+     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
      *  @return a String (containing {ASUX::_} macros) that should be used to executed using BATCH-YAML-Processor within {@link CmdProcessor#genCFNShellScript}
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
@@ -150,7 +150,7 @@ public final class CmdProcessorFullStack
         final String MyEnvironment  = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,MyEnvironment" );
         final String AWSRegion      = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,AWSRegion" );
         // final String VPCName        = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,VPC,VPCName" );  I'm totally going to PREVENT end-user from specifying VPCName
-        final String VPCName        = Macros.evalThoroughly( this.verbose, "${ASUX::VPCID}", _envParams.getAllPropsRef() ); // set by BootstrapAndChecks!  === _envParams.MyVPCStackPrefix + "-VPCID"
+        final String VPCName        = Macros.evalThoroughly( this.verbose, "${ASUX::VPCID}", _envParams.getAllPropsRef() ); // set by BootCheckAndConfig!  === _envParams.MyVPCStackPrefix + "-VPCID"
 
         //--------------- subnets -------------------
         readcmd.searchYamlForPattern( inputNode, "AWS,VPC,subnet", "," );
@@ -248,12 +248,12 @@ public final class CmdProcessorFullStack
 
         //-------------------------------------
         Enums.GenEnum cmd;
-        final BootstrapAndChecks boot = new BootstrapAndChecks( this.verbose, this.cmdinvoker.getMemoryAndContext().getAllPropsRef() );
+        final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, this.cmdinvoker.getMemoryAndContext().getAllPropsRef() );
 
 
         cmd = Enums.GenEnum.VPC;
         final EnvironmentParameters envParamsVPC = EnvironmentParameters.deepClone( _envParams );
-        envParamsVPC.cfnJobTYPEString = BootstrapAndChecks.getCFNJobTypeAsString( cmd );
+        envParamsVPC.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( cmd );
         final CmdLineArgs claVPC     = CmdLineArgs.deepCloneWithChanges( _cmdLA, cmd, null, null );
         boot.configure( claVPC.getCmdName(), claVPC.getJobSetName(), claVPC.getItemNumber() );
         // 1st generate the YAML.
@@ -276,7 +276,7 @@ public final class CmdProcessorFullStack
 // ??????? For each subnet in jobSetName.yaml ...
         cmd = Enums.GenEnum.SUBNET;
         final EnvironmentParameters envParamsSubnet = EnvironmentParameters.deepClone( _envParams );
-        envParamsSubnet.cfnJobTYPEString = BootstrapAndChecks.getCFNJobTypeAsString( cmd );
+        envParamsSubnet.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( cmd );
         final CmdLineArgs claSubnet  = CmdLineArgs.deepCloneWithChanges( _cmdLA, cmd, null, publicOrPrivateSubnet );
         boot.configure( claSubnet.getCmdName(), claSubnet.getJobSetName(), claSubnet.getItemNumber() );
         // 1st generate the YAML.
@@ -288,7 +288,7 @@ public final class CmdProcessorFullStack
 // ??????? For each SG in jobSetName.yaml ...
         cmd = Enums.GenEnum.SGSSH;
         final EnvironmentParameters envParamsSG = EnvironmentParameters.deepClone( _envParams );
-        envParamsSG.cfnJobTYPEString = BootstrapAndChecks.getCFNJobTypeAsString( cmd );
+        envParamsSG.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( cmd );
         final CmdLineArgs claSGSSH   = CmdLineArgs.deepCloneWithChanges( _cmdLA, cmd, null, null );
         boot.configure( claSGSSH.getCmdName(), claSGSSH.getJobSetName(), claSGSSH.getItemNumber() );
         // 1st generate the YAML.
@@ -300,7 +300,7 @@ public final class CmdProcessorFullStack
 // ??????? For each SERVER in jobSetName.yaml ...
         cmd = Enums.GenEnum.EC2PLAIN;
         final EnvironmentParameters envParamsEC2 = EnvironmentParameters.deepClone( _envParams );
-        envParamsEC2.cfnJobTYPEString = BootstrapAndChecks.getCFNJobTypeAsString( cmd );
+        envParamsEC2.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( cmd );
         final CmdLineArgs claEC2     = CmdLineArgs.deepCloneWithChanges( _cmdLA, cmd, null, null );
         boot.configure( claEC2.getCmdName(), claEC2.getJobSetName(), claEC2.getItemNumber() );
         // 1st generate the YAML.
@@ -321,7 +321,7 @@ public final class CmdProcessorFullStack
      *  <p>Make sure the 'labels' for what's put in memory matches what is 'recalled' within the 'AWSCFN-ec2plain-Create.ASUX-batch.txt' YamlBatchScript</p>
      *  @param _mapNode should be the YAML-sub-tree determined by: read AWS,VPC,subnet,SERVERS,<MyEC2InstanceName> --delimiter ,
      *  @param _readcmd a NotNull instance
-     *  @param _envParams a NotNull object (created by {@link BootstrapAndChecks#exec})
+     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#exec})
      *  @param _cfnInitContext typically, it's one of the AWS cfn-init ConfigSets (StandupOnly, StandUpInstallAndRun, ..)
      *  @throws Exception logic inside method will throw if the right YAML-structure is not provided, to read simple KV-pairs.
      */

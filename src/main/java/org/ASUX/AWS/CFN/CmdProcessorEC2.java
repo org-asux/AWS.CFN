@@ -96,7 +96,7 @@ public final class CmdProcessorEC2
      *  <p>Runs the command to generate CFN-Template YAML via: //${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}</p>
      *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
-     *  @param _envParams a NotNull object (created by {@link BootstrapAndChecks#exec})
+     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
      *  @return a String (containing {ASUX::_} macros) that should be used to executed using BATCH-YAML-Processor within {@link CmdProcessor#genCFNShellScript}
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
@@ -118,7 +118,7 @@ public final class CmdProcessorEC2
         // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, "AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _envParams.getAllPropsRef() );
         final String AMIIDCachePropsFileName = "AMZNLinux2_AMI_ID-"+ _envParams.AWSLocation +".txt";
         try {
-            BootstrapAndChecks.fileCheck( _envParams.awscfnhome +"/config/inputs", AMIIDCachePropsFileName );
+            BootCheckAndConfig.fileCheck( _envParams.awscfnhome +"/config/inputs", AMIIDCachePropsFileName );
             globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _envParams.awscfnhome +"/config/inputs/"+ AMIIDCachePropsFileName ) );
             // Will contain a SINGLE row like:-     AWSAMIID=ami-084040f99a74ce8c3
         } catch (Exception e) {
