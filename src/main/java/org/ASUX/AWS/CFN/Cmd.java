@@ -89,7 +89,7 @@ public class Cmd {
 
             //=============================================================
             // read input, whether it's System.in -or- an actual input-file
-            if (cmdlineargs.verbose) System.out.println( HDR +" jobSetName: " + cmdlineargs.getJobSetName() +", itemNumber: "+ cmdlineargs.getItemNumber() );
+            if (cmdlineargs.verbose) System.out.println( HDR +" jobSetName: " + cmdlineargs.getJobSetName() +", itemNumber: "+ cmdlineargs.getItemNumber() +" cmdlineargs.getCmdName()="+ cmdlineargs.getCmdName() );
 
             // -----------------------
             // PRECEDES the processing of the command
@@ -99,9 +99,10 @@ public class Cmd {
                 case SGSSH:
                 case SGEFS:
                 case EC2PLAIN:
+                case FULLSTACK:
+                    break; // do nothing for now.
                 case VPNCLIENT:
                 case UNDEFINED:
-                    break; // do nothing for now.
                 default:
                     final String es = HDR +"Internal Error: INCOMPLETE CODE 1.  Switch(_cmdName) for _cmdName="+ cmdlineargs.getCmdName();
                     System.err.println( es );
@@ -112,7 +113,10 @@ public class Cmd {
             // run the command requested by user
             final Object outputAsIs = cmdinvoker.processCommand( cmdlineargs, null );
 
-            if (cmdlineargs.verbose) System.out.println( HDR +" processing of entire command returned [" + (outputAsIs.getClass().getName()) + "]" );
+            if (cmdlineargs.verbose) System.out.println( HDR +" processing of entire command returned outputAsIs as NULL!" );
+            if (cmdlineargs.verbose && outputAsIs != null ) System.out.println( HDR +" processing of entire command returned [" + (outputAsIs.getClass().getName()) + "]" );
+
+            // we're doing NOTHING with 'outputAsIs' .. for now..
 
             //======================================================================
             // post-completion of processing of command
@@ -122,9 +126,10 @@ public class Cmd {
                 case SGSSH:
                 case SGEFS:
                 case EC2PLAIN:
+                case FULLSTACK:
+                    break; // do nothing for now.
                 case VPNCLIENT:
                 case UNDEFINED:
-                    break; // do nothing for now.
                 default:
                     final String es = HDR +"Internal Error: INCOMPLETE CODE 2.  Switch(_cmdName) for _cmdName="+ cmdlineargs.getCmdName();
                     System.err.println( es );
