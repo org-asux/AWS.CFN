@@ -18,7 +18,8 @@ echo "Usage: $0 [--verbose]"
 set ORGASUXFLDR=/mnt/development/src/org.ASUX
 set path=( $path ${ORGASUXFLDR} )
 
-set TESTSRCFLDR=${ORGASUXFLDR}/AWS/CFN/test
+set AWSCFNFLDR=${ORGASUXFLDR}/AWS/CFN
+set TESTSRCFLDR=${AWSCFNFLDR}/test
 
 ###------------------------------
 if ( $#argv == 1 && "$1" == "--verbose" ) then
@@ -29,44 +30,44 @@ else
 endif
 
 chdir ${TESTSRCFLDR}
+chdir ${AWSCFNFLDR}/myjobs
 if ( "$VERBOSE" != "" ) pwd
 
 ###------------------------------
 # echo -n "Sleep interval? >>"; set DELAY=$<
 # if ( "$DELAY" == "" ) set DELAY=2
 
-set TEMPLATEFLDR=${TESTSRCFLDR}/outputs
-set OUTPUTFLDR=/tmp/test-output-AWS
-
-\rm -rf ${OUTPUTFLDR}
-mkdir -p ${OUTPUTFLDR}
-
-###------------------------------
 set JARFLDR=${ORGASUXFLDR}/lib
 
+set UBERJARPATH=${JARFLDR}/org.asux-mvn-shade-uber-jar-1.0.jar
+set UBERJARPATH=${JARFLDR}/org.asux-mvn-shade-uber-jar-1.0.jar-ORIG
 #_____ ${JARFLDR}/org.asux.aws-sdk.aws-sdk-1.0.jar
 #_____ ${JARFLDR}/org.asux.yaml.nodeimpl.yaml.nodeimpl-1.0.jar
 #_____ ${JARFLDR}/org.asux.yaml.yaml-1.0.jar
 #_____ ${JARFLDR}/org.asux.yaml.collectionsimpl.yaml.collectionsimpl-1.0.jar
 
-set COMMONSCLIJAR=${JARFLDR}/commons-cli.commons-cli.commons-cli-1.4.jar
-#___ commons-cli-1.4.jar
-set JUNITJAR=${JARFLDR}/junit.junit.junit-4.8.2.jar
+# set COMMONSCLIJAR=${JARFLDR}/commons-cli.commons-cli.commons-cli-1.4.jar
+# #___ commons-cli-1.4.jar
+# set JUNITJAR=${JARFLDR}/junit.junit.junit-4.8.2.jar
 
-set ASUXCOMMON=${JARFLDR}/org.asux.common.common-1.0.jar
-set ASUXCOMMON=/Users/Sarma/.m2/repository/org/asux/common/1.0/common-1.0.jar
-set ASUXYAML=${JARFLDR}/org.asux.yaml.yaml-1.0.jar
-set ASUXYAML=/Users/Sarma/.m2/repository/org/asux/yaml/1.0/yaml-1.0.jar
-set ASUXAWSCFN=${JARFLDR}/org.asux.aws-cfn.aws-cfn-1.0.jar
-set ASUXAWSCFN=/Users/Sarma/.m2/repository/org/asux/aws-cfn/1.0/aws-cfn-1.0.jar
+# set ASUXCOMMON=${JARFLDR}/org.asux.common.common-1.0.jar
+# set ASUXCOMMON=/Users/Sarma/.m2/repository/org/asux/common/1.0/common-1.0.jar
+# set ASUXYAML=${JARFLDR}/org.asux.yaml.yaml-1.0.jar
+# set ASUXYAML=/Users/Sarma/.m2/repository/org/asux/yaml/1.0/yaml-1.0.jar
+# set ASUXAWSCFN=${JARFLDR}/org.asux.aws-cfn.aws-cfn-1.0.jar
+# set ASUXAWSCFN=/Users/Sarma/.m2/repository/org/asux/aws-cfn/1.0/aws-cfn-1.0.jar
 
 if ( $?CLASSPATH ) then
-        setenv CLASSPATH  ${CLASSPATH}:${ASUXAWSCFN}:${ASUXYAML}:${ASUXCOMMON}:${COMMONSCLIJAR}:${JUNITJAR}
+        # setenv CLASSPATH  ${CLASSPATH}:${ASUXAWSCFN}:${ASUXYAML}:${ASUXCOMMON}:${COMMONSCLIJAR}:${JUNITJAR}
+        setenv CLASSPATH ${CLASSPATH}:${UBERJARPATH}
 else
-        setenv CLASSPATH  ${ASUXAWSCFN}:${ASUXYAML}:${ASUXCOMMON}:${COMMONSCLIJAR}:${JUNITJAR}
+        # setenv CLASSPATH  ${ASUXAWSCFN}:${ASUXYAML}:${ASUXCOMMON}:${COMMONSCLIJAR}:${JUNITJAR}
+        setenv CLASSPATH ${CLASSPATH}:${UBERJARPATH}
 endif
 
 if ( "$VERBOSE" != "" ) echo $CLASSPATH
+
+set DIVIDER='-----------------------------------------------------------------------------------------------------------'
 
 ###---------------------------------
 set noglob ### Very important to allow us to use '*' character on cmdline arguments
@@ -75,47 +76,119 @@ set noclobber
 set TESTNUM=1
 
 ###---------------------------------
+set JOBSET=simple
+
+###---------------------------------
+
+set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/myjobs/${JOBSET}
+set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs
+set OUTPUTFLDR=/tmp/test-output-AWSCFN
+
+\rm -rf ${OUTPUTFLDR}
+mkdir -p ${OUTPUTFLDR}
+
+set RUNTESTCMD="java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs"
+set RUNTESTCMD="asux aws.cfn"
+
+###------------------------------
 # 1
+
+set CMD=vpc
+echo ${CMD}
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
+if ($status != 0) exit $status
+diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+echo $DIVIDER
+
+set CMD=subnets
+echo ${CMD}
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} public --no-quote"
+if ($status != 0) exit $status
+diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+echo $DIVIDER
+
+set CMD=sg-ssh
+echo ${CMD}
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
+if ($status != 0) exit $status
+diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+echo $DIVIDER
+
+# set CMD=sg-efs
+# echo ${CMD}
+# eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
+# if ($status != 0) exit $status
+# diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+# diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+# echo $DIVIDER
+
+set CMD=ec2plain
+echo ${CMD}
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
+if ($status != 0) exit $status
+diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+echo $DIVIDER
+
+# set CMD=vpnclient
+# echo ${CMD}
+# eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
+# if ($status != 0) exit $status
+# diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+# diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+# echo $DIVIDER
+
+# set CMD=ec2plain
+# echo ${CMD}
+# eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} 2ndinstance --no-quote"
+# if ($status != 0) exit $status
+# diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+# diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+# echo $DIVIDER
+
+set CMD=fullstack
+echo ${CMD}
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
+if ($status != 0) exit $status
+echo ''
+set CMD=vpc
+diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+echo ''
+set CMD=subnets
+diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+echo ''
+set CMD=sg-ssh
+diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+echo ''
+set CMD=ec2plain
+diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+echo $DIVIDER
+
+### Error situations
+echo
+echo -n 'Error conditions now.. (Y/N) :>'; set ANS=$<
+if ( "$ANS" == "Y" ||  "$ANS" == "y" ) then
+        java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} unknownCmd-gen ${JOBSET} --no-quote
+        java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --subnets-gen ${JOBSET} --no-quote
+        java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --sgssh-gen ${JOBSET} --no-quote
+        java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --unknownCmd-gen ${JOBSET} --no-quote sdfasd asdf asdfa
+endif
+
+###---------------------------------
+# 2
 # set OUTPFILE=${OUTPUTFLDR}/test-${TESTNUM}
 # echo $OUTPFILE
 # java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} ??????  #_____ >&! ${OUTPFILE}
 # diff ${OUTPFILE} ${TEMPLATEFLDR}/test-${TESTNUM}
 # if ($status != 0) exit $status
 
-###---------------------------------
-# 2
-echo -n .
-java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --vpc-gen simple
-if ($status != 0) exit $status
-echo -n .
-java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --subnets-gen simple private
-if ($status != 0) exit $status
-echo -n .
-java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --sg-ssh-gen simple
-if ($status != 0) exit $status
-echo -n .
-java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --sg-efs-gen simple
-if ($status != 0) exit $status
-echo -n .
-java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --vpnclient-gen simple
-if ($status != 0) exit $status
-echo -n .
-java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --ec2plain-gen simple
-if ($status != 0) exit $status
-
-echo -n .
-java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --ec2plain-gen simple 2ndinstance
-if ($status != 0) exit $status
-
-### Error situations
-echo
-echo -n 'Error conditions now.. (Y/N) :>'; set ANS=$<
-if ( "$ANS" == "Y" ||  "$ANS" == "y" ) then
-        java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} unknownCmd-gen simple
-        java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --subnets-gen simple
-        java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --sgssh-gen simple
-        java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --unknownCmd-gen simple sdfasd asdf asdfa
-endif
 
 #EoInfo
 
