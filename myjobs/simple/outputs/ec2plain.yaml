@@ -42,10 +42,7 @@ Resources:
           - Standup
           StandUpInstallAndRun:
           - Standup
-          - Install
-          - Configure
           - Services
-          - Upload
         Standup:
           packages:
             yum:
@@ -57,10 +54,6 @@ Resources:
                 ]
               maven: [
                 ]
-        Install: [
-          ]
-        Configure: [
-          ]
         Services:
           sysvinit:
             httpd:
@@ -69,8 +62,6 @@ Resources:
             sendmail:
               enabled: false'
               ensureRunning: 'false'
-        Upload: [
-          ]
     Properties:
       NetworkInterfaces:
       - AssociatePublicIpAddress: "true"
@@ -141,18 +132,6 @@ Resources:
           - |
             yum install -y aws-cfn-bootstrap
           - |
-            # Install the files and packages from the metadata
-          - '/opt/aws/bin/cfn-init -v '
-          - '         --stack '
-          - !Ref 'AWS::StackName'
-          - '         --resource '
-          - OrgASUXplayEC2plain
-          - '         --configsets Standup '
-          - '         --region '
-          - !Ref 'AWS::Region'
-          - |2+
-
-          - |
             mkdir /var/build
           - |
             chown ec2-user /var/build
@@ -169,9 +148,19 @@ Resources:
           - |2+
 
           - |
-            mkdir -p $DIR_TGT
+            # Make sure this is the 2nd-last command in the UserData, as .. in case it fails (which is very likely, due to Config-set errors/typos), the rest of the script has executed.
           - |
-            chown ec2-user $DIR_TGT
+            # Install the files and packages from the metadata associated with the EC2-instance's Resource/Properties/
+          - '/opt/aws/bin/cfn-init -v '
+          - '         --stack '
+          - !Ref 'AWS::StackName'
+          - '         --resource '
+          - OrgASUXplayEC2plain
+          - '         --configsets StandupOnly '
+          - '         --region '
+          - !Ref 'AWS::Region'
+          - |2+
+
           - |
             ### !!!!! WARNING !!!!!!!!: Sudo BELOW should be VERY LAST command
           - >
@@ -182,3 +171,13 @@ Resources:
             ### This ABOVE command does NOT impact the use of sudo.
           - |
             ### !!!!! WARNING !!!!!!!!: Sudo ABOVE should be VERY LAST command
+  DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: Z2NF71MJ75KYXK
+      Comment: DNS name for my instance.
+      Name: OrgASUXplayEC2plain.playground.asux.org.
+      Type: A
+      TTL: '900'
+      ResourceRecords:
+      - !GetAtt 'OrgASUXplayEC2plain.PublicIp'
