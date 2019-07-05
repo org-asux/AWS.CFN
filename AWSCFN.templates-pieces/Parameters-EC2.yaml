@@ -30,6 +30,15 @@ Parameters:
     Description: O/S specified as via a very precise ami ID
     Type: String
 
+  # MyDomainName:                             ### Why bother with this parameter?  Just use ${ASUX::MyDomainName} directly within 'Route53-EC2.yaml'
+  #   Description: The route53 HostedZoneName. For example, "mydomain.com."  Unlike Route53 specs, do _NOT_ add the period at the end.   This CFN will add the period for you!
+  #   Type: String
+  #   Default:   ${ASUX::MyDomainName}
+  # NewHostname:                            ### Why bother this with parameter?  Just use ${ASUX::MyEC2InstanceName} directly within 'Route53-EC2.yaml'
+  #   Description: The new EC2 servers name. For example, hello -> as in -> hello.mydomain.com.
+  #   Type: String
+  #   Default: ${ASUX::MyEC2InstanceName}
+
   EC2EBSVolumeSize:
     Type: Number
     Default: '10'
