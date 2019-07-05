@@ -63,10 +63,15 @@ public final class EnvironmentParameters implements Serializable {
     public static final String JOB_DEFAULTS = "/config/DEFAULTS/job-DEFAULTS.properties"; // under AWSCFNHOME
     public static final String JOBSET_MASTER = "jobset-Master.properties"; // under '.' folder
 
+    public static final String MYSTACKNAMEPREFIX    = "MyStackNamePrefix";
     public static final String MYVPCSTACKPREFIX     = "MyVPCStackPrefix";
     public static final String MYEC2INSTANCENAME    = "MyEC2InstanceName";
     public static final String MYDOMAINNAME         = "MyDomainName";
     public static final String MYRT53HOSTEDZONEID   = "MyRt53HostedZoneId";
+
+    public static final String CFNINIT_PACKAGES = "AWS-CFNInit-Standup";
+    public static final String EC2INSTANCETYPE  = "EC2InstanceType";
+    public static final String EC2IAMROLES      = "MyIAM-roles";
 
     // =================================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -83,7 +88,7 @@ public final class EnvironmentParameters implements Serializable {
     public String MyStackNamePrefix = "UNDEFINED";
     public String MyVPCStackPrefix  = "UNDEFINED";
 
-    public String cfnJobTYPE    = "UNDEFINED";
+    public String cfnJobTYPEString  = "UNDEFINED";
 
     //---------------- PRIVATE ----------------
     private transient LinkedHashMap<String, Properties> allPropsRef;   // this could have been 'final' too, but for the fact that this.deepClone() needs to reset it.
