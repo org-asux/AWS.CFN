@@ -51,20 +51,14 @@ yaml --macro @/dev/null
 saveTo !YAMLROOT
 
 //--------------------------------------------------
-useAsInput ?!AWS-CFNInit-Standup
-print -
+
 useAsInput @${ASUX::JobSetName}/Pkgs-ASUX.org-DEV-1.yaml
 saveTo ?!AWS-CFNInit-Standup
 useAsInput ?!AWS-CFNInit-Standup
-print -
 
-useAsInput ?!AWS-CFNInit-Services
-print -
 useAsInput @${ASUX::JobSetName}/Svcs-ASUX.org-DEV-1.yaml
 saveTo ?!AWS-CFNInit-Services
 useAsInput ?!AWS-CFNInit-Services
-print -
-
 
 //--------------------------------------------------
 makeNewRoot Resources
