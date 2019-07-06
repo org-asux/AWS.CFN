@@ -15,7 +15,7 @@ if ( ! process.env.ORGASUXHOME ) {
   process.exit(99);
 }
 // file-included - Not a 'require'
-eval( fs.readFileSync( process.env.ORGASUXHOME +'/asux-common.js' ) + '' );
+eval( fs.readFileSync( process.env.ORGASUXHOME +'/bin/asux-common.js' ) + '' );
 
 //==========================================================
 var CMDGRP="aws.cfn"; // this entire file is about this CMDGRP
