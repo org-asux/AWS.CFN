@@ -5,12 +5,12 @@
 
 	<name>${project.groupId}:${project.artifactId}</name>
 	<groupId>org.asux</groupId>
-	<artifactId>aws-sdk</artifactId>
+	<artifactId>aws-cfn</artifactId>
     
     <version>1.0</version>
     <inceptionYear>2019</inceptionYear>
-    <description>Interface to AWS SDK that produces SnakeYAML compatible org.yaml.snakeyaml.nodes.Node data-structures, for further processing by org.ASUX toolset</description>
-	<url>https://github.com/seetamraju/org.ASUX.common</url>
+    <description>Command line tools to generate AWS Cloudformation templates in YAML, that areSnakeYAML compatible org.yaml.snakeyaml.nodes.Node data-structures.  This project does NOT interact with AWS, and any use of AWS is limited to fetching the list of regions and the list of AZs within each region</description>
+	<url>https://github.com/org-asux/org.ASUX.AWS.CFN</url>
 
     <properties>
         <!-- Properties added here are globally useable -->
@@ -52,9 +52,9 @@
 	</contributors>
 
     <scm>
-		<url>https://github.com/org-asux/org.ASUX.AWS-SDK</url>
-		<connection>scm:git:git@github.com:org-asux/org.ASUX.AWS-SDK.git</connection>
-		<developerConnection>scm:git:git@github.com:org-asux/org.ASUX.AWS-SDK.git</developerConnection>
+		<url>https://github.com/org-asux/org.ASUX.AWS.CFN.git</url>
+		<connection>scm:git:git@github.com:org-asux/org.ASUX.AWS.CFN.git</connection>
+		<developerConnection>scm:git:git@github.com:org-asux/org.ASUX.AWS.CFN.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
@@ -73,7 +73,7 @@
         </repository>
     </distributionManagement>
 
-    <dependencies>
+	<dependencies>
         <dependency>
             <groupId>org.asux</groupId>
             <artifactId>common</artifactId>
@@ -87,6 +87,11 @@
         <dependency>
             <groupId>org.asux</groupId>
             <artifactId>yaml.nodeimpl</artifactId>
+            <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.asux</groupId>
+            <artifactId>aws-sdk</artifactId>
             <version>1.0</version>
         </dependency>
         <dependency>
@@ -106,32 +111,6 @@
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>1.24</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.opencsv/opencsv -->
-        <dependency>
-            <groupId>com.opencsv</groupId>
-            <artifactId>opencsv</artifactId>
-            <version>4.0</version>
-        </dependency>
-        <!-- <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>s3</artifactId>
-            <version>2.5.32</version>
-        </dependency>
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>utils</artifactId>
-            <version>2.5.32</version>
-        </dependency> -->
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-core</artifactId>
-            <version>1.11.541</version>
-        </dependency>
-        <dependency>
-            <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-ec2</artifactId>
-            <version>1.11.541</version>
         </dependency>
 	</dependencies>
 
