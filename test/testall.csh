@@ -15,9 +15,22 @@ echo "Usage: $0 [--verbose]"
 # endif
 
 ###------------------------------
-set ORGASUXFLDR=/mnt/development/src/org.ASUX
-set path=( $path ${ORGASUXFLDR} )
+which asux >& /dev/null
+if ( $status == 0 ) then
+        set ORGASUXFLDR=`which asux`
+        set ORGASUXFLDR=$ORGASUXFLDR:h
+        setenv ORGASUXFLDR $ORGASUXFLDR
+        echo "ORGASUXFLDR=$ORGASUXFLDR"
+else
+        foreach FLDR ( ~/org.ASUX   ~/github/org.ASUX   ~/github.com/org.ASUX  /mnt/development/src/org.ASUX     /opt/org.ASUX  /tmp/org.ASUX  )
+                if ( -e "${FLDR}/asux" ) then
+                        set ORGASUXFLDR="$FLDR"
+                        set path=( $path "${ORGASUXFLDR}" )
+                endif
+        end
+endif
 
+###------------------------------
 set AWSCFNFLDR=${ORGASUXFLDR}/AWS/CFN
 set TESTSRCFLDR=${AWSCFNFLDR}/test
 
@@ -38,9 +51,8 @@ if ( "$VERBOSE" != "" ) pwd
 # if ( "$DELAY" == "" ) set DELAY=2
 
 set JARFLDR=${ORGASUXFLDR}/lib
+set UBERJARPATH=${JARFLDR}/org.asux.mvn-shade-uber-jar-1.0.jar
 
-set UBERJARPATH=${JARFLDR}/org.asux-mvn-shade-uber-jar-1.0.jar
-set UBERJARPATH=${JARFLDR}/org.asux-mvn-shade-uber-jar-1.0.jar-ORIG
 #_____ ${JARFLDR}/org.asux.aws-sdk.aws-sdk-1.0.jar
 #_____ ${JARFLDR}/org.asux.yaml.nodeimpl.yaml.nodeimpl-1.0.jar
 #_____ ${JARFLDR}/org.asux.yaml.yaml-1.0.jar
@@ -49,7 +61,6 @@ set UBERJARPATH=${JARFLDR}/org.asux-mvn-shade-uber-jar-1.0.jar-ORIG
 # set COMMONSCLIJAR=${JARFLDR}/commons-cli.commons-cli.commons-cli-1.4.jar
 # #___ commons-cli-1.4.jar
 # set JUNITJAR=${JARFLDR}/junit.junit.junit-4.8.2.jar
-
 # set ASUXCOMMON=${JARFLDR}/org.asux.common.common-1.0.jar
 # set ASUXCOMMON=/Users/Sarma/.m2/repository/org/asux/common/1.0/common-1.0.jar
 # set ASUXYAML=${JARFLDR}/org.asux.yaml.yaml-1.0.jar
@@ -62,7 +73,7 @@ if ( $?CLASSPATH ) then
         setenv CLASSPATH ${CLASSPATH}:${UBERJARPATH}
 else
         # setenv CLASSPATH  ${ASUXAWSCFN}:${ASUXYAML}:${ASUXCOMMON}:${COMMONSCLIJAR}:${JUNITJAR}
-        setenv CLASSPATH ${CLASSPATH}:${UBERJARPATH}
+        setenv CLASSPATH ${UBERJARPATH}
 endif
 
 if ( "$VERBOSE" != "" ) echo $CLASSPATH
