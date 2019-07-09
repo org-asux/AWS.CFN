@@ -77,6 +77,9 @@ yaml --macro @/dev/null
 yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties	@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml  --delimiter ,
 yaml --macro @/dev/null
 
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties,Tags	'Key: FQDN ; Value: ${ASUX::MyEC2InstanceName}.${ASUX::MyDomainName}'  --delimiter ,
+yaml --macro @/dev/null
+
 yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties	@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2-UserData.yaml  --delimiter ,
 yaml --macro @/dev/null
 
