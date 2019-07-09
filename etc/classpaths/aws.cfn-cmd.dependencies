@@ -4,7 +4,7 @@
 ## To help others, copy these 5 header lines!   Add a few blank lines to make everyone feel comfortable editing this file!
 ## That's it!
 
-org.asux:common:jar:1.0:compile
+org.asux:common:jar:1.1:compile
 org.asux:yaml:jar:1.0:compile
 org.asux:aws-cfn:jar:1.0
 org.asux:aws-sdk:jar:1.0
