@@ -1,0 +1,13 @@
+  MyPrivateRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    DependsOn:
+      - MyVPCGatewayAttachment
+    Properties:
+      VpcId: !Ref ${ASUX::MyVPCName}
+
+      ### Do _NOT_ think it's useful for RouteTable to have other tags.
+      Tags:
+      - Key: Name
+        Value: PRIVATE Route table
+
+#EOF

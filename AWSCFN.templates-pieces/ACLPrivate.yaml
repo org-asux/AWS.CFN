@@ -1,0 +1,11 @@
+  MyPrivateNetworkAcl:
+    Type: 'AWS::EC2::NetworkAcl'
+    Properties:
+      VpcId: !Ref ${ASUX::MyVPCName}
+
+      ### Do _NOT_ think it's useful for ACLs to have other tags.
+      Tags:
+      - Key: Name
+        Value: PRIVATE Network-ACL (no ports)
+
+#EOF

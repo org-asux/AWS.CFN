@@ -1,0 +1,19 @@
+  MyPrivateSubnetAZ${ASUX::foreach.index+1}:
+    Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
+    Type: 'AWS::EC2::Subnet'
+    Condition: doesExistSubnet${ASUX::foreach.index+1}
+    Properties:
+      VpcId: !ImportValue
+        Ref: MyVPCName
+      CidrBlock: ${ASUX::CidrBlockAZ${ASUX::foreach.index+1}}
+      MapPublicIpOnLaunch: !Ref EC2getsPublicIPByDefault
+      ### DefaultForAz: true  ## Apparently not supported for VPCs and Subnets that are NOT default ALREADY.
+      AvailabilityZone: ${ASUX::foreach.iteration.value}
+      #### There are 2 formula-based ALTERNATIVE-MACROs:-
+      # (1)  ${ASUX::AWSRegion}${ASUX::Digit${ASUX::foreach.index}ToAlpha} 
+      # (2) AvailabilityZone: !Join
+      #     - ''
+      #     - - !Ref 'AWS::Region'
+      #       - ${ASUX::AZSuffix}  ## values like 'a' 'b' 'c' based on the # of AZs
+
+#EOF
