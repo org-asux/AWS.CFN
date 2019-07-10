@@ -4,7 +4,6 @@
     Export:             ## The name of the resource output to be exported for a cross-stack reference.
       Name: !Sub '${MyVPCStackPrefix}-VPCID'  ## For each AWS account, Export names must be unique within a region.
       ## Alternatively, the Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-VPC-1"
-      ##      But.. how will you replace the "1" at the end of the name in above line??????
 
   PublicRouteTableID: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
     Description: Export ID of the only Public Route Table associated with a VPC + IGW
@@ -13,7 +12,14 @@
       Name: '${ASUX::MyVPCStackPrefix}-PublicRouteTableID'  ## For each AWS account, Export names must be unique within a region.
       ## Alternative #1:  Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-PublicRouteTableID-1"
       ## Alternative #2:  Name: !Sub '${MyStackNamePrefix}-PublicRouteTableID'
-      ##      But.. how will you replace the "1" at the end of the name in above line??????
+
+  PrivateRouteTableID: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
+    Description: Export ID of the only _PRIVATE_ Route Table associated with a VPC's private subnets
+    Value: !Ref MyPrivateRouteTable   ## The value of the property returned by the aws cloudformation describe-stacks command
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: '${ASUX::MyVPCStackPrefix}-PrivateRouteTableID'  ## For each AWS account, Export names must be unique within a region.
+      ## Alternative #1:  Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-PrivateRouteTableID-1"
+      ## Alternative #2:  Name: !Sub '${MyStackNamePrefix}-PrivateRouteTableID'
 
   DefaultNetworkAcl: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
     Description: Export ID of the only Default-Network-ACL associated with a VPC + IGW
@@ -22,6 +28,13 @@
       Name: '${ASUX::MyVPCStackPrefix}-DefaultNetworkAclID'  ## For each AWS account, Export names must be unique within a region.
       ## Alternative #1:  Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-DefaultNetworkAcl-1"
       ## Alternative #2:  Name: !Sub '${MyStackNamePrefix}-DefaultNetworkAclID'
-      ##      But.. how will you replace the "1" at the end of the name in above line??????
+
+  PrivateNetworkAcl: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
+    Description: Export ID of the only Private-Network-ACL associated with a VPC's private subnets
+    Value: !Ref MyPrivateNetworkAcl   ## The value of the property returned by the aws cloudformation describe-stacks command
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: '${ASUX::MyVPCStackPrefix}-PrivateNetworkAclID'  ## For each AWS account, Export names must be unique within a region.
+      ## Alternative #1:  Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-PrivateNetworkAcl-1"
+      ## Alternative #2:  Name: !Sub '${MyStackNamePrefix}-PrivateNetworkAclID'
 
 #EOF
