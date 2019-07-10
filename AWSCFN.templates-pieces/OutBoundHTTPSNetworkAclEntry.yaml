@@ -5,7 +5,7 @@
       RuleNumber: '101'
       Protocol: '6'
       RuleAction: allow
-      Egress: 'true'
+      Egress: 'true'    ### Whether this rule applies to egress traffic from the subnet (true) or ingress traffic to the subnet (false). By default, AWS CloudFormation specifies false
       CidrBlock: 0.0.0.0/0
       PortRange:
         From: '443'
