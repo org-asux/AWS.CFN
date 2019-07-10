@@ -5,4 +5,9 @@
     Properties:
       VpcId: !Ref ${ASUX::MyVPCName}
 
+      ### Do _NOT_ think it's useful for RouteTable to have other tags.
+      Tags:
+      - Key: Name
+        Value: PUBLIC Route table
+
 #EOF
