@@ -60,8 +60,6 @@ public final class EnvironmentParameters implements Serializable {
     public static final String PROPERTIES_FOR_JOB = "job.properties"; // one of the many Properties objects within this.allPropsRef (see go())
 
     public static final String AWSREGIONSLOCATIONS = "config/AWSRegionsLocations.properties";
-    public static final String JOB_DEFAULTS = "/config/DEFAULTS/job-DEFAULTS.properties"; // under AWSCFNHOME
-    public static final String JOBSET_MASTER = "jobset-Master.properties"; // under '.' folder
 
     public static final String MYSTACKNAMEPREFIX    = "MyStackNamePrefix";
     public static final String MYVPCSTACKPREFIX     = "MyVPCStackPrefix";
@@ -69,7 +67,20 @@ public final class EnvironmentParameters implements Serializable {
     public static final String MYDOMAINNAME         = "MyDomainName";
     public static final String MYRT53HOSTEDZONEID   = "MyRt53HostedZoneId";
 
+    public static final String VPCCIDRBLOCK = "VPCCIDRBLOCK";
+    public static final String CIDRBLOCK_BYTE3_DELTA = "CIDRBLOCK_Byte3_Delta";
+
+	public static final String CIDRBLOCKELEMENTpattern = "([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
+	public static final String CIDRBLOCKRANGEpattern = "([0-9]|[12][0-9]|3[0-2])";
+	public static final String CIDRBLOCKpattern = "^"+ CIDRBLOCKELEMENTpattern +"\\."+ CIDRBLOCKELEMENTpattern +"\\."+ CIDRBLOCKELEMENTpattern +"\\."+ CIDRBLOCKELEMENTpattern +"/"+ CIDRBLOCKRANGEpattern +"$";
+
+    // ------ private ------
+    private static final String JOB_DEFAULTS = "/config/DEFAULTS/job-DEFAULTS.properties"; // under AWSCFNHOME
+    private static final String FULLSTACKJOB_DEFAULTS = "/config/DEFAULTS/FullStackJob-DEFAULTS.properties"; // under AWSCFNHOME
+    private static final String JOBSET_MASTER = "jobset-Master.properties"; // under '.' folder
+
     public static final String CFNINIT_PACKAGES = "AWS-CFNInit-Standup";
+    public static final String CFNINIT_SERVICES = "AWS-CFNInit-Services";
     public static final String EC2INSTANCETYPE  = "EC2InstanceType";
     public static final String EC2IAMROLES      = "MyIAM-roles";
 
@@ -77,21 +88,27 @@ public final class EnvironmentParameters implements Serializable {
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // =================================================================================
 
+    // The following .. once they are set by BootCheckAndConfig.config(), they are untouched.
     public boolean verbose;
 
-    public String orgasuxhome   = "UNDEFINED";
-    public String awshome       = "UNDEFINED";
-    public String awscfnhome    = "UNDEFINED";
+    private String orgasuxhome   = "UNDEFINED";
+    private String awshome       = "UNDEFINED";
+    private String awscfnhome    = "UNDEFINED";
 
-    public String AWSRegion     = "UNDEFINED";
-    public String AWSLocation   = "UNDEFINED";
-    public String MyStackNamePrefix = "UNDEFINED";
-    public String MyVPCStackPrefix  = "UNDEFINED";
+    private String AWSRegion     = "UNDEFINED";
+    private String AWSLocation   = "UNDEFINED";
+    private String MyStackNamePrefix = "UNDEFINED";
+    private String MyVPCStackPrefix  = "UNDEFINED";
 
-    public String cfnJobTYPEString  = "UNDEFINED";
+    private Enums.GenEnum cfnJobTypEnum = Enums.GenEnum.UNDEFINED;
+    private String cfnJobTYPEString  = "UNDEFINED";
 
     //---------------- PRIVATE ----------------
     private transient LinkedHashMap<String, Properties> allPropsRef;   // this could have been 'final' too, but for the fact that this.deepClone() needs to reset it.
+
+    //--------- following are redefined by fullstack-gen -----------
+    public boolean bInRecursionByFullStack = false;
+    public String outputFolderPath = "/tmp";
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -105,7 +122,42 @@ public final class EnvironmentParameters implements Serializable {
     public EnvironmentParameters( final boolean _verbose, final LinkedHashMap<String, Properties> _allProps  ) {
         this.verbose = _verbose;
         this.allPropsRef = _allProps;
+        // this.cfnJobTypEnum = _cfnJobTypEnum;
+        // this.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( this.cfnJobTypEnum );
     }
+
+    //==============================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //==============================================================================
+
+    public void setHomeFolders( final String _orgasuxhome, final String _awshome, final String _awscfnhome ) {
+        this.orgasuxhome = _orgasuxhome;
+        this.awshome = _awshome;
+        this.awscfnhome = _awscfnhome;
+    }
+
+    public void setFundamentalGlobalProps( final String _AWSRegion, final String _AWSLocation ) {
+        this.AWSRegion = _AWSRegion;
+        this.AWSLocation = _AWSLocation;
+    }
+
+    public void setFundamentalPrefixes( final String _MyStackNamePrefix, final String _MyVPCStackPrefix ) {
+        this.MyStackNamePrefix = _MyStackNamePrefix;
+        this.MyVPCStackPrefix = _MyVPCStackPrefix;
+    }
+
+    //==============================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //==============================================================================
+
+    public void setCmd( final Enums.GenEnum _cfnJobTypEnum ) throws Exception {
+        this.cfnJobTypEnum = _cfnJobTypEnum;
+        this.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( this.cfnJobTypEnum );
+    }
+
+    //==============================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //==============================================================================
 
     //==============================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -146,6 +198,60 @@ public final class EnvironmentParameters implements Serializable {
         // because this class has at least one TRANSIENT class-variable.. ..
         // we need to 'restore' that object's transient variable to a 'replica'
         this.allPropsRef = _orig.allPropsRef;
+    }
+
+    // =================================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // =================================================================================
+
+    public Enums.GenEnum getCmdEnum()       { return this.cfnJobTypEnum; }
+    public String getCfnJobTYPEString()     { return this.cfnJobTYPEString; }
+
+    public String get_orgasuxhome()         { return this.orgasuxhome; }
+    public String get_awshome()             { return this.awshome; }
+    public String get_awscfnhome()          { return this.awscfnhome; }
+
+    public String getAWSRegion()            { return this.AWSRegion; }
+    public String getAWSLocation()          { return this.AWSLocation; }
+    public String getMyStackNamePrefix()    { return this.MyStackNamePrefix; }
+    public String getMyVPCStackPrefix ()    { return this.MyVPCStackPrefix; }
+
+    public String getJOB_DEFAULTS() throws Exception
+    {   final String HDR = CLASSNAME + ": getJOB_DEFAULTS(): ";
+        switch ( this.cfnJobTypEnum ) {
+            case FULLSTACK:     return "fullstack-"+ JOB_DEFAULTS;
+            case SUBNET:
+            case EC2PLAIN:
+            case VPC:
+            case SGSSH:
+                        if ( this.bInRecursionByFullStack )
+                            return FULLSTACKJOB_DEFAULTS;
+                        else
+                            return JOB_DEFAULTS;
+            case VPNCLIENT:
+            case SGEFS:
+            case UNDEFINED:
+            default:        final String es = HDR +" Unimplemented command: " + this.cfnJobTypEnum;
+                            System.err.println( es );
+                            throw new Exception( es );
+        } // switch
+    }
+
+    public String getJOBSET_MASTER() throws Exception
+    {   final String HDR = CLASSNAME + ": getJOBSET_MASTER(): ";
+        switch ( this.cfnJobTypEnum ) {
+            case FULLSTACK:     return JOBSET_MASTER;
+            case SUBNET:
+            case EC2PLAIN:
+            case VPC:
+            case SGSSH:         return JOBSET_MASTER;
+            case VPNCLIENT:
+            case SGEFS:
+            case UNDEFINED:
+            default:        final String es = HDR +" Unimplemented command: " + this.cfnJobTypEnum;
+                            System.err.println( es );
+                            throw new Exception( es );
+        } // switch
     }
 
     // =================================================================================
