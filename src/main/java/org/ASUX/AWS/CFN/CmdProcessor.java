@@ -135,20 +135,22 @@ public final class CmdProcessor
             case EC2PLAIN:
                             final String MyDomainName       = globalProps.getProperty( EnvironmentParameters.MYDOMAINNAME );
                             if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName );
-                            final String Rt53HostedZoneId   = awssdk.getHostedZoneId( _envParams.AWSRegion, MyDomainName );
+                            final String Rt53HostedZoneId   = awssdk.getHostedZoneId( _envParams.getAWSRegion(), MyDomainName );
                             if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName + " Rt53HostedZoneId " + Rt53HostedZoneId  );
                             globalProps.setProperty( EnvironmentParameters.MYRT53HOSTEDZONEID, Rt53HostedZoneId ); // will define ${ASUX::MyRt53HostedZoneId}
                             // fall thru below.
+                            batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
+                            break;
             case VPC:
             case SGSSH:
-                            batchFilePath = "@"+ _envParams.awscfnhome +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
+                            batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
                             break;
             case SUBNET:
                             assertTrue( _cmdLA.publicOrPrivateSubnet != null && _cmdLA.publicOrPrivateSubnet.length() > 0 ); // CmdLineArgs.class guarantees that it will be 'public' or 'private', if NOT NULL.
                             globalProps.setProperty( "PublicOrPrivate", _cmdLA.publicOrPrivateSubnet );
                             if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
-                            batchFilePath = "@"+ _envParams.awscfnhome +"/bin/AWSCFN-"+_cfnJobType+"-"+_cmdLA.publicOrPrivateSubnet+"-Create.ASUX-batch.txt";
+                            batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-"+_cmdLA.publicOrPrivateSubnet+"-Create.ASUX-batch.txt";
                             break;
             case FULLSTACK:
                             break;
@@ -162,33 +164,61 @@ public final class CmdProcessor
         } // switch
 
         //-------------------------------------
+        String outpfile = "???UN-initialized_outpfile???"; // forced to initialize because of 'case: FULLSTACK' below.
         switch ( _cmdLA.getCmdName() ) {
+            case SUBNET:    outpfile   = _envParams.outputFolderPath +"/"+ _cfnJobType +"-"+ _cmdLA.publicOrPrivateSubnet +".yaml";
+                            break;
+
+            case EC2PLAIN:
+                            outpfile   = _envParams.outputFolderPath +"/"+ _cfnJobType +"-"+ globalProps.getProperty( EnvironmentParameters.MYEC2INSTANCENAME ) +".yaml";
+                            break;
+            case VPC:
+            case SGSSH:
+                            outpfile   = _envParams.outputFolderPath +"/"+ _cfnJobType +".yaml";
+                            break;
+            case FULLSTACK:
+                            break;
+            case VPNCLIENT:
+            case SGEFS:
+            case UNDEFINED:
+            default:        final String es = HDR +" Unimplemented command: " + _cmdLA.toString();
+                            System.err.println( es );
+                            throw new Exception( es );
+        } // switch
+
+        //-------------------------------------
+        switch ( _cmdLA.getCmdName() ) {
+            case FULLSTACK:
+                            break;
+            case SUBNET:
             case EC2PLAIN:
             case VPC:
             case SGSSH:
-            case SUBNET:
-            case SGEFS:
-            case VPNCLIENT:
-                // invoking org.ASUX.YAML.NodeImpl.CmdInvoker() is too generic.. especially, when I am clear as daylight that I want to invoke --batch command.
-                // final org.ASUX.YAML.NodeImpl.CmdInvoker nodeImplCmdInvoker = org.ASUX.YAML.NodeImpl.CmdInvoker(
-                //             this.verbose, false,  _cmdInvoker.getMemoryAndContext(), (DumperOptions)_cmdInvoker.getLibraryOptionsObject() );
-                // final Object outputAsIs = nodeImplCmdInvoker.processCommand( cmdlineargs, inputNode );
+                    // invoking org.ASUX.YAML.NodeImpl.CmdInvoker() is too generic.. especially, when I am clear as daylight that I want to invoke --batch command.
+                    // final org.ASUX.YAML.NodeImpl.CmdInvoker nodeImplCmdInvoker = org.ASUX.YAML.NodeImpl.CmdInvoker(
+                    //             this.verbose, false,  _cmdInvoker.getMemoryAndContext(), (DumperOptions)_cmdInvoker.getLibraryOptionsObject() );
+                    // final Object outputAsIs = nodeImplCmdInvoker.processCommand( cmdlineargs, inputNode );
 // above 3 lines  -versus-  below 3 lines
-                final BatchCmdProcessor batcher = new BatchCmdProcessor( _cmdLA.verbose, /* showStats */ false, _cmdLA.quoteType, this.cmdinvoker.dumperopt );
-                batcher.setMemoryAndContext( this.cmdinvoker.getMemoryAndContext() ); // this will invoke.. batcher.initProperties()
-                if ( _cmdLA.verbose ) new org.ASUX.common.Debug(_cmdLA.verbose).printAllProps( HDR +" FULL DUMP of propsSetRef = ", _envParams.getAllPropsRef() );
+                    final BatchCmdProcessor batcher = new BatchCmdProcessor( _cmdLA.verbose, /* showStats */ false, _cmdLA.quoteType, this.cmdinvoker.dumperopt );
+                    batcher.setMemoryAndContext( this.cmdinvoker.getMemoryAndContext() ); // this will invoke.. batcher.initProperties()
+                    if ( _cmdLA.verbose ) new org.ASUX.common.Debug(_cmdLA.verbose).printAllProps( HDR +" FULL DUMP of propsSetRef = ", _envParams.getAllPropsRef() );
 
-                final Node emptyInput = NodeTools.getEmptyYAML( this.cmdinvoker.dumperopt );
-                final Node outpData2 = batcher.go( batchFilePath, emptyInput );
-                if ( this.verbose ) System.out.println( HDR +" outpData2 =" + outpData2 +"\n\n");
-
-                final String outpfile   = "/tmp/"+ _cfnJobType +".yaml";
-                InputsOutputs.saveDataIntoReference( "@"+ outpfile, outpData2, null, this.cmdinvoker.getYamlWriter(), this.cmdinvoker.dumperopt, _cmdLA.verbose );
-                break;
-            case FULLSTACK:
+                    final Node emptyInput = NodeTools.getEmptyYAML( this.cmdinvoker.dumperopt );
+                    final Node outpData2 = batcher.go( batchFilePath, emptyInput );
+                    if ( this.verbose ) System.out.println( HDR +" outpData2 =" + outpData2 +"\n\n");
+                    if ( outpData2 == null ) {
+                        System.err.println("Failure!  See error-messages above.  The "+ _cmdLA.getCmdName() + " command abruptly ends immediately." );
+                        System.exit(99);
+                        throw new Exception( "Failure to successfully complete user-command. rerun with --verbose option!" );
+                    }
+                    InputsOutputs.saveDataIntoReference( "@"+ outpfile, outpData2, null, this.cmdinvoker.getYamlWriter(), this.cmdinvoker.dumperopt, _cmdLA.verbose );
+                    break;
+            case VPNCLIENT:
+            case SGEFS:
             case UNDEFINED:
-            default:
-                            break;
+            default:        final String es = HDR +" Unimplemented command: " + _cmdLA.toString();
+                            System.err.println( es );
+                            throw new Exception( es );
         } // switch
     }
 
@@ -210,8 +240,7 @@ public final class CmdProcessor
     public void genCFNShellScript( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
     {
         final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
-        final String outpfile   = "/tmp/"+ _envParams.cfnJobTYPEString +".yaml";
-        final String scriptfile = "/tmp/"+ _envParams.cfnJobTYPEString +".sh";
+        final String outpfile   = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".yaml";
 
         final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         // final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}--${ASUX::JobSetName}${ASUX::ItemNumber}", this.allPropsRef );
@@ -220,20 +249,28 @@ public final class CmdProcessor
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose );
 
         String preStr = null;
+        String scriptfile;
+
         switch ( _cmdLA.getCmdName() ) {
         case VPC:       preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-VPC  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey="+EnvironmentParameters.MYVPCSTACKPREFIX+",ParameterValue=${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"} --template-body file://"+ outpfile;
+                        scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".sh";
                         break;
         case SUBNET:    preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.publicOrPrivateSubnet +"-"+ _cmdLA.jobSetName + _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
+                        scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ _cmdLA.publicOrPrivateSubnet +".sh";
                         break;
         case SGSSH:     preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
+                        scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".sh";
                         break;
         case EC2PLAIN:  
                         final CmdProcessorEC2 ec2Processor = new CmdProcessorEC2( this );
                         preStr = ec2Processor.genCFNShellScript( _cmdLA, _envParams );
+                        scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ globalProps.getProperty( EnvironmentParameters.MYEC2INSTANCENAME ) +".sh";
                         break;
         case FULLSTACK:
                         final CmdProcessorFullStack fullStackProcessor = new CmdProcessorFullStack( this, this.cmdinvoker );
-                        preStr = fullStackProcessor.genCFNShellScript( _cmdLA, _envParams );
+                        // do NOT set 'preStr' for FULLSTACK
+                        fullStackProcessor.genCFNShellScript( _cmdLA, _envParams );
+                        scriptfile = "??UNDEFINED for FullStack-gen"; // OTHERWISE, Compiler will complain about uninitialized-variable.. .. .. per formula, you can blindly set it to:- _envParams.outputFolderPath +"/"+ _envParams.cfnJobTYPEString +".sh";
                         break;
         case VPNCLIENT:
         case SGEFS:
@@ -285,7 +322,7 @@ public final class CmdProcessor
     //     // final String HDR = CLASSNAME + ": genVPC(): ";
     //     //${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}
     //     final String cfnJobType = _boot.getCFNJobType( _cla.cmdName );
-    //     // final String outpfile   = "/tmp/"+ cfnJobType;
+    //     // final String outpfile   = _envParams.outputFolderPath +"/"+ cfnJobType;
 
     //     final String[] batchcmdargs = { "--batch",
     //                     "@"+ _boot.awscfnhome +"/bin/AWSCFN-"+cfnJobType+"-Create.ASUX-batch.txt",
