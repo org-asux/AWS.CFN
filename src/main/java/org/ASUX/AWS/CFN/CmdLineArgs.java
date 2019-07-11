@@ -170,7 +170,8 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             subnetsgen.setArgName("JobSetName> <public|private"); // overwrite what was set within genOption()
         final Option sgsshgen = genOption( "gs", SGSSHGEN, false, "create a SecurityGroup just to allow SSH access to a AMZN2-Linux EC2-instance", 1 );
         final Option sgefsgen = genOption( "ge", SGEFSGEN, false, "create a SecurityGroup just to MOUNT an EFS onto a AMZN2-Linux EC2-instance", 1 );
-        final Option ec2plaingen = genOption( "e", EC2PLAINGEN, false, "create a new plain EC2-instance of AMZN2-Linux", 1 );
+        final Option ec2plaingen = genOption( "e", EC2PLAINGEN, false, "create a new plain EC2-instance of AMZN2-Linux", 2 );
+            ec2plaingen.setArgName("JobSetName> <public|private"); // overwrite what was set within genOption()
 
         final Option vpcclientgen = genOption( "vn", VPNCLIENTGEN, false, "create a new VPN-Client connection for a specific VPC", 1 );
         final Option fullstackgen = genOption( "fg", FULLSTACKGEN, false, "create a new stack that includes a VPC, subnets, SGs and an EC2 instance", 1 );
