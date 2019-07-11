@@ -1,9 +1,23 @@
 ### This is the file 'AWSCFN-Subnets-private-Create.ASUX-batch.txt'
 
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
 ### The 1st thing you do - Is to define's the JOB-parameters
 ### You can do it in 2 ways (or do both ways, as shown in next 3 lines below):-
 ###	(1) Via a properties-file
 ###	(2) or via setProperty
+
+### So.. 1st load the "PRE" common stuff - that's common to all jobs
+
+#__ setProperty	?AWSCFNHOME=${ASUX::ORGASUXHOME}/AWS/CFN
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-pre.ASUX-batch.txt
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### 2nd load the MOST __FUNDAMENTAL__ job-specific properties!
+###	FYI: We'll load the rest of the properties -- see below, _AFTER_ the "Post" common stuff
 
 setProperty ?cfnJobTYPE=subnets
 
@@ -13,10 +27,9 @@ properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}.prope
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
-### Now load the common stuff - that's common to all jobs
+### Now load the "POST" common stuff - that's common to all jobs.. that __RELY__ on the various properties loaded __ABOVE__
 
-#__ setProperty	AWSCFNHOME=${ASUX::ORGASUXHOME}/AWS/CFN
-include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader.ASUX-batch.txt
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-post.ASUX-batch.txt
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

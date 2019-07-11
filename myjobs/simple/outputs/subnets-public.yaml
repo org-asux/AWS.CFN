@@ -30,8 +30,7 @@ Conditions:
   - ASUXorgWorks
 Resources:
   MyPublicSubnetAZ1:
-    Description: >-
-      If you specify a true or false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property must be specified. - - - Also, Cannot provide Tag with Key=Name.
+    Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
     Type: 'AWS::EC2::Subnet'
     Condition: doesExistSubnet1
     Properties:
@@ -70,8 +69,7 @@ Resources:
       - Key: VALIDATED
         Value: 'No'
   MyPublicSubnetAZ2:
-    Description: >-
-      If you specify a true or false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property must be specified. - - - Also, Cannot provide Tag with Key=Name.
+    Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
     Type: 'AWS::EC2::Subnet'
     Condition: doesExistSubnet2
     Properties:
@@ -110,8 +108,7 @@ Resources:
       - Key: VALIDATED
         Value: 'No'
   MyPublicSubnetAZ3:
-    Description: >-
-      If you specify a true or false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property must be specified. - - - Also, Cannot provide Tag with Key=Name.
+    Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
     Type: 'AWS::EC2::Subnet'
     Condition: doesExistSubnet3
     Properties:
@@ -194,16 +191,16 @@ Outputs:
     Value: !Ref 'MyPublicSubnetAZ1'
     Condition: doesExistSubnet1
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-1-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-public1-ID'
   DefaultPublicSubnet2:
     Description: The subnet no.2's ID to use for public web servers
     Value: !Ref 'MyPublicSubnetAZ2'
     Condition: doesExistSubnet2
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-2-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-public2-ID'
   DefaultPublicSubnet3:
     Description: The subnet no.3's ID to use for public web servers
     Value: !Ref 'MyPublicSubnetAZ3'
     Condition: doesExistSubnet3
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-3-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-public3-ID'

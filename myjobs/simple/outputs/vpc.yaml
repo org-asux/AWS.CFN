@@ -104,6 +104,9 @@ Resources:
     Properties:
       VpcId: !Ref 'VPCbyASUXorg'
       Tags:
+      - Key: Name
+        Value: PUBLIC Route table
+      Tags:
       - Key: LOCATION
         Value: ap-northeast-1
       - Key: ENV
@@ -143,6 +146,9 @@ Resources:
     Type: 'AWS::EC2::NetworkAcl'
     Properties:
       VpcId: !Ref 'VPCbyASUXorg'
+      Tags:
+      - Key: Name
+        Value: DEFAULT Network-ACL for http/s,ssh
       Tags:
       - Key: LOCATION
         Value: ap-northeast-1
@@ -255,8 +261,18 @@ Outputs:
     Value: !Ref 'MyPublicRouteTable'
     Export:
       Name: 'org-ASUX-Playground-Tokyo-PublicRouteTableID'
+  PrivateRouteTableID:
+    Description: Export ID of the only _PRIVATE_ Route Table associated with a VPC's private subnets
+    Value: !Ref 'MyPrivateRouteTable'
+    Export:
+      Name: 'org-ASUX-Playground-Tokyo-PrivateRouteTableID'
   DefaultNetworkAcl:
     Description: Export ID of the only Default-Network-ACL associated with a VPC + IGW
     Value: !Ref 'MyDefaultNetworkAcl'
     Export:
       Name: 'org-ASUX-Playground-Tokyo-DefaultNetworkAclID'
+  PrivateNetworkAcl:
+    Description: Export ID of the only Private-Network-ACL associated with a VPC's private subnets
+    Value: !Ref 'MyPrivateNetworkAcl'
+    Export:
+      Name: 'org-ASUX-Playground-Tokyo-PrivateNetworkAclID'

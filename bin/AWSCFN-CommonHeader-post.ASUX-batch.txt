@@ -1,39 +1,12 @@
-### This is the file 'AWSCFN-CommonHeader.ASUX-batch.txt'
-
-#_____ print ORGASUXHOME=${ASUX::ORGASUXHOME} \n
+### This is the file 'AWSCFN-CommonHeader-post.ASUX-batch.txt'
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
-
-#______ setProperty	AWSCFNHOME=${ASUX::ORGASUXHOME}/AWS/CFN
-#______ setProperty	AWSCFNHOME=/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN
-
-//=============================================================
-//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//=============================================================
-
-### AWSCFN project must create these following lines based on what files exist
-### In fact, the project must Not allow this batch file to run.. unless appropriate files exist.
-### Example: For creating a VPC, only the 1st two lines below are required
-### Example: For creating a new EC2 w EFS, all of the following 5 lines are required
-
-
-properties GLOBAL.VARIABLES=${ASUX::AWSCFNHOME}/config/DEFAULTS/job-DEFAULTS.properties
 
 properties DigitToAlphaProps=${ASUX::AWSCFNHOME}/config/DigitToAlpha.properties
 properties AWSLocationsRegion=${ASUX::AWSCFNHOME}/config/AWSLocationsRegions.properties
 properties AWSRegionLocations=${ASUX::AWSCFNHOME}/config/AWSRegionsLocations.properties
-
-//=============================================================
-//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//=============================================================
-
-properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-DEFAULTS.properties
-properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-${ASUX::cfnJobTYPE}-DEFAULTS.properties
-#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-EFS-DEFAULTS.properties
-#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-SG-DEFAULTS.properties
-#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-EC2-DEFAULTS.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -44,9 +17,6 @@ properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-${ASUX::cfnJobTYPE}-DEF
 setProperty AWSLocation=${ASUX::AWS-${ASUX::AWSRegion}}
 
 setProperty MyVPCStackPrefix=${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}
-
-###------- Load properties CREATED via the vpc-gen.sh  subnets-gen.sh  sg-ssh.sh   and ec2plain.sh
-#____	properties AutoGen.properties=./AutoGen.properties	### ${JobSetName}/AutoGen.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
