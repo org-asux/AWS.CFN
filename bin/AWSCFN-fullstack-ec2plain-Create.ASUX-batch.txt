@@ -1,0 +1,77 @@
+### This is the file 'AWSCFN-fullstack-ec2plain-Create.ASUX-batch.txt'
+
+### The 1st thing you do - Is to define's the JOB-parameters
+### You can do it in 2 ways (or do both ways, as shown in next 3 lines below):-
+###	(1) Via a properties-file
+###	(2) or via setProperty
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now load the common stuff - that's common to all jobs
+
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-FullStack.ASUX-batch.txt
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+### Any ___OVERRIDES___ already came in via JobSetName.yaml
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Load the external inputs (in this case, the list of AZs for the region of interest)
+
+#________ aws.sdk --list-AZs      ${ASUX::AWSRegion}
+useAsInput @${ASUX::AWSCFNHOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
+saveTo !AWSAZs
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now build the CFN script I want
+
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/TopYaml.yaml
+saveTo !YAMLROOT
+
+yaml --insert / @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-EC2.yaml
+yaml --macro @/dev/null
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+makeNewRoot Resources
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2.yaml
+yaml --macro @/dev/null
+
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Standup	!AWS-CFNInit-Standup  --no-quote    --delimiter ,
+yaml --macro @/dev/null
+
+#________ yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Services	!AWS-CFNInit-Services --no-quote    --delimiter ,
+#________ yaml --macro @/dev/null
+
+yaml --insert Resources,${ASUX::MyEC2InstanceName}		@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2-ResourceProperties.yaml --no-quote  --delimiter ,
+yaml --macro @/dev/null
+
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties	@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml  --delimiter ,
+yaml --macro @/dev/null
+
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties,Tags	'Key: FQDN ; Value: ${ASUX::MyEC2InstanceName}.${ASUX::MyDomainName}'  --delimiter ,
+yaml --macro @/dev/null
+
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties	@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2-UserData.yaml  --delimiter ,
+yaml --macro @/dev/null
+
+yaml --insert Resources 					@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Route53-EC2.yaml  --delimiter ,
+yaml --macro @/dev/null
+
+saveTo !TopElemResources
+
+//--------------------------------------------------
+useAsInput !YAMLROOT
+yaml --insert / !TopElemResources
+yaml --macro @/dev/null
+saveTo !YAMLROOT
+
+
+#EoF

@@ -1,0 +1,129 @@
+### This is the file 'AWSCFN-fullstack-subnets-private-Create.ASUX-batch.txt'
+
+### The 1st thing you do - Is to define's the JOB-parameters
+### You can do it in 2 ways (or do both ways, as shown in next 3 lines below):-
+###	(1) Via a properties-file
+###	(2) or via setProperty
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now load the common stuff - that's common to all jobs
+
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-FullStack.ASUX-batch.txt
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+### Any ___OVERRIDES___ already came in via JobSetName.yaml
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Load the external inputs (in this case, the list of AZs for the region of interest)
+
+#________ aws.sdk --list-AZs      ${ASUX::AWSRegion}
+useAsInput @${ASUX::AWSCFNHOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
+saveTo !AWSAZs
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now build the CFN script I want
+
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/TopYaml.yaml
+saveTo !YAMLROOT
+
+yaml --insert / @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-Subnets.yaml
+yaml --macro @/dev/null
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+
+makeNewRoot Resources
+saveTo !TopElemResources
+
+//--------------------------------------------------
+
+makeNewRoot Conditions
+saveTo !Conditions
+
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !Conditions
+		yaml --insert Conditions @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Conditions-Subnets.yaml
+		yaml --macro @/dev/null
+		saveTo !Conditions
+	end
+
+useAsInput !YAMLROOT
+yaml --insert / !Conditions
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		#______print AZ no. ${ASUX::foreach.index} is: 
+		#______print ${ASUX::foreach.iteration.value}
+		
+		useAsInput !TopElemResources
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateSubnet.yaml
+		yaml --macro @/dev/null
+		yaml --insert 'Resources,MyPrivateSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+		yaml --macro @/dev/null
+		saveTo !TopElemResources
+	end
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemResources
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateRouteForAZ.yaml
+		yaml --macro @/dev/null
+		saveTo !TopElemResources
+	end
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemResources
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateSubnetACLAssoc.yaml
+		yaml --macro @/dev/null
+		saveTo !TopElemResources
+	end
+
+//--------------------------------------------------
+
+useAsInput !YAMLROOT
+yaml --insert / !TopElemResources
+saveTo !YAMLROOT
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+makeNewRoot Outputs
+saveTo !TopElemOutputs
+
+//--------------------------------------------------
+	useAsInput !AWSAZs
+	foreach
+		useAsInput !TopElemOutputs
+		yaml --insert Outputs @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-DefaultPrivateSubnet.yaml
+		yaml --macro @/dev/null
+		saveTo !TopElemOutputs
+	end
+
+//--------------------------------------------------
+useAsInput !YAMLROOT
+yaml --insert / !TopElemOutputs
+yaml --macro @/dev/null
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+
+#EoF

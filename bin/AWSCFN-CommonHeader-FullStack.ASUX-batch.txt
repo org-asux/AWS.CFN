@@ -1,0 +1,34 @@
+### This is the file 'AWSCFN-CommonHeader-FullStack.ASUX-batch.txt'
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+### AWSCFN project must create these following lines based on what files exist
+### In fact, the project must Not allow this batch file to run.. unless appropriate files exist.
+### Example: For creating a VPC, only the 1st two lines below are required
+### Example: For creating a new EC2 w EFS, all of the following 5 lines are required
+
+
+properties GLOBAL.VARIABLES=${ASUX::AWSCFNHOME}/config/DEFAULTS/FullStackJob-DEFAULTS.properties
+
+properties DigitToAlphaProps=${ASUX::AWSCFNHOME}/config/DigitToAlpha.properties
+properties AWSLocationsRegion=${ASUX::AWSCFNHOME}/config/AWSLocationsRegions.properties
+properties AWSRegionLocations=${ASUX::AWSCFNHOME}/config/AWSRegionsLocations.properties
+
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-DEFAULTS.properties
+properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-${ASUX::cfnJobTYPE}-DEFAULTS.properties
+#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-EFS-DEFAULTS.properties
+#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-SG-DEFAULTS.properties
+#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-EC2-DEFAULTS.properties
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+#EoF

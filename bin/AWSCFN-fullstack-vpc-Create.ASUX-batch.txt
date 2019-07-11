@@ -1,0 +1,125 @@
+### This is the file 'AWSCFN-fullstack-vpc-Create.ASUX-batch.txt'
+
+### The 1st thing you do - Is to define's the JOB-parameters
+### You can do it in 2 ways (or do both ways, as shown in next 3 lines below):-
+###	(1) Via a properties-file
+###	(2) or via setProperty
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now load the common stuff - that's common to all jobs
+
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-FullStack.ASUX-batch.txt
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+### Any ___OVERRIDES___ already came in via JobSetName.yaml
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Load the external inputs (in this case, the list of AZs for the region of interest)
+
+#________ aws.sdk --list-AZs      ${ASUX::AWSRegion}
+useAsInput @${ASUX::AWSCFNHOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
+saveTo !AWSAZs
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now build the CFN script I want
+
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/TopYaml.yaml
+saveTo !YAMLROOT
+
+yaml --insert / @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-VPC.yaml
+yaml --macro @/dev/null
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+
+makeNewRoot Conditions
+saveTo !Conditions
+
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !Conditions
+		yaml --insert Conditions @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Conditions-VPC.yaml
+		yaml --macro @/dev/null
+		saveTo !Conditions
+	end
+
+useAsInput !YAMLROOT
+yaml --insert / !Conditions
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+
+makeNewRoot Resources
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/VPC.yaml
+yaml --macro @/dev/null
+yaml --insert Resources,${ASUX::MyVPCName},Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro @/dev/null
+saveTo !TopElemResources
+
+//--------------------------------------------------
+useAsInput !TopElemResources
+
+### !!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!
+### Internet gateways per Region = 5.  This limit is directly correlated with the limit on 5 VPCs per Region.
+
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGW.yaml
+yaml --insert Resources,MyInternetGateway,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGWAttach.yaml
+
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRouteTable.yaml
+yaml --insert Resources,MyPublicRouteTable,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro @/dev/null
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRoute.yaml
+
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/ACLDefault.yaml
+yaml --insert Resources,MyDefaultNetworkAcl,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro @/dev/null
+
+saveTo !TopElemResources
+
+//--------------------------------------------------
+useAsInput !TopElemResources
+
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/InboundHTTPNetworkAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/InboundSSHNetworkAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/InboundResponsePortsNetworkAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/OutBoundHTTPNetworkAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/OutBoundHTTPSNetworkAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/OutBoundResponsePortsNetworkAclEntry.yaml
+
+saveTo !TopElemResources
+
+//--------------------------------------------------
+
+useAsInput !YAMLROOT
+yaml --insert / !TopElemResources
+saveTo !YAMLROOT
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+makeNewRoot Outputs
+yaml --insert Outputs @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-VPC.yaml
+yaml --macro @/dev/null
+saveTo !TopElemOutputs
+
+//--------------------------------------------------
+useAsInput !YAMLROOT
+yaml --insert / !TopElemOutputs
+yaml --macro @/dev/null
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+
+#EoF
