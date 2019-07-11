@@ -104,7 +104,7 @@ public final class CmdProcessorEC2
     public String genCFNShellScript( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
     {
         final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
-        final String outpfile   = "/tmp/"+ _envParams.cfnJobTYPEString +".yaml";
+        final String outpfile   = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".yaml";
 
         final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         final String MyStackNamePrefix = globalProps.getProperty( EnvironmentParameters.MYSTACKNAMEPREFIX );
@@ -116,19 +116,19 @@ public final class CmdProcessorEC2
         // final Properties AMIIDCacheProps = org.ASUX.common.Utils.parseProperties( "@"+ AMIIDCachePropsFileName );
         // this.getAllPropsRef().put( "AMIIDCache", AWSRegionLocations );
         // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, "AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _envParams.getAllPropsRef() );
-        final String AMIIDCachePropsFileName = "AMZNLinux2_AMI_ID-"+ _envParams.AWSLocation +".txt";
+        final String AMIIDCachePropsFileName = "AMZNLinux2_AMI_ID-"+ _envParams.getAWSLocation() +".txt";
         try {
-            BootCheckAndConfig.fileCheck( _envParams.awscfnhome +"/config/inputs", AMIIDCachePropsFileName );
-            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _envParams.awscfnhome +"/config/inputs/"+ AMIIDCachePropsFileName ) );
+            BootCheckAndConfig.fileCheck( _envParams.get_awscfnhome() +"/config/inputs", AMIIDCachePropsFileName, _envParams.bInRecursionByFullStack );
+            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _envParams.get_awscfnhome() +"/config/inputs/"+ AMIIDCachePropsFileName ) );
             // Will contain a SINGLE row like:-     AWSAMIID=ami-084040f99a74ce8c3
         } catch (Exception e) {
             if ( e.getMessage().startsWith("ERROR! File missing/unreadable/empty") ) {
                 final String EC2AMI_AMZN2Linux_LookupKey = Macros.evalThoroughly( this.verbose, "${ASUX::EC2AMI_AMZN2Linux_LookupKey}", _envParams.getAllPropsRef() );
                 // The ABOVE 'EC2AMI_AMZN2Linux_LookupKey' is typically defined in AWSCFNHOME/config/DEFAULTS/job-DEFAULTS.propertied
-                System.out.println( HDR +"Need your _MANUAL_HELP_ in Querying AWS to figure out .. what the AMI-ID for "+ EC2AMI_AMZN2Linux_LookupKey +" is, in the Location "+ _envParams.AWSLocation +"." );
-                System.out.println( HDR +"aws ssm get-parameters --names '/aws/service/ami-amazon-linux-latest/"+ EC2AMI_AMZN2Linux_LookupKey +"' --region "+ _envParams.AWSRegion +" --profile ${AWSprofile} --output json" );
-                System.out.println( HDR +"aws ssm get-parameters --names '/aws/service/ami-amazon-linux-latest/"+ EC2AMI_AMZN2Linux_LookupKey +"' --region "+ _envParams.AWSRegion +" --profile ${AWSprofile} --output json > /tmp/o.json" );
-                System.out.println( HDR +"asux yaml batch 'useAsInput @/tmp/o.json ; yaml --read Parameters,0,Value --delimiter ,' --no-quote -i /dev/null -o '"+ _envParams.awscfnhome +"/config/inputs"+ AMIIDCachePropsFileName +"'" );
+                System.out.println( HDR +"Need your _MANUAL_HELP_ in Querying AWS to figure out .. what the AMI-ID for "+ EC2AMI_AMZN2Linux_LookupKey +" is, in the Location "+ _envParams.getAWSLocation() +"." );
+                System.out.println( HDR +"aws ssm get-parameters --names '/aws/service/ami-amazon-linux-latest/"+ EC2AMI_AMZN2Linux_LookupKey +"' --region "+ _envParams.getAWSRegion() +" --profile ${AWSprofile} --output json" );
+                System.out.println( HDR +"aws ssm get-parameters --names '/aws/service/ami-amazon-linux-latest/"+ EC2AMI_AMZN2Linux_LookupKey +"' --region "+ _envParams.getAWSRegion() +" --profile ${AWSprofile} --output json > /tmp/o.json" );
+                System.out.println( HDR +"asux yaml batch 'useAsInput @/tmp/o.json ; yaml --read Parameters,0,Value --delimiter ,' --no-quote -i /dev/null -o '"+ _envParams.get_awscfnhome() +"/config/inputs"+ AMIIDCachePropsFileName +"'" );
                 System.exit(111);
                 return null;
 
@@ -136,7 +136,7 @@ public final class CmdProcessorEC2
                 throw e;
         } // try-catch
 
-        final String DefaultPublicSubnet1 = MyStackNamePrefix + "-Subnet-1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", _envParams.getAllPropsRef()  );
+        final String DefaultPublicSubnet1 = MyStackNamePrefix + "-Subnet-"+_cmdLA.publicOrPrivateSubnet+"1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", _envParams.getAllPropsRef()  );
         final String MySSHSecurityGroup = MyStackNamePrefix + "-SG-SSH"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-SG-SSH", this.getAllPropsRef()  );
         final String MySSHKeyName = Macros.evalThoroughly( this.verbose, "${ASUX::AWSLocation}-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-LinuxSSH.pem", _envParams.getAllPropsRef() );
         // final String MyIamInstanceProfiles = Macros.evalThoroughly( this.verbose, "${ASUX::?????????????????}-"+HDR, this.getAllPropsRef() );
@@ -157,13 +157,13 @@ public final class CmdProcessorEC2
         preStr ="aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::"+EnvironmentParameters.MYEC2INSTANCENAME+"}"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} "+
                 "--profile ${AWSprofile} --parameters "+ params +" --template-body file://"+ outpfile;
 
-        final List keys = awssdk.listKeyPairEC2   ( _envParams.AWSRegion, MySSHKeyName );
+        final List keys = awssdk.listKeyPairEC2   ( _envParams.getAWSRegion(), MySSHKeyName );
         if ( keys.size() > 0 ) {
             if (this.verbose) System.out.println( HDR + "The key exists with the name: "+ MySSHKeyName );
         } else {
             if (this.verbose) System.out.println( HDR + "Will CREATE NEW SSH-login KeyPair with name: "+ MySSHKeyName );
-            awssdk.deleteKeyPairEC2 ( _envParams.AWSRegion, MySSHKeyName ); // just to be sure - and no other reason, that the create should succeed.
-            final String keyPairMaterial = awssdk.createKeyPairEC2 ( _envParams.AWSRegion, MySSHKeyName );
+            awssdk.deleteKeyPairEC2 ( _envParams.getAWSRegion(), MySSHKeyName ); // just to be sure - and no other reason, that the create should succeed.
+            final String keyPairMaterial = awssdk.createKeyPairEC2 ( _envParams.getAWSRegion(), MySSHKeyName );
             // "aws ec2 delete-key-pair --region ${AWSRegion} --profile \${AWSprofile} --key-name ${MySSHKeyName} "
             // "aws ec2 create-key-pair --region ${AWSRegion} --profile \${AWSprofile} --key-name ${MySSHKeyName} > ~/.aws/${MySSHKeyName}"
             final String homedir = System.getProperty("user.home");
