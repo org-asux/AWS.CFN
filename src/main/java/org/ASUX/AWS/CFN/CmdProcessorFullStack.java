@@ -109,13 +109,15 @@ public final class CmdProcessorFullStack
 
         final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
 
-        String preStr = null;
+        final File outputFldr = new File( _cmdLA.jobSetName );
+        outputFldr.mkdir(); // create a folder in '.' called '{JobSetName}'
+        _envParams.outputFolderPath = outputFldr.getAbsolutePath();
 
         //-------------------------------------
         // read AWS,MyOrgName --delimiter ,              (put it into GLOBAL.PROPERTIES)
         // read AWS,MyEnvironment --delimiter ,          (put it into GLOBAL.PROPERTIES)
         // read AWS,AWSRegion --delimiter ,              (put it into GLOBAL.PROPERTIES)
-        // read AWS,VPC,VPCName --delimiter ,           else: a DEFAULT value based on {MyOrgName}-{MyEnvironment}-{AWSLocation}-{user.name} ..  (put them into GLOBAL.PROPERTIES)
+        // read AWS,VPC,MyVPCName --delimiter ,           else: a DEFAULT value based on {MyOrgName}-{MyEnvironment}-{AWSLocation}-{user.name} ..  (put them into GLOBAL.PROPERTIES)
         // read AWS,VPC,subnet  --delimiter ,           to get _ANY_ KV-Pairs for subnet (put them into GLOBAL.PROPERTIES)
         // read AWS,VPC,subnet,SERVERS --delimiter ,     iterate over how many ever such elements exist
         // read AWS,VPC,subnet,SERVERS,<MyEC2InstanceName> --delimiter ,
@@ -126,7 +128,15 @@ public final class CmdProcessorFullStack
         // read AWS,VPC,subnet,SERVERS,<MyEC2InstanceName>,configCustomCommands --delimiter ,
 
         //-------------------------------------
-        // read the single configuration file describing the entire stack
+        // Now recursively call _ALL_ the logic of this entire java-package, to generate the various VPC, subnet, SG and EC2 YAML-files and associated shell scripts
+        //-------------------------------------
+        // _cmdLA.verbose       <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
+        // _cmdLA.quoteType     <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
+        // _cmdLA.jobSetName    <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
+        // _cmdLA.publicOrPrivateSubnet <-- SAME VALUE FOR ALL CMDs (as other commands will IGNORE this)
+
+        //-------------------------------------
+        // read the single YAML-configuration-file.. that's describing the entire-stack / fullstack
         Node output = null;
         final String fullStackJob_Filename = _cmdLA.jobSetName + ".yaml";
         if ( this.verbose ) System.out.println( HDR +" about to read file '" + fullStackJob_Filename + "'" );
@@ -139,7 +149,7 @@ public final class CmdProcessorFullStack
         final Node inputNode = yamlscanner.load( filereader );
         if ( this.verbose ) System.out.println( HDR +" file contents= '" + NodeTools.Node2YAMLString( inputNode ) + ".yaml'");
 
-        //--------------- VPC -------------------
+        //========================================================================
         // invoking org.ASUX.YAML.NodeImpl.CmdInvoker() is too generic.. especially, when I am clear as daylight that I want to invoke --read YAML-command.
         // final org.ASUX.YAML.NodeImpl.CmdInvoker nodeImplCmdInvoker = org.ASUX.YAML.NodeImpl.CmdInvoker(
         //             this.verbose, false,  _cmdInvoker.getMemoryAndContext(), (DumperOptions)_cmdInvoker.getLibraryOptionsObject() );
@@ -149,167 +159,192 @@ public final class CmdProcessorFullStack
         final String MyOrgName      = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,MyOrgName" );
         final String MyEnvironment  = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,MyEnvironment" );
         final String AWSRegion      = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,AWSRegion" );
-        // final String VPCName        = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,VPC,VPCName" );  I'm totally going to PREVENT end-user from specifying VPCName
-        final String VPCName        = Macros.evalThoroughly( this.verbose, "${ASUX::VPCID}", _envParams.getAllPropsRef() ); // set by BootCheckAndConfig!  === _envParams.MyVPCStackPrefix + "-VPCID"
+        globalProps.setProperty( "MyOrgName", MyOrgName );
+        globalProps.setProperty( "MyEnvironment", MyEnvironment );
+        globalProps.setProperty( "AWSRegion", AWSRegion );
+        // !!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!
+        // It is _VERY_ important that these 3 above GLOBAL properties be set - BEFORE creating 'boot' object, and invoking boot.configure()
+
+        final String MyVPCName     = Macros.evalThoroughly( this.verbose, "${ASUX::VPCID}", _envParams.getAllPropsRef() ); // set by BootCheckAndConfig!  === _envParams.MyVPCStackPrefix + "-VPCID"
+        // final String MyVPCName  = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,VPC,MyVPCName" );
+        // !!!! ATTENTION !!!! I'm totally going to PREVENT end-user from specifying MyVPCName
+        globalProps.setProperty( "MyVPCName", MyVPCName );
+
+        final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, this.cmdinvoker.getMemoryAndContext().getAllPropsRef() );
+
+        //========================================================================
+        //--------------- VPC -------------------
+        final EnvironmentParameters envParamsVPC = EnvironmentParameters.deepClone( _envParams );
+        envParamsVPC.bInRecursionByFullStack = true;
+        envParamsVPC.setCmd( Enums.GenEnum.VPC );
+        final CmdLineArgs claVPC     = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsVPC.getCmdEnum(), null, null );
+        boot.envParams = envParamsVPC;
+        boot.configure( claVPC.getCmdName(), claVPC.getJobSetName(), claVPC.getItemNumber() );
+        // This boot.configure() will invoke the following:-
+        // envParamsVPC.setHomeFolders( .. .. .. );
+        // envParamsVPC.setFundamentalGlobalProps( .. .. );
+        // envParamsVPC.setFundamentalPrefixes( .. .. );
+
+        // 1st generate the YAML.
+        this.cmdProcessor.genYAML( claVPC, "fullstack-"+ envParamsVPC.getCfnJobTYPEString(), envParamsVPC );
+        // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
+        this.cmdProcessor.genCFNShellScript( claVPC, envParamsVPC );
+
+        //-------------------------------------
+// ??????? For each SG in jobSetName.yaml ...
+        final EnvironmentParameters envParamsSG = EnvironmentParameters.deepClone( _envParams );
+        envParamsSG.bInRecursionByFullStack = true;
+        envParamsSG.setCmd( Enums.GenEnum.SGSSH );
+        final CmdLineArgs claSGSSH   = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsSG.getCmdEnum(), null, null );
+        boot.envParams = envParamsSG;
+        boot.configure( claSGSSH.getCmdName(), claSGSSH.getJobSetName(), claSGSSH.getItemNumber() );
+        // 1st generate the YAML.
+        this.cmdProcessor.genYAML( claSGSSH, "fullstack-"+ envParamsSG.getCfnJobTYPEString(), envParamsSG );
+        // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
+        this.cmdProcessor.genCFNShellScript( claSGSSH, envParamsSG );
 
         //--------------- subnets -------------------
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose );
+        final ArrayList<String> AZs = awssdk.getAZs( AWSRegion );
+        final int numOfAZs = AZs.size();
+
         readcmd.searchYamlForPattern( inputNode, "AWS,VPC,subnet", "," );
         final SequenceNode subnetSeqN = readcmd.getOutput();
         // we know readcmd always returns a LIST (because we could have one or more matches for ANY arbitratry YAML-Path-Expression.)
         final java.util.List<Node> subnetseqs = subnetSeqN.getValue();
         if ( subnetseqs.size() < 1 )
             throw new Exception( "Under 'subnet', a child-element labelled(LHS) 'SERVERS' must be provided" );
-        final Node subnet = subnetseqs.get(0);
-// ????????????? We should loop over the subnetseqs
-        if ( this.verbose ) System.out.println( HDR +" subnet YAML-tree =\n" + NodeTools.Node2YAMLString( subnet ) +"\n" );
+        for ( Node subnet: subnetseqs ) {// loop over EACH subnet
 
-        String strPublicSubnet    = "no";
-        String strPrivateSubnet   = "no";
-        try {
-            strPublicSubnet    = readStringFromFullStackJobConfig( subnet, readcmd, "public" );
-        } catch( java.lang.AssertionError ae ) { /* do Nothing */ }
-        try {
-            strPrivateSubnet   = readStringFromFullStackJobConfig( subnet, readcmd, "private" );
-        } catch( java.lang.AssertionError ae ) { /* do Nothing */ }
-        final boolean isPublicSubnet    = ( strPublicSubnet != null && strPublicSubnet.toLowerCase().equals("yes") );
-        final boolean isPrivateSubnet   = ( strPrivateSubnet != null && strPrivateSubnet.toLowerCase().equals("yes") );
+            // final Node subnet = subnetseqs.get(0);
+            if ( this.verbose ) System.out.println( HDR +" subnet YAML-tree =\n" + NodeTools.Node2YAMLString( subnet ) +"\n" );
 
-        //--------------- SERVERS -------------------
-        readcmd.searchYamlForPattern( subnet, "SERVERS", "," );
-        final SequenceNode serversSeqN = readcmd.getOutput();
-        // we know readcmd always returns a LIST (because we could have one or more matches for ANY arbitratry YAML-Path-Expression.)
-        final java.util.List<Node> srvrseqs = serversSeqN.getValue();
-        if ( srvrseqs.size() < 1 )
-            throw new Exception( "Under 'subnet', a child-element labelled(LHS) 'SERVERS' must be provided" );
-// ????????????? We should loop over the srvrseqs
-        final Node servers = srvrseqs.get(0);
-        if ( this.verbose ) System.out.println( HDR +" SERVERS(plural) YAML-tree =\n" + NodeTools.Node2YAMLString( servers ) +"\n" );
+            String strPublicSubnet    = "no";
+            String strPrivateSubnet   = "no";
+            try {
+                strPublicSubnet    = readStringFromFullStackJobConfig( subnet, readcmd, "public" );
+            } catch( java.lang.AssertionError ae ) { /* do Nothing */ }
+            try {
+                strPrivateSubnet   = readStringFromFullStackJobConfig( subnet, readcmd, "private" );
+            } catch( java.lang.AssertionError ae ) { /* do Nothing */ }
+            final boolean isPublicSubnet    = ( strPublicSubnet != null && strPublicSubnet.toLowerCase().equals("yes") );
+            final boolean isPrivateSubnet   = ( strPrivateSubnet != null && strPrivateSubnet.toLowerCase().equals("yes") );
 
-        //--------------- EC2 -------------------
-        String ec2instanceName = null;
-        if ( servers instanceof MappingNode ) {
-            //       SERVERS:
-            //          OrgASUXplayEC2plain: ### This is the name of the 1st SERVER.
-            //              ..
+            //-------------------------------------
+            String publicOrPrivateSubnet;
+            if ( isPublicSubnet && ! isPrivateSubnet )
+                publicOrPrivateSubnet = "public"; // unless I am 100% sure, I'm not making the subnet public.
+            else
+                publicOrPrivateSubnet = "private";
 
-            final MappingNode mapNode = (MappingNode) servers;
-            final java.util.List<NodeTuple> tuples = mapNode.getValue();
-            assertTrue( tuples.size() > 0 );
-            int ix = 0;
-            for( NodeTuple kv: tuples ) {
-                final Node keyNode = kv.getKeyNode();
-                assertTrue( keyNode instanceof ScalarNode );
-                // @SuppressWarnings("unchecked")
-                final ScalarNode scalarKey = (ScalarNode) keyNode;
-                ec2instanceName = scalarKey.getValue();
-                final Node valNode = kv.getValueNode();
-                if ( this.verbose ) System.out.println( HDR +" SERVER(#"+ix+") YAML-tree =\n" + NodeTools.Node2YAMLString( valNode ) +"\n" );
-                if ( valNode instanceof MappingNode ) {
-                    parseServerInfo( (MappingNode) valNode, readcmd, _envParams, "packages" );  // ????????????????????? Need to parametrize "packages"
-                } else {
-                    if ( this.verbose ) System.out.println( HDR +" (servers["+ ec2instanceName +"] instanceof MappingNode) is Not a mapping within:\n" + NodeTools.Node2YAMLString( mapNode ) + "\n");
-                    throw new Exception( "SERVER(#"+ix+")="+ ec2instanceName +" is an Invalid Node of type: "+ valNode.getNodeId() );
-                }
-                ix ++;
+            final String VPCCIDRBlock = globalProps.getProperty( EnvironmentParameters.VPCCIDRBLOCK ); // "172.31.0.0/20"
+            final String CIDRBLOCK_Byte3_DeltaString = globalProps.getProperty( EnvironmentParameters.CIDRBLOCK_BYTE3_DELTA ); // example: 16
+            final int CIDRBLOCK_Byte3_Delta = Integer.parseInt( CIDRBLOCK_Byte3_DeltaString );
+            // globalProps.setProperty( "CidrBlockAZ1", "172.31.0.0/20" );
+            // globalProps.setProperty( "CidrBlockAZ2", "172.31.16.0/20" );
+            // globalProps.setProperty( "CidrBlockAZ3", "172.31.32.0/20" );
+            // globalProps.setProperty( "CidrBlockAZ4", "172.31.48.0/20" );
+            int subix = 1;
+            final Util util = new Util( this.verbose );
+            for ( String subnetMask: util.genSubnetMasks( VPCCIDRBlock, numOfAZs, CIDRBLOCK_Byte3_Delta) ) {
+                globalProps.setProperty( "CidrBlockAZ" + subix, subnetMask );
+                subix ++;
             }
 
-        } else if ( servers instanceof SequenceNode ) {
-            //       SERVERS:
-            //        -   ### Sequence of UNNAMED servers
-            //            ..  ..
-            final SequenceNode seqNode = (SequenceNode) servers;
-            final java.util.List<Node> seqs = seqNode.getValue();
-            assertTrue( seqs.size() >= 1 );
-            int ix = 0;
-            for( Node seqItem: seqs ) {
-                if ( seqItem instanceof MappingNode ) {
-                    parseServerInfo( (MappingNode) seqItem, readcmd, _envParams, "packages" );  // ????????????????????? Need to parametrize "packages"
-                } else {
-                    if ( this.verbose ) System.out.println( HDR +" (servers["+ ix +"] instanceof SequenceNode) failed with:\n" + NodeTools.Node2YAMLString( seqItem ) + "\n");
-                    throw new Exception( "Invalid Node of type: "+ seqItem.getNodeId() );
+            final EnvironmentParameters envParamsSubnet = EnvironmentParameters.deepClone( _envParams );
+            envParamsSubnet.bInRecursionByFullStack = true;
+            envParamsSubnet.setCmd( Enums.GenEnum.SUBNET );
+            final CmdLineArgs claSubnet  = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsSubnet.getCmdEnum(), null, publicOrPrivateSubnet );
+            boot.envParams = envParamsSubnet;
+            boot.configure( claSubnet.getCmdName(), claSubnet.getJobSetName(), claSubnet.getItemNumber() );
+            // 1st generate the YAML.
+            this.cmdProcessor.genYAML( claSubnet, "fullstack-"+ envParamsSubnet.getCfnJobTYPEString(), envParamsSubnet );
+            // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
+            this.cmdProcessor.genCFNShellScript( claSubnet, envParamsSubnet );
+
+            //--------------- SERVERS -------------------
+            readcmd.searchYamlForPattern( subnet, "SERVERS", "," );
+            final SequenceNode serversSeqN = readcmd.getOutput();
+            // we know readcmd always returns a LIST (because we could have one or more matches for ANY arbitratry YAML-Path-Expression.)
+            final java.util.List<Node> srvrseqs = serversSeqN.getValue();
+            if ( srvrseqs.size() < 1 )
+                throw new Exception( "Under 'subnet', a child-element labelled(LHS) 'SERVERS' must be provided" );
+            for ( Node serverNode: srvrseqs ) { // loop for each EC2 / server
+
+                // final Node serverNode = srvrseqs.get(0);
+                if ( this.verbose ) System.out.println( HDR +" SERVERS(plural) YAML-tree =\n" + NodeTools.Node2YAMLString( serverNode ) +"\n" );
+
+                //--------------- EC2 -------------------
+                String ec2instanceName = null;
+                if ( serverNode instanceof MappingNode ) {
+                    //       SERVERS:
+                    //          OrgASUXplayEC2plain: ### This is the name of the 1st SERVER.
+                    //              ..
+
+                    final MappingNode mapNode = (MappingNode) serverNode;
+                    final java.util.List<NodeTuple> tuples = mapNode.getValue();
+                    assertTrue( tuples.size() > 0 );
+                    int ix = 0;
+                    for( NodeTuple kv: tuples ) {
+                        final Node keyNode = kv.getKeyNode();
+                        assertTrue( keyNode instanceof ScalarNode );
+                        // @SuppressWarnings("unchecked")
+                        final ScalarNode scalarKey = (ScalarNode) keyNode;
+                        ec2instanceName = scalarKey.getValue();
+                        final Node valNode = kv.getValueNode();
+                        if ( this.verbose ) System.out.println( HDR +" SERVER(#"+ix+") YAML-tree =\n" + NodeTools.Node2YAMLString( valNode ) +"\n" );
+                        if ( valNode instanceof MappingNode ) {
+                            parseServerInfo( (MappingNode) valNode, readcmd, _envParams, "packages" );  // ????????????????????? Need to parametrize "packages"
+                        } else {
+                            if ( this.verbose ) System.out.println( HDR +" (server["+ ec2instanceName +"] instanceof MappingNode) is Not a mapping within:\n" + NodeTools.Node2YAMLString( mapNode ) + "\n");
+                            throw new Exception( "SERVER(#"+ix+")="+ ec2instanceName +" is an Invalid Node of type: "+ valNode.getNodeId() );
+                        }
+                        ix ++;
+                    }
+
+                } else if ( serverNode instanceof SequenceNode ) {
+                    //       SERVERS:
+                    //        -   ### Sequence of UNNAMED server
+                    //            ..  ..
+                    final SequenceNode seqNode = (SequenceNode) serverNode;
+                    final java.util.List<Node> seqs = seqNode.getValue();
+                    assertTrue( seqs.size() >= 1 );
+                    int ix = 0;
+                    for( Node seqItem: seqs ) {
+                        if ( seqItem instanceof MappingNode ) {
+                            parseServerInfo( (MappingNode) seqItem, readcmd, _envParams, "packages" );  // ????????????????????? Need to parametrize "packages"
+                        } else {
+                            if ( this.verbose ) System.out.println( HDR +" (server["+ ix +"] instanceof SequenceNode) failed with:\n" + NodeTools.Node2YAMLString( seqItem ) + "\n");
+                            throw new Exception( "Invalid Node of type: "+ seqItem.getNodeId() );
+                        }
+                        ec2instanceName = Integer.toString( ix + 1 );
+                        ix ++;
+                    }
+                } else { // !  (serverNode instanceof MappingNode)   &&   !  (serverNode instanceof SequenceNode) )
+                    throw new Exception( "the content of "+ fullStackJob_Filename +" at the YAML-path: 'AWS,VPC,subnet,SERVERS' is neither MappingNode nor SequenceNode" );
                 }
-                ec2instanceName = Integer.toString( ix + 1 );
-                ix ++;
-            }
-        } else { // !  (servers instanceof MappingNode)   &&   !  (servers instanceof SequenceNode) )
-            throw new Exception( "the content of "+ fullStackJob_Filename +" at the YAML-path: 'AWS,VPC,subnet,SERVERS' is neither MappingNode nor SequenceNode" );
-        }
 
-        assertTrue( ec2instanceName != null );
-        globalProps.setProperty( EnvironmentParameters.MYEC2INSTANCENAME, ec2instanceName );
+                assertTrue( ec2instanceName != null );
+                globalProps.setProperty( EnvironmentParameters.MYEC2INSTANCENAME, ec2instanceName );
 
-        //-------------------------------------
-        // Now recursively call _ALL_ the logic of this entire java-package, to generate the various VPC, subnet, SG and EC2 YAML-files and associated shell scripts
-        //-------------------------------------
-        // _cmdLA.verbose       <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
-        // _cmdLA.quoteType     <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
-        // _cmdLA.jobSetName    <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
-        // _cmdLA.publicOrPrivateSubnet <-- SAME VALUE FOR ALL CMDs (as other commands will IGNORE this)
+                //-------------------------------------
+                final EnvironmentParameters envParamsEC2 = EnvironmentParameters.deepClone( _envParams );
+                envParamsEC2.bInRecursionByFullStack = true;
+                envParamsEC2.setCmd( Enums.GenEnum.EC2PLAIN );
+                final CmdLineArgs claEC2     = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsEC2.getCmdEnum(), null, null );
+                boot.envParams = envParamsEC2;
+                boot.configure( claEC2.getCmdName(), claEC2.getJobSetName(), claEC2.getItemNumber() );
+                // 1st generate the YAML.
+                this.cmdProcessor.genYAML( claEC2, "fullstack-"+ envParamsEC2.getCfnJobTYPEString(), envParamsEC2 );
+                // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
+                this.cmdProcessor.genCFNShellScript( claEC2, envParamsEC2 );
 
-        //-------------------------------------
-        Enums.GenEnum cmd;
-        final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, this.cmdinvoker.getMemoryAndContext().getAllPropsRef() );
+            } // for each EC2 / server
 
-
-        cmd = Enums.GenEnum.VPC;
-        final EnvironmentParameters envParamsVPC = EnvironmentParameters.deepClone( _envParams );
-        envParamsVPC.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( cmd );
-        final CmdLineArgs claVPC     = CmdLineArgs.deepCloneWithChanges( _cmdLA, cmd, null, null );
-        boot.configure( claVPC.getCmdName(), claVPC.getJobSetName(), claVPC.getItemNumber() );
-        // 1st generate the YAML.
-        this.cmdProcessor.genYAML( claVPC, envParamsVPC.cfnJobTYPEString, envParamsVPC );
-        // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
-        this.cmdProcessor.genCFNShellScript( claVPC, envParamsVPC );
+        } // for each SUBNET
 
         //-------------------------------------
-        String publicOrPrivateSubnet;
-        if ( isPublicSubnet && ! isPrivateSubnet )
-            publicOrPrivateSubnet = "public"; // unless I am 100% sure, I'm not making the subnet public.
-        else
-            publicOrPrivateSubnet = "private";
-
-        globalProps.setProperty( "CidrBlockAZ1", "172.31.0.0/20" );
-        globalProps.setProperty( "CidrBlockAZ2", "172.31.16.0/20" );
-        globalProps.setProperty( "CidrBlockAZ3", "172.31.32.0/20" );
-        globalProps.setProperty( "CidrBlockAZ4", "172.31.48.0/20" );
-
-// ??????? For each subnet in jobSetName.yaml ...
-        cmd = Enums.GenEnum.SUBNET;
-        final EnvironmentParameters envParamsSubnet = EnvironmentParameters.deepClone( _envParams );
-        envParamsSubnet.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( cmd );
-        final CmdLineArgs claSubnet  = CmdLineArgs.deepCloneWithChanges( _cmdLA, cmd, null, publicOrPrivateSubnet );
-        boot.configure( claSubnet.getCmdName(), claSubnet.getJobSetName(), claSubnet.getItemNumber() );
-        // 1st generate the YAML.
-        this.cmdProcessor.genYAML( claSubnet, envParamsSubnet.cfnJobTYPEString, envParamsSubnet );
-        // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
-        this.cmdProcessor.genCFNShellScript( claSubnet, envParamsSubnet );
-
-        //-------------------------------------
-// ??????? For each SG in jobSetName.yaml ...
-        cmd = Enums.GenEnum.SGSSH;
-        final EnvironmentParameters envParamsSG = EnvironmentParameters.deepClone( _envParams );
-        envParamsSG.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( cmd );
-        final CmdLineArgs claSGSSH   = CmdLineArgs.deepCloneWithChanges( _cmdLA, cmd, null, null );
-        boot.configure( claSGSSH.getCmdName(), claSGSSH.getJobSetName(), claSGSSH.getItemNumber() );
-        // 1st generate the YAML.
-        this.cmdProcessor.genYAML( claSGSSH, envParamsSG.cfnJobTYPEString, envParamsSG );
-        // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
-        this.cmdProcessor.genCFNShellScript( claSGSSH, envParamsSG );
-
-        //-------------------------------------
-// ??????? For each SERVER in jobSetName.yaml ...
-        cmd = Enums.GenEnum.EC2PLAIN;
-        final EnvironmentParameters envParamsEC2 = EnvironmentParameters.deepClone( _envParams );
-        envParamsEC2.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( cmd );
-        final CmdLineArgs claEC2     = CmdLineArgs.deepCloneWithChanges( _cmdLA, cmd, null, null );
-        boot.configure( claEC2.getCmdName(), claEC2.getJobSetName(), claEC2.getItemNumber() );
-        // 1st generate the YAML.
-        this.cmdProcessor.genYAML( claEC2, envParamsEC2.cfnJobTYPEString, envParamsEC2 );
-        // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
-        this.cmdProcessor.genCFNShellScript( claEC2, envParamsEC2 );
-
-        //-------------------------------------
-        return preStr;
+        return null;
     }
 
     //=================================================================================
@@ -401,6 +436,8 @@ public final class CmdProcessorFullStack
         // this.cmdinvoker.getMemoryAndContext().saveDataIntoMemory( EnvironmentParameters.CFNINIT_PACKAGES +".yum", yum );
         // this.cmdinvoker.getMemoryAndContext().saveDataIntoMemory( EnvironmentParameters.CFNINIT_PACKAGES +".rpm", rpm );
         // this.cmdinvoker.getMemoryAndContext().saveDataIntoMemory( EnvironmentParameters.CFNINIT_PACKAGES +".configCustomCommands", configCustomCommands );
+
+        // this.cmdinvoker.getMemoryAndContext().saveDataIntoMemory( EnvironmentParameters.CFNINIT_SERVICES, null );   // <<----------- <<-------------
 
     }
 
