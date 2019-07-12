@@ -7,7 +7,7 @@ Parameters:
     Type: String
     Default: org-ASUX-Playground-Tokyo
   MyPublicSubnet1:
-    Description: "What is the EXPORTED OUTPUT NAME of the SUBNET #1 - from the other CFN-template"
+    Description: "What is the EXPORTED OUTPUT NAME of the Appropriate PUBLIC-vs-PRIVATE-SUBNET #1 - from the other VPC CFN-template"
     Type: String
   MySSHSecurityGroup:
     Description: "What is the EXPORTED OUTPUT NAME of the SG for SSH? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
@@ -32,6 +32,10 @@ Parameters:
   MySSHKeyName:
     Description: The EC2 Key Pair to allow SSH access to the instance
     Type: 'AWS::EC2::KeyPair::KeyName'
+Conditions:
+  isPublic: !Equals
+  - 'Public'
+  - 'Public'
 Resources:
   OrgASUXplayEC2plain:
     Type: 'AWS::EC2::Instance'
@@ -64,13 +68,17 @@ Resources:
               ensureRunning: 'false'
     Properties:
       NetworkInterfaces:
-      - AssociatePublicIpAddress: "true"
-        DeviceIndex: "0"
+      - DeviceIndex: "0"
         GroupSet:
         - !ImportValue
           Ref: MySSHSecurityGroup
         SubnetId: !ImportValue
           Ref: MyPublicSubnet1
+        AssociatePublicIpAddress: !If [
+          isPublic,
+          'true',
+          'false']
+        
       InstanceType: !Ref 'EC2InstanceType'
       ImageId: !Ref 'AWSAMIID'
       BlockDeviceMappings:

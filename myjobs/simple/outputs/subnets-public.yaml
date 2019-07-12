@@ -18,6 +18,10 @@ Parameters:
     Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-simple-PublicRouteTableID"
     Type: String
     Default: org-ASUX-Playground-Tokyo-PublicRouteTableID
+  MyPrivateRouteTable:
+    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PrivateRouteTable is associated with only the VPC CIDRBlock.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-simple-PrivateRouteTableID"
+    Type: String
+    Default: org-ASUX-Playground-Tokyo-PrivateRouteTableID
 Conditions:
   doesExistSubnet1: !Equals
   - ASUXorgWorks
@@ -45,7 +49,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-public2
+        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public1
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -84,7 +88,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-public3
+        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public2
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -123,7 +127,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-public1
+        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public3
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -187,20 +191,20 @@ Resources:
       NetworkAclId: !ImportValue 'org-ASUX-Playground-Tokyo-DefaultNetworkAclID'
 Outputs:
   DefaultPublicSubnet1:
-    Description: The subnet no.1's ID to use for public web servers
+    Description: The subnet no.1's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPublicSubnetAZ1'
     Condition: doesExistSubnet1
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-public1-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Public1-ID'
   DefaultPublicSubnet2:
-    Description: The subnet no.2's ID to use for public web servers
+    Description: The subnet no.2's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPublicSubnetAZ2'
     Condition: doesExistSubnet2
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-public2-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Public2-ID'
   DefaultPublicSubnet3:
-    Description: The subnet no.3's ID to use for public web servers
+    Description: The subnet no.3's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPublicSubnetAZ3'
     Condition: doesExistSubnet3
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-public3-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Public3-ID'

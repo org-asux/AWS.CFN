@@ -18,7 +18,11 @@ Parameters:
     Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-simple-PublicRouteTableID"
     Type: String
     Default: org-ASUX-Playground-Tokyo-PublicRouteTableID
-"Conditions":
+  MyPrivateRouteTable:
+    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PrivateRouteTable is associated with only the VPC CIDRBlock.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-simple-PrivateRouteTableID"
+    Type: String
+    Default: org-ASUX-Playground-Tokyo-PrivateRouteTableID
+Conditions:
   doesExistSubnet1: !Equals
   - ASUXorgWorks
   - ASUXorgWorks
@@ -28,7 +32,7 @@ Parameters:
   doesExistSubnet3: !Equals
   - ASUXorgWorks
   - ASUXorgWorks
-"Resources":
+Resources:
   MyPrivateSubnetAZ1:
     Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
     Type: 'AWS::EC2::Subnet'
@@ -45,7 +49,7 @@ Parameters:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-private2
+        Value: org-ASUX-Playground-Tokyo-simple-subnets-Private1
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -84,7 +88,7 @@ Parameters:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-private3
+        Value: org-ASUX-Playground-Tokyo-simple-subnets-Private2
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -123,7 +127,7 @@ Parameters:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-private1
+        Value: org-ASUX-Playground-Tokyo-simple-subnets-Private3
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -185,22 +189,22 @@ Parameters:
     Properties:
       SubnetId: !Ref 'MyPrivateSubnetAZ3'
       NetworkAclId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateNetworkAclID'
-"Outputs":
+Outputs:
   DefaultPrivateSubnet1:
-    Description: The subnet no.1's ID to use for Private EC2 INSTANCES
+    Description: The subnet no.1's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPrivateSubnetAZ1'
     Condition: doesExistSubnet1
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-private1-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Private1-ID'
   DefaultPrivateSubnet2:
-    Description: The subnet no.2's ID to use for Private EC2 INSTANCES
+    Description: The subnet no.2's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPrivateSubnetAZ2'
     Condition: doesExistSubnet2
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-private2-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Private2-ID'
   DefaultPrivateSubnet3:
-    Description: The subnet no.3's ID to use for Private EC2 INSTANCES
+    Description: The subnet no.3's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPrivateSubnetAZ3'
     Condition: doesExistSubnet3
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-private3-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Private3-ID'
