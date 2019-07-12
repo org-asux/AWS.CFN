@@ -133,7 +133,7 @@ public final class CmdProcessorFullStack
         // _cmdLA.verbose       <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
         // _cmdLA.quoteType     <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
         // _cmdLA.jobSetName    <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
-        // _cmdLA.publicOrPrivateSubnet <-- SAME VALUE FOR ALL CMDs (as other commands will IGNORE this)
+        // _cmdLA.PublicOrPrivate <-- SAME VALUE FOR ALL CMDs (as other commands will IGNORE this)
 
         //-------------------------------------
         // read the single YAML-configuration-file.. that's describing the entire-stack / fullstack
@@ -159,16 +159,22 @@ public final class CmdProcessorFullStack
         final String MyOrgName      = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,MyOrgName" );
         final String MyEnvironment  = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,MyEnvironment" );
         final String AWSRegion      = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,AWSRegion" );
+        final String MyDomainName   = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,MyDomainName" );
         globalProps.setProperty( "MyOrgName", MyOrgName );
         globalProps.setProperty( "MyEnvironment", MyEnvironment );
         globalProps.setProperty( "AWSRegion", AWSRegion );
+        globalProps.setProperty( EnvironmentParameters.MYDOMAINNAME, MyDomainName );
         // !!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!
-        // It is _VERY_ important that these 3 above GLOBAL properties be set - BEFORE creating 'boot' object, and invoking boot.configure()
+        // It is _VERY_ important that these 4 above GLOBAL properties be set - BEFORE creating 'boot' object, and invoking boot.configure()
+        if (this.verbose) System.out.println( HDR + "MyOrgName=" + MyOrgName + " MyEnvironment=" + MyEnvironment + " AWSRegion=" + AWSRegion + " MyDomainName=" + MyDomainName +"." );
 
-        final String MyVPCName     = Macros.evalThoroughly( this.verbose, "${ASUX::VPCID}", _envParams.getAllPropsRef() ); // set by BootCheckAndConfig!  === _envParams.MyVPCStackPrefix + "-VPCID"
-        // final String MyVPCName  = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,VPC,MyVPCName" );
+        final String VPCIDwMacros   = Macros.evalThoroughly( this.verbose, "${ASUX::VPCID}", _envParams.getAllPropsRef() ); // set by BootCheckAndConfig!  === _envParams.MyVPCStackPrefix + "-VPCID"
+        // final String VPCID  = readStringFromFullStackJobConfig( inputNode, readcmd, "AWS,VPC,MyVPCName" );
         // !!!! ATTENTION !!!! I'm totally going to PREVENT end-user from specifying MyVPCName
-        globalProps.setProperty( "MyVPCName", MyVPCName );
+        final String VPCID = Macros.evalThoroughly( this.verbose, VPCIDwMacros, _envParams.getAllPropsRef() );
+        // !!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!            Don't ask.  I'm forced to run Macros.evalThoroughly _TWICE_ in succession, to get it to eval completely.
+        globalProps.setProperty( "MyVPCName", VPCID.replaceAll("-", "") ); // Why?  CreateStack format error: Resource name org_ASUX_Playground_Tokyo_VPCID is non alphanumeric
+        if ( this.verbose ) System.out.println( HDR +"VPCID="+ VPCID );
 
         final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, this.cmdinvoker.getMemoryAndContext().getAllPropsRef() );
 
@@ -179,14 +185,14 @@ public final class CmdProcessorFullStack
         envParamsVPC.setCmd( Enums.GenEnum.VPC );
         final CmdLineArgs claVPC     = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsVPC.getCmdEnum(), null, null );
         boot.envParams = envParamsVPC;
-        boot.configure( claVPC.getCmdName(), claVPC.getJobSetName(), claVPC.getItemNumber() );
+        boot.configure( claVPC ); // .getCmdName(), claVPC.getJobSetName(), claVPC.getItemNumber() );
         // This boot.configure() will invoke the following:-
         // envParamsVPC.setHomeFolders( .. .. .. );
         // envParamsVPC.setFundamentalGlobalProps( .. .. );
         // envParamsVPC.setFundamentalPrefixes( .. .. );
 
         // 1st generate the YAML.
-        this.cmdProcessor.genYAML( claVPC, "fullstack-"+ envParamsVPC.getCfnJobTYPEString(), envParamsVPC );
+        this.cmdProcessor.genYAML( claVPC, envParamsVPC.getCfnJobTYPEString(), envParamsVPC );          // Note: the 2nd argument automtically has "fullstack-" prefix in it.
         // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
         this.cmdProcessor.genCFNShellScript( claVPC, envParamsVPC );
 
@@ -197,14 +203,14 @@ public final class CmdProcessorFullStack
         envParamsSG.setCmd( Enums.GenEnum.SGSSH );
         final CmdLineArgs claSGSSH   = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsSG.getCmdEnum(), null, null );
         boot.envParams = envParamsSG;
-        boot.configure( claSGSSH.getCmdName(), claSGSSH.getJobSetName(), claSGSSH.getItemNumber() );
+        boot.configure( claSGSSH ); // .getCmdName(), claSGSSH.getJobSetName(), claSGSSH.getItemNumber() );
         // 1st generate the YAML.
-        this.cmdProcessor.genYAML( claSGSSH, "fullstack-"+ envParamsSG.getCfnJobTYPEString(), envParamsSG );
+        this.cmdProcessor.genYAML( claSGSSH, envParamsSG.getCfnJobTYPEString(), envParamsSG );           // Note: the 2nd argument automtically has "fullstack-" prefix in it.
         // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
         this.cmdProcessor.genCFNShellScript( claSGSSH, envParamsSG );
 
         //--------------- subnets -------------------
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose );
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
         final ArrayList<String> AZs = awssdk.getAZs( AWSRegion );
         final int numOfAZs = AZs.size();
 
@@ -231,12 +237,13 @@ public final class CmdProcessorFullStack
             final boolean isPrivateSubnet   = ( strPrivateSubnet != null && strPrivateSubnet.toLowerCase().equals("yes") );
 
             //-------------------------------------
-            String publicOrPrivateSubnet;
+            String PublicOrPrivate;
             if ( isPublicSubnet && ! isPrivateSubnet )
-                publicOrPrivateSubnet = "public"; // unless I am 100% sure, I'm not making the subnet public.
+                PublicOrPrivate = "Public"; // unless I am 100% sure, I'm _NOT_ making the subnet _PUBLIC_.
             else
-                publicOrPrivateSubnet = "private";
-
+                PublicOrPrivate = "Private";
+            globalProps.setProperty( "PublicOrPrivate", PublicOrPrivate );  // Override what's set in BootCheckAndConfig
+    
             final String VPCCIDRBlock = globalProps.getProperty( EnvironmentParameters.VPCCIDRBLOCK ); // "172.31.0.0/20"
             final String CIDRBLOCK_Byte3_DeltaString = globalProps.getProperty( EnvironmentParameters.CIDRBLOCK_BYTE3_DELTA ); // example: 16
             final int CIDRBLOCK_Byte3_Delta = Integer.parseInt( CIDRBLOCK_Byte3_DeltaString );
@@ -245,8 +252,8 @@ public final class CmdProcessorFullStack
             // globalProps.setProperty( "CidrBlockAZ3", "172.31.32.0/20" );
             // globalProps.setProperty( "CidrBlockAZ4", "172.31.48.0/20" );
             int subix = 1;
-            final Util util = new Util( this.verbose );
-            for ( String subnetMask: util.genSubnetMasks( VPCCIDRBlock, numOfAZs, CIDRBLOCK_Byte3_Delta) ) {
+            final Inet inet = new Inet( this.verbose );
+            for ( String subnetMask: inet.genSubnetRangeWithMasks( VPCCIDRBlock, numOfAZs, CIDRBLOCK_Byte3_Delta) ) {
                 globalProps.setProperty( "CidrBlockAZ" + subix, subnetMask );
                 subix ++;
             }
@@ -254,11 +261,11 @@ public final class CmdProcessorFullStack
             final EnvironmentParameters envParamsSubnet = EnvironmentParameters.deepClone( _envParams );
             envParamsSubnet.bInRecursionByFullStack = true;
             envParamsSubnet.setCmd( Enums.GenEnum.SUBNET );
-            final CmdLineArgs claSubnet  = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsSubnet.getCmdEnum(), null, publicOrPrivateSubnet );
+            final CmdLineArgs claSubnet  = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsSubnet.getCmdEnum(), null, PublicOrPrivate );
             boot.envParams = envParamsSubnet;
-            boot.configure( claSubnet.getCmdName(), claSubnet.getJobSetName(), claSubnet.getItemNumber() );
+            boot.configure( claSubnet ); // .getCmdName(), claSubnet.getJobSetName(), claSubnet.getItemNumber() );
             // 1st generate the YAML.
-            this.cmdProcessor.genYAML( claSubnet, "fullstack-"+ envParamsSubnet.getCfnJobTYPEString(), envParamsSubnet );
+            this.cmdProcessor.genYAML( claSubnet, envParamsSubnet.getCfnJobTYPEString(), envParamsSubnet );          // Note: the 2nd argument automtically has "fullstack-" prefix in it.
             // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
             this.cmdProcessor.genCFNShellScript( claSubnet, envParamsSubnet );
 
@@ -331,11 +338,11 @@ public final class CmdProcessorFullStack
                 final EnvironmentParameters envParamsEC2 = EnvironmentParameters.deepClone( _envParams );
                 envParamsEC2.bInRecursionByFullStack = true;
                 envParamsEC2.setCmd( Enums.GenEnum.EC2PLAIN );
-                final CmdLineArgs claEC2     = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsEC2.getCmdEnum(), null, null );
+                final CmdLineArgs claEC2     = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsEC2.getCmdEnum(), null, PublicOrPrivate );
                 boot.envParams = envParamsEC2;
-                boot.configure( claEC2.getCmdName(), claEC2.getJobSetName(), claEC2.getItemNumber() );
+                boot.configure( claEC2 ); // .getCmdName(), claEC2.getJobSetName(), claEC2.getItemNumber() );
                 // 1st generate the YAML.
-                this.cmdProcessor.genYAML( claEC2, "fullstack-"+ envParamsEC2.getCfnJobTYPEString(), envParamsEC2 );
+                this.cmdProcessor.genYAML( claEC2, envParamsEC2.getCfnJobTYPEString(), envParamsEC2 );               // Note: the 2nd argument automtically has "fullstack-" prefix in it.
                 // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
                 this.cmdProcessor.genCFNShellScript( claEC2, envParamsEC2 );
 
