@@ -55,34 +55,43 @@ public final class EnvironmentParameters implements Serializable {
     public static final String ORGASUXHOME = "ORGASUXHOME";
     public static final String AWSHOME = "AWSHOME";
     public static final String AWSCFNHOME = "AWSCFNHOME";
+    public static final String HOMEDIR = System.getProperty("user.home");
+    public static final String USERCONFIGHOME = HOMEDIR + "/.ASUX.org";
+    public static final String USERCONFIGHOME_CFN = USERCONFIGHOME + "/AWS.CFN";
 
     public static final String PROPERTIES_FOR_CFN = "cfn.properties"; // one of the many Properties objects within this.allPropsRef (see go())
     public static final String PROPERTIES_FOR_JOB = "job.properties"; // one of the many Properties objects within this.allPropsRef (see go())
+    public static final String TAGS_ALONE_MASTER = "Tags-Alone-Master.properties"; // one of the many Properties objects within this.allPropsRef (see go())
+    public static final String TAGS_DEPT_MASTER = "Tags-Dept-Master.properties"; // one of the many Properties objects within this.allPropsRef (see go())
+    public static final String TAGS_ENTERPRISE_MASTER = "Tags-Enterprise-Master.properties"; // one of the many Properties objects within this.allPropsRef (see go())
 
     public static final String AWSREGIONSLOCATIONS = "config/AWSRegionsLocations.properties";
 
-    public static final String MYSTACKNAMEPREFIX    = "MyStackNamePrefix";
-    public static final String MYVPCSTACKPREFIX     = "MyVPCStackPrefix";
-    public static final String MYEC2INSTANCENAME    = "MyEC2InstanceName";
-    public static final String MYDOMAINNAME         = "MyDomainName";
-    public static final String MYRT53HOSTEDZONEID   = "MyRt53HostedZoneId";
+    public static final String MYSTACKNAMEPREFIX = "MyStackNamePrefix";
+    public static final String MYVPCSTACKPREFIX = "MyVPCStackPrefix";
+    public static final String MYEC2INSTANCENAME = "MyEC2InstanceName";
+    public static final String MYDOMAINNAME = "MyDomainName";
+    public static final String MYRT53HOSTEDZONEID = "MyRt53HostedZoneId";
 
     public static final String VPCCIDRBLOCK = "VPCCIDRBLOCK";
     public static final String CIDRBLOCK_BYTE3_DELTA = "CIDRBLOCK_Byte3_Delta";
 
-	public static final String CIDRBLOCKELEMENTpattern = "([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
-	public static final String CIDRBLOCKRANGEpattern = "([0-9]|[12][0-9]|3[0-2])";
-	public static final String CIDRBLOCKpattern = "^"+ CIDRBLOCKELEMENTpattern +"\\."+ CIDRBLOCKELEMENTpattern +"\\."+ CIDRBLOCKELEMENTpattern +"\\."+ CIDRBLOCKELEMENTpattern +"/"+ CIDRBLOCKRANGEpattern +"$";
+    public static final String CIDRBLOCKELEMENTpattern = "([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
+    public static final String CIDRBLOCKRANGEpattern = "([0-9]|[12][0-9]|3[0-2])";
+    public static final String CIDRBLOCKpattern = "^" + CIDRBLOCKELEMENTpattern + "\\." + CIDRBLOCKELEMENTpattern
+            + "\\." + CIDRBLOCKELEMENTpattern + "\\." + CIDRBLOCKELEMENTpattern + "/" + CIDRBLOCKRANGEpattern + "$";
+
+    public static final String CFNINIT_PACKAGES = "AWS-CFNInit-Standup";
+    public static final String CFNINIT_SERVICES = "AWS-CFNInit-Services";
+    public static final String EC2INSTANCETYPE = "EC2InstanceType";
+    public static final String EC2IAMROLES = "MyIAM-roles";
 
     // ------ private ------
     private static final String JOB_DEFAULTS = "/config/DEFAULTS/job-DEFAULTS.properties"; // under AWSCFNHOME
     private static final String FULLSTACKJOB_DEFAULTS = "/config/DEFAULTS/FullStackJob-DEFAULTS.properties"; // under AWSCFNHOME
     private static final String JOBSET_MASTER = "jobset-Master.properties"; // under '.' folder
 
-    public static final String CFNINIT_PACKAGES = "AWS-CFNInit-Standup";
-    public static final String CFNINIT_SERVICES = "AWS-CFNInit-Services";
-    public static final String EC2INSTANCETYPE  = "EC2InstanceType";
-    public static final String EC2IAMROLES      = "MyIAM-roles";
+    private static final String prefixFULLSTACK = "fullstack";
 
     // =================================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -91,44 +100,46 @@ public final class EnvironmentParameters implements Serializable {
     // The following .. once they are set by BootCheckAndConfig.config(), they are untouched.
     public boolean verbose;
 
-    private String orgasuxhome   = "UNDEFINED";
-    private String awshome       = "UNDEFINED";
-    private String awscfnhome    = "UNDEFINED";
+    private String orgasuxhome = "UNDEFINED";
+    private String awshome = "UNDEFINED";
+    private String awscfnhome = "UNDEFINED";
 
-    private String AWSRegion     = "UNDEFINED";
-    private String AWSLocation   = "UNDEFINED";
+    private String AWSRegion = "UNDEFINED";
+    private String AWSLocation = "UNDEFINED";
     private String MyStackNamePrefix = "UNDEFINED";
-    private String MyVPCStackPrefix  = "UNDEFINED";
+    private String MyVPCStackPrefix = "UNDEFINED";
 
     private Enums.GenEnum cfnJobTypEnum = Enums.GenEnum.UNDEFINED;
-    private String cfnJobTYPEString  = "UNDEFINED";
+    private String cfnJobTYPEString = "UNDEFINED";
 
-    //---------------- PRIVATE ----------------
-    private transient LinkedHashMap<String, Properties> allPropsRef;   // this could have been 'final' too, but for the fact that this.deepClone() needs to reset it.
+    // ---------------- PRIVATE ----------------
+    private transient LinkedHashMap<String, Properties> allPropsRef; // this could have been 'final' too, but for the fact that this.deepClone() needs to reset it.
 
-    //--------- following are redefined by fullstack-gen -----------
+    // --------- following are redefined by fullstack-gen -----------
     public boolean bInRecursionByFullStack = false;
     public String outputFolderPath = "/tmp";
 
-    //=================================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //=================================================================================
+    // =================================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // =================================================================================
 
     /**
      * The only constructor
+     * 
      * @param _verbose  Whether you want deluge of debug-output onto System.out.
      * @param _allProps a (NotNull) reference provided by CmdInvoker().memoryAndContext.getAllPropsRef().. or other source
      */
-    public EnvironmentParameters( final boolean _verbose, final LinkedHashMap<String, Properties> _allProps  ) {
+    public EnvironmentParameters( final boolean _verbose, final LinkedHashMap<String, Properties> _allProps ) {
         this.verbose = _verbose;
         this.allPropsRef = _allProps;
         // this.cfnJobTypEnum = _cfnJobTypEnum;
-        // this.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( this.cfnJobTypEnum );
+        // this.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString(
+        // this.cfnJobTypEnum );
     }
 
-    //==============================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //==============================================================================
+    // ==============================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // ==============================================================================
 
     public void setHomeFolders( final String _orgasuxhome, final String _awshome, final String _awscfnhome ) {
         this.orgasuxhome = _orgasuxhome;
@@ -146,52 +157,57 @@ public final class EnvironmentParameters implements Serializable {
         this.MyVPCStackPrefix = _MyVPCStackPrefix;
     }
 
-    //==============================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //==============================================================================
+    // ==============================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // ==============================================================================
 
     public void setCmd( final Enums.GenEnum _cfnJobTypEnum ) throws Exception {
         this.cfnJobTypEnum = _cfnJobTypEnum;
         this.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( this.cfnJobTypEnum );
     }
 
-    //==============================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //==============================================================================
+    // ==============================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // ==============================================================================
 
-    //==============================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //==============================================================================
+    // ==============================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // ==============================================================================
 
     /**
      * The getter-method to the ONLY private instance-variable of this class.
-     * @return NotNull instance, unless of course, logic-errors led to the constructor being called to set this.allPropsRef to null.
+     * 
+     * @return NotNull instance, unless of course, logic-errors led to the
+     *         constructor being called to set this.allPropsRef to null.
      */
     public LinkedHashMap<String, Properties> getAllPropsRef() {
         return this.allPropsRef;
     }
 
-    //==============================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //==============================================================================
+    // ==============================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // ==============================================================================
 
-    /** This deepClone function is VERY MUCH necessary, as No cloning-code can handle 'transient' variables in this class.
-     *  @param _orig what you want to deep-clone
-     *  @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
+    /**
+     * This deepClone function is VERY MUCH necessary, as No cloning-code can handle 'transient' variables in this class.
+     * 
+     * @param _orig what you want to deep-clone
+     * @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
      */
     public static EnvironmentParameters deepClone( EnvironmentParameters _orig ) {
         try {
-            final EnvironmentParameters newobj = org.ASUX.common.Utils.deepClone( _orig );
-            newobj.deepCloneFix( _orig );
+            final EnvironmentParameters newobj = org.ASUX.common.Utils.deepClone(_orig);
+            newobj.deepCloneFix(_orig);
             return newobj;
         } catch (Exception e) {
-			e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping this on the user.
+            e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping this on the user.
             return null;
         }
     }
 
     /**
      * In order to allow deepClone() to work seamlessly up and down the class-hierarchy.. I should allow subclasses to EXTEND (Not semantically override) this method.
+     * 
      * @param _orig the original NON-Null object
      */
     protected void deepCloneFix( final EnvironmentParameters _orig ) {
@@ -204,22 +220,52 @@ public final class EnvironmentParameters implements Serializable {
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // =================================================================================
 
-    public Enums.GenEnum getCmdEnum()       { return this.cfnJobTypEnum; }
-    public String getCfnJobTYPEString()     { return this.cfnJobTYPEString; }
+    public Enums.GenEnum getCmdEnum() {
+        return this.cfnJobTypEnum;
+    }
 
-    public String get_orgasuxhome()         { return this.orgasuxhome; }
-    public String get_awshome()             { return this.awshome; }
-    public String get_awscfnhome()          { return this.awscfnhome; }
+    public String getCfnJobTYPEString() {
+        if (this.bInRecursionByFullStack)
+            return prefixFULLSTACK +"-"+ this.cfnJobTYPEString;
+        else
+            return this.cfnJobTYPEString;
+    }
 
-    public String getAWSRegion()            { return this.AWSRegion; }
-    public String getAWSLocation()          { return this.AWSLocation; }
-    public String getMyStackNamePrefix()    { return this.MyStackNamePrefix; }
-    public String getMyVPCStackPrefix ()    { return this.MyVPCStackPrefix; }
+    public String get_orgasuxhome() {
+        return this.orgasuxhome;
+    }
 
-    public String getJOB_DEFAULTS() throws Exception
+    public String get_awshome() {
+        return this.awshome;
+    }
+
+    public String get_awscfnhome() {
+        return this.awscfnhome;
+    }
+
+    public String getAWSRegion() {
+        return this.AWSRegion;
+    }
+
+    public String getAWSLocation() {
+        return this.AWSLocation;
+    }
+
+    public String getMyStackNamePrefix() {
+        return this.MyStackNamePrefix;
+    }
+
+    public String getMyVPCStackPrefix() {
+        return this.MyVPCStackPrefix;
+    }
+
+    // =================================================================================
+    public String getJOB_DEFAULTS()
+                throws Exception
     {   final String HDR = CLASSNAME + ": getJOB_DEFAULTS(): ";
-        switch ( this.cfnJobTypEnum ) {
-            case FULLSTACK:     return "fullstack-"+ JOB_DEFAULTS;
+        switch (this.cfnJobTypEnum) {
+        case FULLSTACK:
+            return prefixFULLSTACK +"/"+ JOB_DEFAULTS;
             case SUBNET:
             case EC2PLAIN:
             case VPC:
@@ -237,7 +283,9 @@ public final class EnvironmentParameters implements Serializable {
         } // switch
     }
 
-    public String getJOBSET_MASTER() throws Exception
+    // =================================================================================
+    public String getJOBSET_MASTER()
+                throws Exception
     {   final String HDR = CLASSNAME + ": getJOBSET_MASTER(): ";
         switch ( this.cfnJobTypEnum ) {
             case FULLSTACK:     return JOBSET_MASTER;
