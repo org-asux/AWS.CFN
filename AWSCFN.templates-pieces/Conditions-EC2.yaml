@@ -1,0 +1,9 @@
+Conditions:
+  isPublic: !Equals
+      - 'Public'
+      - '${ASUX::PublicOrPrivate}'
+
+# Conditions:
+#   isPublic: !Equals ### [ "Public" , "Private" ]
+
+#EOF
