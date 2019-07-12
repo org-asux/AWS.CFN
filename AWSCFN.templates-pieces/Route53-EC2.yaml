@@ -16,6 +16,6 @@
       Type: A
       TTL: '900'
       ResourceRecords:
-      - !GetAtt ${ASUX::MyEC2InstanceName}.PublicIp
+      - !GetAtt ${ASUX::MyEC2InstanceName}.${ASUX::PublicOrPrivate}Ip
 
 #EOF

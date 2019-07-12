@@ -4,8 +4,11 @@ Parameters:
     Type: String
     Default: ${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}
 
-  MyPublicSubnet1:
-    Description: "What is the EXPORTED OUTPUT NAME of the SUBNET #1 - from the other CFN-template"
+  # MyPublicSubnet1:
+  #   Description: "What is the EXPORTED OUTPUT NAME of the Public-SUBNET #1 - from the other VPC CFN-template"
+  #   Type: String
+  My${ASUX::PublicOrPrivate}Subnet1:
+    Description: "What is the EXPORTED OUTPUT NAME of the Appropriate PUBLIC-vs-PRIVATE-SUBNET #1 - from the other VPC CFN-template"
     Type: String
 
 
