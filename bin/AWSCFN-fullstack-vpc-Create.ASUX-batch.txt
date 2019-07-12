@@ -62,6 +62,9 @@ saveTo !YAMLROOT
 makeNewRoot Resources
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/VPC.yaml
 yaml --macro @/dev/null
+yaml --macro @/dev/null
+### !!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!! This double-back2back macro is NEEDED, else we will have 'cloned' VPC under Resources/ YAML.
+
 yaml --insert Resources,${ASUX::MyVPCName},Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 yaml --macro @/dev/null
 saveTo !TopElemResources
@@ -82,8 +85,16 @@ yaml --insert Resources,MyPublicRouteTable,Properties  @${ASUX::AWSCFNHOME}/AWSC
 yaml --macro @/dev/null
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRoute.yaml
 
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateRouteTable.yaml
+yaml --insert Resources,MyPrivateRouteTable,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro @/dev/null
+
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/ACLDefault.yaml
 yaml --insert Resources,MyDefaultNetworkAcl,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro @/dev/null
+
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/ACLPrivate.yaml
+yaml --insert Resources,MyPrivateNetworkAcl,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 yaml --macro @/dev/null
 
 saveTo !TopElemResources
