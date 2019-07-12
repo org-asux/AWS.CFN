@@ -59,7 +59,11 @@ saveTo !AWSAZs
 useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/TopYaml.yaml
 saveTo !YAMLROOT
 
-yaml --insert / @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-EC2.yaml
+yaml --insert /    @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-EC2.yaml
+yaml --macro @/dev/null
+saveTo !YAMLROOT
+
+yaml --insert /    @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Conditions-EC2.yaml
 yaml --macro @/dev/null
 saveTo !YAMLROOT
 
