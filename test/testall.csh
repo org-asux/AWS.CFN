@@ -162,7 +162,8 @@ echo $DIVIDER
 set CMD=ec2plain
 set PublicOrPrivate=public
 echo ${CMD}
-eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} -${PublicOrPrivate} --no-quote ${OFFLINE}"
+echo "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote ${OFFLINE}"
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
 diff /tmp/${CMD}-OrgASUXplayEC2plain.yaml  ${TEMPLATEFLDR}/${CMD}-OrgASUXplayEC2plain.yaml
 diff /tmp/${CMD}-OrgASUXplayEC2plain.sh  ${TEMPLATEFLDR}/${CMD}-OrgASUXplayEC2plain.sh
