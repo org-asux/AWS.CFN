@@ -11,3 +11,4 @@ AWSCloudFormation-MyTemplates/JSON/*BACKUP
 AWSCFN.templates-pieces/Conditions full-listing.yaml
 **/testExclamation.yaml
 **/AutoGen.properties
+myjobs/2layer-ex-1private1public
