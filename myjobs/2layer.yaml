@@ -5,12 +5,11 @@ AWS:
   MyDomainName: playground.asux.org
 
   VPC:
-    # MyVPCName: VPCbyASUXorg <-- why am I __forcing__ user to provide this?  Why not a DEFAULT value based on {MyOrgName}-{MyEnvironment}-{AWSLocation}-{user.name}
     subnet:
       public: yes
 
       SERVERS:
-        PublicEC2: ### This is the name of the 1st SERVER.
+        MyPublicASUXLinux1:            ### This is the name of the 1st SERVER.   This is also used to create the DNS name as 'MyPublicASUXEC2.{MyDomainName}'
           EC2InstanceType: t2.micro
           # public: no
 
@@ -40,7 +39,7 @@ AWS:
       public: no
 
       SERVERS:
-        PrivateEC2: ### This is the name of the 1st SERVER.
+        MyPrivateASUXLinux2:           ### This is the name of the 2nd SERVER.   This is also used to create the DNS name as 'MyPublicASUXEC2.{MyDomainName}'
           EC2InstanceType: t2.micro
           # public: no
 
