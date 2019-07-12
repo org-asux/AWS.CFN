@@ -1,6 +1,6 @@
-  DefaultPublicSubnet${ASUX::foreach.index+1}:
-    Description: The subnet no.${ASUX::foreach.index+1}'s ID to use for public web servers
-    Value: !Ref MyPublicSubnetAZ${ASUX::foreach.index+1}  ## The value of the property returned by the aws cloudformation describe-stacks command
+  Default${ASUX::PublicOrPrivate}Subnet${ASUX::foreach.index+1}:
+    Description: The subnet no.${ASUX::foreach.index+1}'s ID to use for web servers if public, or for databases if private.
+    Value: !Ref My${ASUX::PublicOrPrivate}SubnetAZ${ASUX::foreach.index+1}  ## The value of the property returned by the aws cloudformation describe-stacks command
     Condition: doesExistSubnet${ASUX::foreach.index+1}
     Export:             ## The name of the resource output to be exported for a cross-stack reference.
       Name: '${ASUX::MyStackNamePrefix}-Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-ID'  ## For each AWS account, Export names must be unique within a region.
