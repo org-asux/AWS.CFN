@@ -27,6 +27,10 @@ properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-${ASUX::cfnJobTYPE}-DEF
 #____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-SG-DEFAULTS.properties
 #____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-EC2-DEFAULTS.properties
 
+properties Tags=?${ASUX::user.home}/.ASUX.org/AWS.CFN/Tags-Alone-Master.properties
+properties Tags=?${ASUX::user.home}/.ASUX.org/AWS.CFN/Tags-Dept-Master.properties
+properties Tags=?${ASUX::user.home}/.ASUX.org/AWS.CFN/Tags-Enterprise-Master.properties
+
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
