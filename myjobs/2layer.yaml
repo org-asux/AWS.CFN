@@ -9,9 +9,9 @@ AWS:
       public: yes
 
       SERVERS:
-        MyPublicASUXLinux1:            ### This is the name of the 1st SERVER.   This is also used to create the DNS name as 'MyPublicASUXEC2.{MyDomainName}'
+        MyWebASUXLinux1:            ### This is the name of the 1st SERVER.   This is also used to create the DNS name as 'MyWebASUXLinux1.{MyDomainName}'
           EC2InstanceType: t2.micro
-          # public: no
+          # public: no  ### By default this server will be publicly accessible, as it's in the public-subnet.
 
           MyIAM-roles:
           - EC2-ReadWrite-to-S3
@@ -39,9 +39,9 @@ AWS:
       public: no
 
       SERVERS:
-        MyPrivateASUXLinux2:           ### This is the name of the 2nd SERVER.   This is also used to create the DNS name as 'MyPublicASUXEC2.{MyDomainName}'
+        MyPrivASUXLinux2:           ### This is the name of the 2nd SERVER.   This is also used to create the DNS name as 'MyPrivASUXLinux2.{MyDomainName}'
           EC2InstanceType: t2.micro
-          # public: no
+          # public: no    ### By default this server is ___NOT___ publicly accessible, as it's in the private-subnet.
 
           MyIAM-roles:
           - EC2-ReadWrite-to-S3
