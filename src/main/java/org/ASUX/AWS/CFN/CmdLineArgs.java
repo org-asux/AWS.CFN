@@ -71,6 +71,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
     protected static final String ITEMNUMBER = "itemNumber";
 
     protected static final String YAMLLIB = "yamllibrary";
+    protected static final String OFFLINE = "offline";
 
     //------------------------------------
     // public boolean verbose;
@@ -78,9 +79,10 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
     protected String jobSetName = "undefined-JobSetName";
     protected String itemNumber = "undefined-ItemNumber";
-    protected String publicOrPrivateSubnet = "NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable";
+    protected String PublicOrPrivate = "NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable";
 
-    public YAML_Libraries YAMLLibrary = YAML_Libraries.NodeImpl_Library; // some default value for now
+    private boolean offline = false;
+    protected YAML_Libraries YAMLLibrary = YAML_Libraries.NodeImpl_Library; // some default value for now
 
     //------------------------------------
     protected transient final org.apache.commons.cli.Options options = new org.apache.commons.cli.Options();
@@ -110,6 +112,8 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
     public Enums.GenEnum getCmdName()   { return this.cmdName; }
     public String getJobSetName()       { return this.jobSetName; }
     public String getItemNumber()       { return this.itemNumber; }
+    public boolean isOffline()          { return this.offline; }
+    public YAML_Libraries getYAML_Libraries()   { return this.YAMLLibrary; }
 
     //------------------------------------
     /** 
@@ -122,7 +126,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         // This method completely OVERWRITES the super/parent-class' implementation of this method.
         return
         " --verbose="+verbose+" cmdName="+cmdName
-        +" jobSetName="+jobSetName+" itemNumber="+itemNumber
+        +" jobSetName="+jobSetName+" itemNumber="+itemNumber +" offline="+this.offline
         + super.toString()
         ;
     }
@@ -147,6 +151,11 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         Option opt;
 
         opt= new Option("v", "verbose", false, "Show debug output");
+        opt.setRequired(false);
+        this.options.addOption(opt);
+
+        //----------------------------------
+        opt = new Option("zzz", OFFLINE, false, "whether internet is turned  off (or, you'd like to pretend there's no internet) " );
         opt.setRequired(false);
         this.options.addOption(opt);
 
@@ -295,20 +304,29 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             if ( this.verbose ) System.out.println( HDR + this.toString() );
 
             //-------------------------------------------
+            class ReusableCode {
+                public final void setInstanceVariables( final String[] subnetsArgs, final CmdLineArgs  _THIS ) throws MissingOptionException {
+                    // because we set .setArgs(2) above.. you can get the values for:- subnetsArgs[0] and subnetsArgs[1].
+                    _THIS.jobSetName = subnetsArgs[0]; // 1st of the 2 arguments for INSERT cmd.
+                    if ( _THIS.jobSetName.endsWith(".yaml") )
+                        _THIS.jobSetName = _THIS.jobSetName.replaceAll( ".yaml$", "" );
+                    if ( verbose ) System.err.println( "_THIS.jobSetName="+ _THIS.jobSetName );
+                    _THIS.PublicOrPrivate = subnetsArgs[1];
+                    if ( _THIS.PublicOrPrivate == null || ( ! _THIS.PublicOrPrivate.toLowerCase().matches("public|private") ) )
+                        throw new MissingOptionException("Command "+ SUBNETSGEN +" requires 2nd argument to be precisely 'public' or 'private'");
+                    else
+                        _THIS.PublicOrPrivate = _THIS.PublicOrPrivate.toLowerCase();
+                        _THIS.PublicOrPrivate = Character.toUpperCase( _THIS.PublicOrPrivate.charAt(0) ) + _THIS.PublicOrPrivate.substring(1);
+                    }
+            }
+            //-------------------------------------------
             if ( apacheCmdProcessor.hasOption( VPCGEN ) ) {
                 this.cmdName = Enums.GenEnum.VPC;
                 this.jobSetName = apacheCmdProcessor.getOptionValue( VPCGEN );
             }
             if ( apacheCmdProcessor.hasOption( SUBNETSGEN ) ) {
                 this.cmdName = Enums.GenEnum.SUBNET;
-                final String[] subnetsArgs = apacheCmdProcessor.getOptionValues( SUBNETSGEN );
-                // because we set .setArgs(2) above.. you can get the values for:- subnetsArgs[0] and subnetsArgs[1].
-                this.jobSetName = subnetsArgs[0]; // 1st of the 2 arguments for INSERT cmd.
-                this.publicOrPrivateSubnet = subnetsArgs[1];
-                if ( this.publicOrPrivateSubnet == null || ( ! this.publicOrPrivateSubnet.toLowerCase().matches("public|private") ) )
-                    throw new MissingOptionException("Command "+ SUBNETSGEN +" requires 2nd argument to be precisely 'public' or 'private'");
-                else
-                    this.publicOrPrivateSubnet = this.publicOrPrivateSubnet.toLowerCase();
+                new ReusableCode().setInstanceVariables( apacheCmdProcessor.getOptionValues( SUBNETSGEN ), this );
             }
             if ( apacheCmdProcessor.hasOption( SGSSHGEN ) ) {
                 this.cmdName = Enums.GenEnum.SGSSH;
@@ -320,7 +338,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             }
             if ( apacheCmdProcessor.hasOption( EC2PLAINGEN ) ) {
                 this.cmdName = Enums.GenEnum.EC2PLAIN;
-                this.jobSetName = apacheCmdProcessor.getOptionValue( EC2PLAINGEN );
+                new ReusableCode().setInstanceVariables( apacheCmdProcessor.getOptionValues( EC2PLAINGEN ), this );
             }
 
             if ( apacheCmdProcessor.hasOption( VPNCLIENTGEN ) ) {
@@ -332,6 +350,9 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
                 this.jobSetName = apacheCmdProcessor.getOptionValue( FULLSTACKGEN );
             }
 
+            if ( this.jobSetName.endsWith(".yaml") )
+                this.jobSetName = this.jobSetName.replaceAll( ".yaml$", "" );
+            if ( this.verbose ) System.err.println( "this.jobSetName="+ this.jobSetName );
             if ( this.verbose ) System.out.println( HDR + this.toString() );
 
             assert( this.cmdName == Enums.GenEnum.UNDEFINED ); // sanity check
@@ -350,6 +371,9 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
                 this.YAMLLibrary = YAML_Libraries.fromString( apacheCmdProcessor.getOptionValue(YAMLLIB) );
             else
                 this.YAMLLibrary = YAML_Libraries.SNAKEYAML_Library; // default.
+
+            //-------------------------------------------
+            this.offline = ( apacheCmdProcessor.hasOption(OFFLINE) );
 
             //-------------------------------------------
             this.moreParsing( _args, apacheCmdProcessor );
@@ -389,10 +413,10 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
      *  @param _orig what you want to deep-clone
      *  @param _newCmdName after cloning change the {@link #cmdName} to this-value
      *  @param _newItemNumber after cloning change the {@link #itemNumber} to this-value
-     *  @param _publicOrPrivateSubnet make sure to pass in either "public" or "private" (case sensitive) _ONLY_
+     *  @param _PublicOrPrivate make sure to pass in either "public" or "private" (case sensitive) _ONLY_
      *  @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
      */
-    public static CmdLineArgs deepCloneWithChanges( final CmdLineArgs _orig, final Enums.GenEnum _newCmdName, final String _newItemNumber, final String _publicOrPrivateSubnet ) {
+    public static CmdLineArgs deepCloneWithChanges( final CmdLineArgs _orig, final Enums.GenEnum _newCmdName, final String _newItemNumber, final String _PublicOrPrivate ) {
         try {
             final CmdLineArgs newobj = org.ASUX.common.Utils.deepClone( _orig );
             newobj.deepCloneFix( _orig );
@@ -400,8 +424,8 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             newobj.cmdName = _newCmdName;
             if ( _newItemNumber != null )
                 newobj.itemNumber = _newItemNumber;
-            if ( _publicOrPrivateSubnet != null )
-                newobj.publicOrPrivateSubnet = _publicOrPrivateSubnet;
+            if ( _PublicOrPrivate != null )
+                newobj.PublicOrPrivate = _PublicOrPrivate;
             return newobj;
         } catch (Exception e) {
 			e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping it on the user.
