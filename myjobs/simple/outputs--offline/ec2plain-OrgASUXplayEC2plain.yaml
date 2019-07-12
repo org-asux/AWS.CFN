@@ -1,0 +1,193 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  WARNING!!!!  WARNING!!!! Note that you are billed for the AWS resources that you use when you create a stack from this template. WARNING!!!!  WARNING!!!!  This YAML file is generated using ASUX.org's Batch-based scripting. The command used was - .. tbd .. See details of ASUX.org project at https://github.com/org-asux/org-ASUX.github.io/wiki These were in-turn based on the AWS CloudFormation Sample Template @ https://s3.amazonaws.com/cloudformation-examples/user-guide/cross-stack/SampleNetworkCrossStack.template VPC_with_PublicIPs_And_DNS - Sample template that creates a VPC with DNS and public IPs enabled.
+Parameters:
+  MyStackNamePrefix:
+    Description: Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
+    Type: String
+    Default: org-ASUX-Playground-Tokyo
+  MyPublicSubnet1:
+    Description: "What is the EXPORTED OUTPUT NAME of the Appropriate PUBLIC-vs-PRIVATE-SUBNET #1 - from the other VPC CFN-template"
+    Type: String
+  MySSHSecurityGroup:
+    Description: "What is the EXPORTED OUTPUT NAME of the SG for SSH? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
+    Type: String
+  MyIamInstanceProfiles:
+    Description: "What is the **LIST** of IAM groups? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
+    Type: String
+    Default: EC2-ReadWrite-to-S3
+  EC2InstanceType:
+    Description: Sizing of New EC2 instance
+    Type: String
+  AWSAMIID:
+    Description: O/S specified as via a very precise ami ID
+    Type: String
+  EC2EBSVolumeSize:
+    Type: Number
+    Default: '10'
+  needsMonitoring:
+    Description: Whether this EC2 instance needs **DETAILED** monitoring.  Default= FALSE
+    Type: String
+    Default: "false"
+  MySSHKeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instance
+    Type: 'AWS::EC2::KeyPair::KeyName'
+Conditions:
+  isPublic: !Equals
+  - 'Public'
+  - 'Public'
+Resources:
+  OrgASUXplayEC2plain:
+    Type: 'AWS::EC2::Instance'
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          StandupOnly:
+          - Standup
+          StandUpInstallAndRun:
+          - Standup
+          - Services
+        Standup:
+          packages:
+            yum:
+              amazon-efs-utils: [
+                ]
+              tcsh: [
+                ]
+              git: [
+                ]
+              maven: [
+                ]
+        Services:
+          sysvinit:
+            httpd:
+              enabled: 'false'
+              ensureRunning: 'false'
+            sendmail:
+              enabled: false'
+              ensureRunning: 'false'
+    Properties:
+      NetworkInterfaces:
+      - DeviceIndex: "0"
+        GroupSet:
+        - !ImportValue
+          Ref: MySSHSecurityGroup
+        SubnetId: !ImportValue
+          Ref: MyPublicSubnet1
+        AssociatePublicIpAddress: !If [
+          isPublic,
+          'true',
+          'false']
+        
+      InstanceType: !Ref 'EC2InstanceType'
+      ImageId: !Ref 'AWSAMIID'
+      BlockDeviceMappings:
+      - DeviceName: /dev/sdc
+        Ebs:
+          DeleteOnTermination: 'true'
+          VolumeSize:
+            Ref: EC2EBSVolumeSize
+      IamInstanceProfile:
+        Ref: MyIamInstanceProfiles
+      Monitoring:
+        Ref: needsMonitoring
+      KeyName:
+        Ref: MySSHKeyName
+      Tags:
+      - Key: LOCATION
+        Value: ap-northeast-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: org-ASUX-Playground-Tokyo-simple-EC2-OrgASUXplayEC2plain
+      - Key: APPLNAME
+        Value: UndefinedApplication
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Servers
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: FQDN
+        Value: OrgASUXplayEC2plain.playground.asux.org
+      UserData: !Base64
+        'Fn::Join':
+        - ''
+        - - |
+            #!/bin/bash -xe
+          - |
+            ### See this output @ /var/log/cloud-init-output.log
+          - >
+            echo '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+          - |
+            date '+%Y-%m-%d %H:%M:%S'
+          - >
+            # See page 284 of UG - on how to Install the files and packages from the metadata
+          - |
+            yum -y update
+          - |
+            yum install -y aws-cfn-bootstrap
+          - |
+            mkdir /var/build
+          - |
+            chown ec2-user /var/build
+          - |2+
+
+          - |
+            mkdir /mnt/development
+          - |
+            chown ec2-user /mnt/development
+          - |2+
+
+          - EC2_REGION=
+          - !Ref 'AWS::Region'
+          - |2+
+
+          - |
+            # Make sure this is the 2nd-last command in the UserData, as .. in case it fails (which is very likely, due to Config-set errors/typos), the rest of the script has executed.
+          - |
+            # Install the files and packages from the metadata associated with the EC2-instance's Resource/Properties/
+          - '/opt/aws/bin/cfn-init -v '
+          - '         --stack '
+          - !Ref 'AWS::StackName'
+          - '         --resource '
+          - OrgASUXplayEC2plain
+          - '         --configsets StandupOnly '
+          - '         --region '
+          - !Ref 'AWS::Region'
+          - |2+
+
+          - |
+            ### !!!!! WARNING !!!!!!!!: Sudo BELOW should be VERY LAST command
+          - >
+            ### SECURITY-BestPractice: When you work with shared AMIs, a best practice is to disable direct root logins. To do this, issue the following command:
+          - |
+            sudo passwd -l root
+          - |
+            ### This ABOVE command does NOT impact the use of sudo.
+          - |
+            ### !!!!! WARNING !!!!!!!!: Sudo ABOVE should be VERY LAST command
+  DnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneId: __OFFLINE_MODE - AWS.SDK PROJECT - getHostedZoneId()
+      Comment: DNS name for my instance.
+      Name: OrgASUXplayEC2plain.playground.asux.org.
+      Type: A
+      TTL: '900'
+      ResourceRecords:
+      - !GetAtt 'OrgASUXplayEC2plain.PublicIp'

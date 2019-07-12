@@ -1,0 +1,210 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  WARNING!!!!  WARNING!!!! Note that you are billed for the AWS resources that you use when you create a stack from this template. WARNING!!!!  WARNING!!!!  This YAML file is generated using ASUX.org's Batch-based scripting. The command used was - .. tbd .. See details of ASUX.org project at https://github.com/org-asux/org-ASUX.github.io/wiki These were in-turn based on the AWS CloudFormation Sample Template @ https://s3.amazonaws.com/cloudformation-examples/user-guide/cross-stack/SampleNetworkCrossStack.template VPC_with_PublicIPs_And_DNS - Sample template that creates a VPC with DNS and public IPs enabled.
+Parameters:
+  MyStackNamePrefix:
+    Description: The prefix for almost ALL Exports by CFN-templates created by ASUX.org tools.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
+    Type: String
+    Default: org-ASUX-Playground-Tokyo
+  MyVPCName:
+    Description: Export ID of the VPC.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
+    Type: String
+    Default: org-ASUX-Playground-Tokyo-VPCID
+  EC2getsPublicIPByDefault:
+    Description: Whether any EC2 instance created within this VPC automatically gets a PUBLIC-IP (accessible via internet)
+    Type: String
+    Default: 'false'
+  MyPublicRouteTable:
+    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-simple-PublicRouteTableID"
+    Type: String
+    Default: org-ASUX-Playground-Tokyo-PublicRouteTableID
+  MyPrivateRouteTable:
+    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PrivateRouteTable is associated with only the VPC CIDRBlock.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-simple-PrivateRouteTableID"
+    Type: String
+    Default: org-ASUX-Playground-Tokyo-PrivateRouteTableID
+Conditions:
+  doesExistSubnet1: !Equals
+  - ASUXorgWorks
+  - ASUXorgWorks
+  doesExistSubnet2: !Equals
+  - ASUXorgWorks
+  - ASUXorgWorks
+  doesExistSubnet3: !Equals
+  - ASUXorgWorks
+  - ASUXorgWorks
+Resources:
+  MyPublicSubnetAZ1:
+    Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
+    Type: 'AWS::EC2::Subnet'
+    Condition: doesExistSubnet1
+    Properties:
+      VpcId: !ImportValue
+        Ref: MyVPCName
+      CidrBlock: 172.31.0.0/20
+      MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
+      AvailabilityZone: ap-northeast-1a
+      Tags:
+      - Key: LOCATION
+        Value: ap-northeast-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public1
+      - Key: APPLNAME
+        Value: UNDEFINED-APPLNAME
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+  MyPublicSubnetAZ2:
+    Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
+    Type: 'AWS::EC2::Subnet'
+    Condition: doesExistSubnet2
+    Properties:
+      VpcId: !ImportValue
+        Ref: MyVPCName
+      CidrBlock: 172.31.16.0/20
+      MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
+      AvailabilityZone: ap-northeast-1c
+      Tags:
+      - Key: LOCATION
+        Value: ap-northeast-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public2
+      - Key: APPLNAME
+        Value: UNDEFINED-APPLNAME
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+  MyPublicSubnetAZ3:
+    Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
+    Type: 'AWS::EC2::Subnet'
+    Condition: doesExistSubnet3
+    Properties:
+      VpcId: !ImportValue
+        Ref: MyVPCName
+      CidrBlock: 172.31.32.0/20
+      MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
+      AvailabilityZone: ap-northeast-1d
+      Tags:
+      - Key: LOCATION
+        Value: ap-northeast-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public3
+      - Key: APPLNAME
+        Value: UNDEFINED-APPLNAME
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+  MyPublicSubnetRouteTableAssociationAZ1:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: doesExistSubnet1
+    Properties:
+      SubnetId: !Ref 'MyPublicSubnetAZ1'
+      RouteTableId: !ImportValue
+        Ref: MyPublicRouteTable
+  MyPublicSubnetRouteTableAssociationAZ2:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: doesExistSubnet2
+    Properties:
+      SubnetId: !Ref 'MyPublicSubnetAZ2'
+      RouteTableId: !ImportValue
+        Ref: MyPublicRouteTable
+  MyPublicSubnetRouteTableAssociationAZ3:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: doesExistSubnet3
+    Properties:
+      SubnetId: !Ref 'MyPublicSubnetAZ3'
+      RouteTableId: !ImportValue
+        Ref: MyPublicRouteTable
+  MyPublicSubnetNetworkAclAssociation1:
+    Type: 'AWS::EC2::SubnetNetworkAclAssociation'
+    Condition: doesExistSubnet1
+    Properties:
+      SubnetId: !Ref 'MyPublicSubnetAZ1'
+      NetworkAclId: !ImportValue 'org-ASUX-Playground-Tokyo-DefaultNetworkAclID'
+  MyPublicSubnetNetworkAclAssociation2:
+    Type: 'AWS::EC2::SubnetNetworkAclAssociation'
+    Condition: doesExistSubnet2
+    Properties:
+      SubnetId: !Ref 'MyPublicSubnetAZ2'
+      NetworkAclId: !ImportValue 'org-ASUX-Playground-Tokyo-DefaultNetworkAclID'
+  MyPublicSubnetNetworkAclAssociation3:
+    Type: 'AWS::EC2::SubnetNetworkAclAssociation'
+    Condition: doesExistSubnet3
+    Properties:
+      SubnetId: !Ref 'MyPublicSubnetAZ3'
+      NetworkAclId: !ImportValue 'org-ASUX-Playground-Tokyo-DefaultNetworkAclID'
+Outputs:
+  DefaultPublicSubnet1:
+    Description: The subnet no.1's ID to use for web servers if public, or for databases if private.
+    Value: !Ref 'MyPublicSubnetAZ1'
+    Condition: doesExistSubnet1
+    Export:
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Public1-ID'
+  DefaultPublicSubnet2:
+    Description: The subnet no.2's ID to use for web servers if public, or for databases if private.
+    Value: !Ref 'MyPublicSubnetAZ2'
+    Condition: doesExistSubnet2
+    Export:
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Public2-ID'
+  DefaultPublicSubnet3:
+    Description: The subnet no.3's ID to use for web servers if public, or for databases if private.
+    Value: !Ref 'MyPublicSubnetAZ3'
+    Condition: doesExistSubnet3
+    Export:
+      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Public3-ID'
