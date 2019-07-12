@@ -159,7 +159,7 @@ public final class CmdProcessorEC2
                 "--profile ${AWSprofile} --parameters "+ params +" --template-body file://"+ outpfile;
 
         final List keys = awssdk.listKeyPairEC2   ( _envParams.getAWSRegion(), MySSHKeyName );
-        if ( keys.size() > 0 ) {
+        if ( keys.size() > 0 || _cmdLA.isOffline() ) {
             if (this.verbose) System.out.println( HDR + "The key exists with the name: "+ MySSHKeyName );
         } else {
             if (this.verbose) System.out.println( HDR + "Will CREATE NEW SSH-login KeyPair with name: "+ MySSHKeyName );
