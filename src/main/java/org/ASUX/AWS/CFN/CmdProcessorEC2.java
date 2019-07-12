@@ -104,12 +104,12 @@ public final class CmdProcessorEC2
     public String genCFNShellScript( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
     {
         final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
-        final String outpfile   = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".yaml";
 
         final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         final String MyStackNamePrefix = globalProps.getProperty( EnvironmentParameters.MYSTACKNAMEPREFIX );
+        final String outpfile = CmdProcessor.getOutputFilePath( _cmdLA, _envParams, globalProps );  // _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".yaml";
 
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose );
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
 
         String preStr = null;
         // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, _awscfnhome +"/config/inputs/AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _envParams.getAllPropsRef() );
@@ -118,7 +118,7 @@ public final class CmdProcessorEC2
         // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, "AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _envParams.getAllPropsRef() );
         final String AMIIDCachePropsFileName = "AMZNLinux2_AMI_ID-"+ _envParams.getAWSLocation() +".txt";
         try {
-            BootCheckAndConfig.fileCheck( _envParams.get_awscfnhome() +"/config/inputs", AMIIDCachePropsFileName, _envParams.bInRecursionByFullStack );
+            // BootCheckAndConfig.fileCheck( _envParams.get_awscfnhome() +"/config/inputs", AMIIDCachePropsFileName, _envParams.bInRecursionByFullStack );
             globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _envParams.get_awscfnhome() +"/config/inputs/"+ AMIIDCachePropsFileName ) );
             // Will contain a SINGLE row like:-     AWSAMIID=ami-084040f99a74ce8c3
         } catch (Exception e) {
@@ -136,18 +136,19 @@ public final class CmdProcessorEC2
                 throw e;
         } // try-catch
 
-        final String DefaultPublicSubnet1 = MyStackNamePrefix + "-Subnet-"+_cmdLA.publicOrPrivateSubnet+"1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", _envParams.getAllPropsRef()  );
+        final String DefaultSubnet1wMacro = MyStackNamePrefix + "-Subnet-${ASUX::PublicOrPrivate}1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", _envParams.getAllPropsRef()  );
+        final String DefaultSubnet1 = Macros.evalThoroughly( this.verbose, DefaultSubnet1wMacro, _envParams.getAllPropsRef() );
         final String MySSHSecurityGroup = MyStackNamePrefix + "-SG-SSH"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-SG-SSH", this.getAllPropsRef()  );
         final String MySSHKeyName = Macros.evalThoroughly( this.verbose, "${ASUX::AWSLocation}-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-LinuxSSH.pem", _envParams.getAllPropsRef() );
         // final String MyIamInstanceProfiles = Macros.evalThoroughly( this.verbose, "${ASUX::?????????????????}-"+HDR, this.getAllPropsRef() );
         // 'MyIamInstanceProfiles' must be set within one of the JOB files (like Job-Master.properties or Job-ec2plain.properties)
-        // globalProps.setProperty( "DefaultPublicSubnet1", DefaultPublicSubnet1 );
+        // globalProps.setProperty( "DefaultSubnet1", DefaultSubnet1 );
         // globalProps.setProperty( "MySSHSecurityGroup", MySSHSecurityGroup );
         // globalProps.setProperty( "MySSHKeyName", MySSHKeyName );
-        if (this.verbose) System.out.println( HDR + "DefaultPublicSubnet1=" + DefaultPublicSubnet1 + " MySSHSecurityGroup=" + MySSHSecurityGroup + " MySSHKeyName=" + MySSHKeyName );
+        if (this.verbose) System.out.println( HDR + "DefaultSubnet1=" + DefaultSubnet1 + " MySSHSecurityGroup=" + MySSHSecurityGroup + " MySSHKeyName=" + MySSHKeyName );
 
         final String params =
-                    " ParameterKey=MyPublicSubnet1,ParameterValue="+ DefaultPublicSubnet1 +
+                    " ParameterKey=My${ASUX::PublicOrPrivate}Subnet1,ParameterValue="+ DefaultSubnet1 +
                     " ParameterKey=MySSHSecurityGroup,ParameterValue="+ MySSHSecurityGroup +
                     " ParameterKey=MyIamInstanceProfiles,ParameterValue=${ASUX::"+ EnvironmentParameters.EC2IAMROLES +"}" +
                     " ParameterKey=AWSAMIID,ParameterValue=${ASUX::AWSAMIID} "+
