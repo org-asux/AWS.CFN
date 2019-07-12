@@ -1,7 +1,7 @@
 #!/bin/tcsh -f
 
 ###------------------------------
-echo "Usage: $0 [--verbose]"
+echo "Usage: $0 [--verbose] [--offline]"
 # if ( $#argv <= 1 ) then
 #     echo "Usage: $0  [--verbose] --delete --yamlpath yaml.regexp.path $YAMLLIB --inputfile /tmp/input.yaml -o /tmp/output.yaml " >>& /dev/stderr
 #     echo Usage: $0 'org.ASUX.yaml.Cmd [--verbose] --delete --double-quote --yamlpath "paths.*.*.responses.200" $YAMLLIB --inputfile $cwd/src/test/my-petstore-micro.yaml -o /tmp/output2.yaml ' >>& /dev/stderr
@@ -46,6 +46,13 @@ if ( $#argv == 1 && "$1" == "--verbose" ) then
         shift
 else
         set VERBOSE=""
+endif
+
+if ( $#argv == 1 && "$1" == "--offline" ) then
+        set OFFLINE="$1"
+        shift
+else
+        set OFFLINE=""
 endif
 
 chdir ${TESTSRCFLDR}
@@ -98,11 +105,11 @@ set JOBSET=simple
 ###---------------------------------
 
 set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/myjobs/${JOBSET}
-set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs
-set OUTPUTFLDR=/tmp/test-output-AWSCFN
+set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs${OFFLINE}
+#____   set OUTPUTFLDR=/tmp/test-output-AWSCFN${OFFLINE}
 
-\rm -rf ${OUTPUTFLDR}
-mkdir -p ${OUTPUTFLDR}
+#____   \rm -rf ${OUTPUTFLDR}
+#____   mkdir -p ${OUTPUTFLDR}
 
 set RUNTESTCMD="java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs"
 set RUNTESTCMD="asux aws.cfn"
@@ -112,23 +119,33 @@ set RUNTESTCMD="asux aws.cfn"
 
 set CMD=vpc
 echo ${CMD}
-eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
 diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
 diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
 echo $DIVIDER
 
 set CMD=subnets
+set PublicOrPrivate=public
 echo ${CMD}
-eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} public --no-quote"
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
-diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+diff /tmp/${CMD}-${PublicOrPrivate}.yaml  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.yaml
+diff /tmp/${CMD}-${PublicOrPrivate}.sh  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.sh
+echo $DIVIDER
+
+set CMD=subnets
+set PublicOrPrivate=private
+echo ${CMD}
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote ${OFFLINE}"
+if ($status != 0) exit $status
+diff /tmp/${CMD}-${PublicOrPrivate}.yaml  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.yaml
+diff /tmp/${CMD}-${PublicOrPrivate}.sh  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.sh
 echo $DIVIDER
 
 set CMD=sg-ssh
 echo ${CMD}
-eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
 diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
 diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
@@ -143,11 +160,12 @@ echo $DIVIDER
 # echo $DIVIDER
 
 set CMD=ec2plain
+set PublicOrPrivate=public
 echo ${CMD}
-eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} -${PublicOrPrivate} --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
-diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+diff /tmp/${CMD}-OrgASUXplayEC2plain.yaml  ${TEMPLATEFLDR}/${CMD}-OrgASUXplayEC2plain.yaml
+diff /tmp/${CMD}-OrgASUXplayEC2plain.sh  ${TEMPLATEFLDR}/${CMD}-OrgASUXplayEC2plain.sh
 echo $DIVIDER
 
 # set CMD=vpnclient
@@ -158,35 +176,32 @@ echo $DIVIDER
 # diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
 # echo $DIVIDER
 
-# set CMD=ec2plain
+###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+set TEMPLATEFLDR=${AWSCFNFLDR}/myjobs/outputs${OFFLINE}
+
+# ??????????????????????????????????????????????? I have to test fullstack ??????????????????????????????????
+# set CMD=fullstack
 # echo ${CMD}
-# eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} 2ndinstance --no-quote"
+# eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
 # if ($status != 0) exit $status
+# echo ''
+# set CMD=vpc
+# diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+# diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+# echo ''
+# set CMD=subnets
+# diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+# diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+# echo ''
+# set CMD=sg-ssh
+# diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+# diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+# echo ''
+# set CMD=ec2plain
 # diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
 # diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
 # echo $DIVIDER
-
-set CMD=fullstack
-echo ${CMD}
-eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
-if ($status != 0) exit $status
-echo ''
-set CMD=vpc
-diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-echo ''
-set CMD=subnets
-diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-echo ''
-set CMD=sg-ssh
-diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-echo ''
-set CMD=ec2plain
-diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-echo $DIVIDER
 
 ### Error situations
 echo
