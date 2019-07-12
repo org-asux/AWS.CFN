@@ -1,8 +1,8 @@
-  MyPublicSubnetNetworkAclAssociation${ASUX::foreach.index+1}:
+  My${ASUX::PublicOrPrivate}SubnetNetworkAclAssociation${ASUX::foreach.index+1}:
     Type: 'AWS::EC2::SubnetNetworkAclAssociation'
     Condition: doesExistSubnet${ASUX::foreach.index+1}
     Properties:
-      SubnetId: !Ref MyPublicSubnetAZ${ASUX::foreach.index+1}
+      SubnetId: !Ref My${ASUX::PublicOrPrivate}SubnetAZ${ASUX::foreach.index+1}
       NetworkAclId: !ImportValue ${ASUX::MyVPCStackPrefix}-DefaultNetworkAclID
       # NetworkAclId: !GetAtt
       #   - !ImportValue ${ASUX::MyVPCName}

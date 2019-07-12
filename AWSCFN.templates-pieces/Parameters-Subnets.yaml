@@ -15,9 +15,15 @@ Parameters:
     Type: String
     Default: 'false'
 
+  ### !!!! ATTENTION !!! The descriptions of the two (Public vs. Private) below are different!!
   MyPublicRouteTable:
     Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${ASUX::MyStackNamePrefix}-PublicRouteTableID"
     Type: String
     Default: ${ASUX::MyVPCStackPrefix}-PublicRouteTableID
+
+  MyPrivateRouteTable:
+    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PrivateRouteTable is associated with only the VPC CIDRBlock.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${ASUX::MyStackNamePrefix}-PrivateRouteTableID"
+    Type: String
+    Default: ${ASUX::MyVPCStackPrefix}-PrivateRouteTableID
 
 #EOF
