@@ -3,22 +3,28 @@
 ###    See Subnet property below.
 #      AvailabilityZone: !GetAtt   ## The value of the property returned by the aws cloudformation describe-stacks command
 #      - !ImportValue
-#          Ref: MyPublicAZ1
+#          Ref: My${ASUX::PublicOrPrivate}AZ1
 #      - AvailabilityZone
 #        Ref: DefaultAZ
 
       # AWS CFN ERROR: Network-interfaces and an instance-level 'SubnetId' CANNOT be specified on the same request (Status Code: 400; Error Code: InvalidParameterCombination)
       # SubnetId: !ImportValue
-      #    Ref: MyPublicSubnet1
+      #    Ref: My${ASUX::PublicOrPrivate}Subnet1
       NetworkInterfaces: 
         ### This one line *BELOW* distinguishes the 2 files MyEC2wEFS-cloudformation.yaml & MyEC2PrivatewEFS-cloudformation.yaml
-        - AssociatePublicIpAddress: "true"
-          DeviceIndex: "0"
+        - DeviceIndex: "0"
           GroupSet:
             - !ImportValue
                 Ref: MySSHSecurityGroup
           SubnetId: !ImportValue
-              Ref: MyPublicSubnet1
+              Ref: My${ASUX::PublicOrPrivate}Subnet1
+          AssociatePublicIpAddress: !If [  isPublic, 'true' , 'false' ]   ### "true"
+            # !If:    ### This set of 5 lines do NOT work :-(  .. .. An error occurred (ValidationError) when calling the CreateStack operation: Template error: Fn::If requires a list argument with the first element being a condition
+            # - !Equals:
+            #   - "Public"
+            #   - "${ASUX::PublicOrPrivate}"
+            # - "true"
+            # - "false"
       # AWS CFN ERROR: Network interfaces and an instance-level security-groups CANNOT be specified on the same request (Status Code: 400; Error Code: InvalidParameterCombination)
       # SecurityGroupIds:
       #   - !ImportValue
