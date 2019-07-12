@@ -107,7 +107,7 @@ public final class CmdProcessor
     {
         final String HDR = CLASSNAME + ": genYAML(..,"+ _cfnJobType +",..): ";
         final Properties globalProps    = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose );
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
 
         String batchFilePath = null;
         {
@@ -146,40 +146,18 @@ public final class CmdProcessor
                             batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
                             break;
             case SUBNET:
-                            assertTrue( _cmdLA.publicOrPrivateSubnet != null && _cmdLA.publicOrPrivateSubnet.length() > 0 ); // CmdLineArgs.class guarantees that it will be 'public' or 'private', if NOT NULL.
-                            globalProps.setProperty( "PublicOrPrivate", _cmdLA.publicOrPrivateSubnet );
+                            assertTrue( _cmdLA.PublicOrPrivate != null && _cmdLA.PublicOrPrivate.length() > 0 ); // CmdLineArgs.class guarantees that it will be 'Public' or 'Private', if NOT NULL.
+                            // globalProps.setProperty( "PublicOrPrivate", _cmdLA.PublicOrPrivate );  // already set in BootCheckAndConfig.configure()
                             if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
-                            batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-"+_cmdLA.publicOrPrivateSubnet+"-Create.ASUX-batch.txt";
+                            batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-"+_cmdLA.PublicOrPrivate+"-Create.ASUX-batch.txt";
+                            // batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
                             break;
             case FULLSTACK:
                             break;
             // case SGEFS:     batchFilePath = ;       break;
             // case VPNCLIENT: batchFilePath = ;       break;
 
-            case UNDEFINED:
-            default:        final String es = HDR +" Unimplemented command: " + _cmdLA.toString();
-                            System.err.println( es );
-                            throw new Exception( es );
-        } // switch
-
-        //-------------------------------------
-        String outpfile = "???UN-initialized_outpfile???"; // forced to initialize because of 'case: FULLSTACK' below.
-        switch ( _cmdLA.getCmdName() ) {
-            case SUBNET:    outpfile   = _envParams.outputFolderPath +"/"+ _cfnJobType +"-"+ _cmdLA.publicOrPrivateSubnet +".yaml";
-                            break;
-
-            case EC2PLAIN:
-                            outpfile   = _envParams.outputFolderPath +"/"+ _cfnJobType +"-"+ globalProps.getProperty( EnvironmentParameters.MYEC2INSTANCENAME ) +".yaml";
-                            break;
-            case VPC:
-            case SGSSH:
-                            outpfile   = _envParams.outputFolderPath +"/"+ _cfnJobType +".yaml";
-                            break;
-            case FULLSTACK:
-                            break;
-            case VPNCLIENT:
-            case SGEFS:
             case UNDEFINED:
             default:        final String es = HDR +" Unimplemented command: " + _cmdLA.toString();
                             System.err.println( es );
@@ -211,6 +189,7 @@ public final class CmdProcessor
                         System.exit(99);
                         throw new Exception( "Failure to successfully complete user-command. rerun with --verbose option!" );
                     }
+                    final String outpfile = CmdProcessor.getOutputFilePath( _cmdLA, _envParams, globalProps );
                     InputsOutputs.saveDataIntoReference( "@"+ outpfile, outpData2, null, this.cmdinvoker.getYamlWriter(), this.cmdinvoker.dumperopt, _cmdLA.verbose );
                     break;
             case VPNCLIENT:
@@ -240,13 +219,13 @@ public final class CmdProcessor
     public void genCFNShellScript( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
     {
         final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
-        final String outpfile   = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".yaml";
 
         final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         // final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}--${ASUX::JobSetName}${ASUX::ItemNumber}", this.allPropsRef );
         final String MyStackNamePrefix = globalProps.getProperty( "MyStackNamePrefix" );
+        final String outpfile = getOutputFilePath( _cmdLA, _envParams, globalProps ); //_envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".yaml";
 
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose );
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
 
         String preStr = null;
         String scriptfile;
@@ -255,8 +234,8 @@ public final class CmdProcessor
         case VPC:       preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-VPC  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey="+EnvironmentParameters.MYVPCSTACKPREFIX+",ParameterValue=${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"} --template-body file://"+ outpfile;
                         scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".sh";
                         break;
-        case SUBNET:    preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.publicOrPrivateSubnet +"-"+ _cmdLA.jobSetName + _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
-                        scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ _cmdLA.publicOrPrivateSubnet +".sh";
+        case SUBNET:    preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
+                        scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate +".sh";
                         break;
         case SGSSH:     preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
                         scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".sh";
@@ -290,6 +269,7 @@ public final class CmdProcessor
                             if ( this.verbose ) System.out.println( postStr ); // dump the cmd to execute the CFN script to stdout.
                             org.ASUX.common.IOUtils.write2File( scriptfile, postStr );
                             org.ASUX.common.IOUtils.setFilePerms( this.verbose, scriptfile, true, true, true, true ); // rwx------ file-permissions
+                            System.out.println( scriptfile );
                             break;
             case FULLSTACK: // do Nothing for this
             case UNDEFINED:
@@ -302,6 +282,36 @@ public final class CmdProcessor
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
+    /**
+     * Based on whether the VPC, Subnet or EC2 instance is being created - in isolation by itself .. or, as part of a full-stack, the output file-name changes.
+     * This variability is feasible due to {@link EnvironmentParameters#getCfnJobTYPEString()}.
+     * @param _cmdLA NotNull instance obtained from {@link CmdInvoker#processCommand}
+     * @param _envParams MotNull instance obtained from {@link BootCheckAndConfig#configure}
+     * @param _globalProps NotNull instance of java.util.Properties, that is saved in {@link #cmdinvoker}'s MemoryAndContext attribute.
+     * @return a Nullable string
+     * @throws Exception if unimplemented logic or logic-errors
+     */
+    public static String getOutputFilePath( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams, final Properties _globalProps )
+                        throws Exception
+    {   final String HDR = CLASSNAME + ": getOutputFilePath(): ";
+        switch ( _cmdLA.getCmdName() ) {
+            case SUBNET:    return _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate +".yaml";
+
+            case EC2PLAIN:
+                            return _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ _globalProps.getProperty( EnvironmentParameters.MYEC2INSTANCENAME ) +".yaml";
+            case VPC:
+            case SGSSH:
+                            return _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".yaml";
+            case FULLSTACK:
+                            return null;
+            case VPNCLIENT:
+            case SGEFS:
+            case UNDEFINED:
+            default:        final String es = HDR +" Unimplemented command: " + _cmdLA.getCmdName();
+                            System.err.println( es );
+                            throw new Exception( es );
+        } // switch
+    }
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
