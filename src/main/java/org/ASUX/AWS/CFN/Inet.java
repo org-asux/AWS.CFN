@@ -41,9 +41,9 @@ import static org.junit.Assert.*;
  * This enum class is a bit extensive, only because the ENNUMERATED VALUEs are strings.
  * For variations - see https://stackoverflow.com/questions/3978654/best-way-to-create-enum-of-strings
  */
-public final class Util
+public final class Inet
 {
-    public static final String CLASSNAME = Util.class.getName();
+    public static final String CLASSNAME = Inet.class.getName();
 
     //-----------------------------
     public boolean verbose;
@@ -52,7 +52,7 @@ public final class Util
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
-    public Util( final boolean _verbose ) {
+    public Inet( final boolean _verbose ) {
         this.verbose = _verbose;
     }
 
@@ -78,50 +78,40 @@ public final class Util
 
 	protected static InetAddress singleton;
 
-	/** Convert the singleton into an integer, by putting the bytes together.
-	 *  @return an integer that could be a negative number.  Be careful!
-	*/
-	public static final int getInetAddressAsInteger() {
-		final int inetInt =   Util.singleton.b1*256*256*256
-							+ Util.singleton.b2*256*256
-							+ Util.singleton.b3*256
-							+ Util.singleton.b4;
-		// if ( this.verbose ) System.out.println( HDR + "inetInt = "+ inetInt );
-		return inetInt;
-	}
-
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
 	/**
-	 *  <p>By leveraging A private INSTANCE of {@link Util.InetAddress}, this class will sequentially generate subnets separated by '_CIDRBLOCK_Byte3_Delta'.</p>
+	 *  <p>By leveraging A private INSTANCE of {@link Inet.InetAddress}, this class will sequentially generate subnets separated by '_CIDRBLOCK_Byte3_Delta'.</p>
 	 *  <p>Example, if '_CIDRBLOCK_Byte3_Delta' === 16*256, and you invoked {@link #genSubnetMask} with '172.10.0.0/16' then you'll receive on successive invocations of this method:- </p>
 	 *  <ul><li>172.31.0.0/20</li><li>172.31.16.0/20</li><li>172.31.32.0/20</li><li>172.31.48.0/20</li><li>..</li></ul>
 	 *  <p>Please do Not misuse these methods and end-up screwing yourself.  Feel free to copy this entire file</p>	 * 
      *  @param _verbose  Whether you want deluge of debug-output onto System.out.
 	 *  @param _CIDRBLOCK_Byte3_Delta a number like 16 (representing 16*256 ip-addresses)
-	 *  @throws Exception if the argument passed in fails the Range-check: 0 < _CIDRBLOCK_Byte3_Delta <= 256
+	 *  @throws Exception if the argument passed in fails the Range-check: 0 &lt; _CIDRBLOCK_Byte3_Delta &lt;= 256
 	 */
 	public static final void getNextSubnetRange( final boolean _verbose, final int _CIDRBLOCK_Byte3_Delta ) throws Exception
 	{	final String HDR = CLASSNAME + ": getNextSubnetRange("+ _CIDRBLOCK_Byte3_Delta +"): ";
 		if ( 1 > _CIDRBLOCK_Byte3_Delta && _CIDRBLOCK_Byte3_Delta > 256 )
 			throw new Exception( " Failed Range-check: 0 < _CIDRBLOCK_Byte3_Delta("+ _CIDRBLOCK_Byte3_Delta +") <= 256" );
-		int newb2 = Util.singleton.b2;
-		int newb3 = Util.singleton.b3 + _CIDRBLOCK_Byte3_Delta;
+		int newb2 = Inet.singleton.b2;
+		int newb3 = Inet.singleton.b3 + _CIDRBLOCK_Byte3_Delta;
 		if ( newb3 > 255 ) {
 			newb2 += Math.floorDiv( newb3, 256 );
 			newb3  = Math.floorMod( newb3, 256 );
 		}
-		Util.singleton = new InetAddress( Util.singleton.b1, newb2, newb3, Util.singleton.b4, Util.singleton.subnetMask );
-		if ( _verbose ) System.out.println( HDR + Util.singleton.toString() );
+		Inet.singleton = new InetAddress( Inet.singleton.b1, newb2, newb3, Inet.singleton.b4, Inet.singleton.subnetMask );
+		if ( _verbose ) System.out.println( HDR + Inet.singleton.toString() );
 	}
 
 	//=================================================================================
 	/**
 	 *  Given the a VPC CIDRBlock like 172.10.0.0/16.. '16' is the argument to this function.  Assuming about 16 subnets, this method will return /20 (or as appropriate for what the _cidrBlockRange is)
+     *  @param _verbose  Whether you want deluge of debug-output onto System.out.
 	 *  @param _cidrBlockRange a value between 1-32 (inclusive of both limits)
-	 *  @throws Exception if the argument passed in fails the Range-check: 0 < cidrBlockRange <= 256
+	 *  @return an integer in the range 0 &lt;= .. &lt;= 32 (inclusive of both limits)
+	 *  @throws Exception if the argument passed in fails the Range-check: 0 &lt; cidrBlockRange &lt;= 256
 	 */
 	public static final int genSubnetMask( final boolean _verbose, final int _cidrBlockRange ) throws Exception
 	{	final String HDR = CLASSNAME + ": genSubnetMask("+ _cidrBlockRange +"): ";
@@ -135,7 +125,21 @@ public final class Util
 		}
 		final int subnetMask = ( 32 - 8 - iy ); // assumption that last/4th byte of CIDRBlock (a.k.a. right-most 8 bits) Not in subnet-mask.
 		if ( _verbose ) System.out.println( HDR + "subnetMask = "+ subnetMask );
+		assertTrue( 0 <= subnetMask && subnetMask <= 32 );
 		return subnetMask;
+	}
+
+    //=================================================================================
+	/** Convert the singleton into an integer, by putting the bytes together.
+	 *  @return an integer that could be a negative number.  Be careful!
+	*/
+	public static final int getInetAddressAsInteger() {
+		final int inetInt =   Inet.singleton.b1*256*256*256
+							+ Inet.singleton.b2*256*256
+							+ Inet.singleton.b3*256
+							+ Inet.singleton.b4;
+		// if ( this.verbose ) System.out.println( HDR + "inetInt = "+ inetInt );
+		return inetInt;
 	}
 
 	//=================================================================================
@@ -168,12 +172,12 @@ public final class Util
 				final int cidrBlockRange = Integer.parseInt(s5);
 				if ( this.verbose ) System.out.println( HDR + "cidrBlockRange = "+ cidrBlockRange );
 
-				if ( Util.singleton == null ) {
-					final int subnetMask = Util.genSubnetMask( this.verbose, cidrBlockRange );
-					Util.singleton = new InetAddress( Integer.parseInt(s1), Integer.parseInt(s2), Integer.parseInt(s3), Integer.parseInt(s4), subnetMask );
+				if ( Inet.singleton == null ) {
+					final int subnetMask = Inet.genSubnetMask( this.verbose, cidrBlockRange );
+					Inet.singleton = new InetAddress( Integer.parseInt(s1), Integer.parseInt(s2), Integer.parseInt(s3), Integer.parseInt(s4), subnetMask );
 				} else {
-					final int subnetMask = Util.genSubnetMask( this.verbose, cidrBlockRange );
-					if ( Util.singleton.subnetMask != subnetMask )
+					final int subnetMask = Inet.genSubnetMask( this.verbose, cidrBlockRange );
+					if ( Inet.singleton.subnetMask != subnetMask )
 						throw new Exception( "Currently unable to handle changing value of subnetmask (basically changing value of 'cidrBlockRange')" );
 				}
 
@@ -189,12 +193,12 @@ public final class Util
 				// int newb3 = b3;
 
 				for ( int ix=1; ix <= numOfAZs; ix ++ ) {
-					// final String subnet = ""+ Util.singleton.b1 +"."+ Util.singleton.b2 +"."+ Util.singleton.b3 +"."+ Util.singleton.b4 +"/"+ subnetMask;
-					if ( this.verbose ) System.out.println( HDR + "subnet-"+ix+" = "+ Util.singleton.toString() );
+					// final String subnet = ""+ Inet.singleton.b1 +"."+ Inet.singleton.b2 +"."+ Inet.singleton.b3 +"."+ Inet.singleton.b4 +"/"+ subnetMask;
+					if ( this.verbose ) System.out.println( HDR + "subnet-"+ix+" = "+ Inet.singleton.toString() );
 
-					retval.add( Util.singleton.toString() );
+					retval.add( Inet.singleton.toString() );
 
-					Util.getNextSubnetRange( this.verbose, _CIDRBLOCK_Byte3_Delta );
+					Inet.getNextSubnetRange( this.verbose, _CIDRBLOCK_Byte3_Delta );
 					// newb3 += _CIDRBLOCK_Byte3_Delta;
 					// if ( newb3 > 255 ) {
 					// 	newb2 += Math.floorDiv( newb3, 256 );
