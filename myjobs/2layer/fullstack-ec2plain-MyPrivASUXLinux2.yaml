@@ -176,7 +176,7 @@ Resources:
   DnsRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneId: __OFFLINE_MODE - AWS.SDK PROJECT - getHostedZoneId()
+      HostedZoneId: Z2NF71MJ75KYXK
       Comment: DNS name for my instance.
       Name: MyPrivASUXLinux2.playground.asux.org.
       Type: A
