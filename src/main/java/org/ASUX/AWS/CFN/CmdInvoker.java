@@ -131,14 +131,14 @@ public class CmdInvoker extends org.ASUX.YAML.NodeImpl.CmdInvoker {
         final String HDR = CLASSNAME + ": processCommand("+ _cmdLA.toString() +"): ";
         final CmdLineArgs cmdLA = (CmdLineArgs) _cmdLA;
 
-        this.setYamlLibrary( cmdLA.YAMLLibrary );
-        if (cmdLA.verbose) System.out.println( HDR +" set YAML-Library to [" + cmdLA.YAMLLibrary + " and [" + this.getYamlLibrary() + "]" );
+        this.setYamlLibrary( cmdLA.getYAMLLibrary() );
+        if (cmdLA.verbose) System.out.println( HDR +" set YAML-Library to [" + cmdLA.getYAMLLibrary() + " and [" + this.getYamlLibrary() + "]" );
 
         //---------------------------
         if ( this.dumperopt == null ) // this won't be null, if this object was created within BatchCmdProcessor.java
             this.dumperopt = GenericYAMLWriter.defaultConfigurationForSnakeYamlWriter();
 
-        switch( cmdLA.quoteType ) {
+        switch( cmdLA.getQuoteType() ) {
             case DOUBLE_QUOTED: dumperopt.setDefaultScalarStyle( org.yaml.snakeyaml.DumperOptions.ScalarStyle.DOUBLE_QUOTED );  break;
             case SINGLE_QUOTED: dumperopt.setDefaultScalarStyle( org.yaml.snakeyaml.DumperOptions.ScalarStyle.SINGLE_QUOTED );  break;
             case LITERAL:       dumperopt.setDefaultScalarStyle( org.yaml.snakeyaml.DumperOptions.ScalarStyle.LITERAL );        break;
