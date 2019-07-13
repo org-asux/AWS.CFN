@@ -77,9 +77,10 @@ public class Cmd {
     {
         final String HDR = CLASSNAME + ": main(String[]): ";
 
-        final CmdLineArgs cmdlineargs = new CmdLineArgs( false );
+        final CmdLineArgs cmdlineargs = new CmdLineArgs();
 
         try {
+            cmdlineargs.define();
             cmdlineargs.parse( args );
 
             CmdInvoker cmdinvoker = new CmdInvoker( cmdlineargs.verbose );
