@@ -32,6 +32,10 @@ Parameters:
   MySSHKeyName:
     Description: The EC2 Key Pair to allow SSH access to the instance
     Type: 'AWS::EC2::KeyPair::KeyName'
+Conditions:
+  isPublic: !Equals
+  - 'Public'
+  - 'Private'
 Resources:
   MyPrivASUXLinux2:
     Type: 'AWS::EC2::Instance'
@@ -61,13 +65,12 @@ Resources:
         - !ImportValue
           Ref: MySSHSecurityGroup
         SubnetId: !ImportValue
-          Ref: MyPublicSubnet1
-        AssociatePublicIpAddress: !if
-        - Equals:
-          - "public"
-          - "Private"
-        - "true"
-        - "false"
+          Ref: MyPrivateSubnet1
+        AssociatePublicIpAddress: !If [
+          isPublic,
+          'true',
+          'false']
+        
       InstanceType: !Ref 'EC2InstanceType'
       ImageId: !Ref 'AWSAMIID'
       BlockDeviceMappings:
