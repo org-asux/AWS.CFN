@@ -66,7 +66,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
     protected static final String SGEFSGEN = "sg-efs-gen";
     protected static final String EC2PLAINGEN = "ec2plain-gen";
 
-    protected static final String VPNCLIENTGEN = "vpnclient-gen";
+    // protected static final String VPNCLIENTGEN = "vpnclient-gen";
     protected static final String FULLSTACKGEN = "fullstack-gen";
 
     protected static final String ITEMNUMBER = "itemNumber";
@@ -109,7 +109,6 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
     /**
      *  <p>Add cmd-line argument definitions (using apache.commons.cli.Options) for the instance-variables defined in this class.</p>
-     *  @param options a Non-Null instance of org.apache.commons.cli.Options
      */
     @Override
     protected void defineAdditionalOptions()
@@ -127,8 +126,8 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         final Option ec2plaingen  = CmdLineArgsCommon.genOption( "e", EC2PLAINGEN, "create a new plain EC2-instance of AMZN2-Linux", 2, "jobname" );
             ec2plaingen.setArgName("JobSetName> <public|private"); // overwrite what was set within genOption()
 
-        final Option vpcclientgen = CmdLineArgsCommon.genOption( "vn", VPNCLIENTGEN, "create a new VPN-Client connection for a specific VPC", 1, "jobname" );
         final Option fullstackgen = CmdLineArgsCommon.genOption( "fg", FULLSTACKGEN, "create a new stack that includes a VPC, subnets, SGs and an EC2 instance", 1, "job.yaml" );
+        // final Option vpnclientgen = CmdLineArgsCommon.genOption( "vn", VPNCLIENTGEN, "create a new VPN-Client connection for a specific VPC", 1, "jobname" );
 
         grp.addOption(vpcgen);
         grp.addOption(subnetsgen);
@@ -136,7 +135,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         grp.addOption(sgefsgen);
         grp.addOption(ec2plaingen);
 
-        grp.addOption(vpcclientgen);
+        // grp.addOption(vpnclientgen);
         grp.addOption(fullstackgen);
 
         grp.setRequired( true );
@@ -213,14 +212,14 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             new ReusableCode().setInstanceVariables( EC2PLAINGEN, _apacheCmdProcessor.getOptionValues( EC2PLAINGEN ), this );
         }
 
-        if ( _apacheCmdProcessor.hasOption( VPNCLIENTGEN ) ) {
-            this.cmdName = Enums.GenEnum.VPNCLIENT;
-            this.jobSetName = _apacheCmdProcessor.getOptionValue( VPNCLIENTGEN );
-        }
         if ( _apacheCmdProcessor.hasOption( FULLSTACKGEN ) ) {
             this.cmdName = Enums.GenEnum.FULLSTACK;
             this.jobSetName = _apacheCmdProcessor.getOptionValue( FULLSTACKGEN );
         }
+        // if ( _apacheCmdProcessor.hasOption( VPNCLIENTGEN ) ) {
+        //     this.cmdName = Enums.GenEnum.VPNCLIENT;
+        //     this.jobSetName = _apacheCmdProcessor.getOptionValue( VPNCLIENTGEN );
+        // }
 
         // let's do this check once more.. in case something slipped-thru the above complexity.
         if ( this.jobSetName.endsWith(".yaml") )
