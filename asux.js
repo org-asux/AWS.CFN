@@ -36,12 +36,14 @@ CmdLine
 	.version('1.0', '-v, --version')
 	.usage('[options] <commands ...>')
 	.option('--verbose', 'A value that can be increased by repeating', 0)
-.command('vpn-gen ...', 'create a new VPN in a specific region', { isDefault: false, noHelp: false } )
-.command('sshsg-gen ...', 'create a new Security-Group for allowing SSH access to EC2 instances', { isDefault: false, noHelp: false } )
+.command('vpc-gen ...', 'create a new VPC in a specific region', { isDefault: false, noHelp: false } )
+.command('subnets-gen ...', 'create a new subnet (must also specify public or private)', { isDefault: false, noHelp: false } )
+.command('sg-ssh-gen ...', 'create a new Security-Group for allowing SSH access to EC2 instances', { isDefault: false, noHelp: false } )
 .command('ec2plain-gen ...', 'create a new simple EC2 AWS-Linux2 instance (with packages optionally specified to install)', { isDefault: false, noHelp: false } )
-.command('ec2efs-gen ...', 'create a new simple AWS-Linux2 EC2 instance with an EFS mounted under /mnt', { isDefault: false, noHelp: true } )
+// .command('ec2efs-gen ...', 'create a new simple AWS-Linux2 EC2 instance with an EFS mounted under /mnt', { isDefault: false, noHelp: true } )
 .command('ecs-gen ...', 'create a new Elastic Container Service instance', { isDefault: false, noHelp: true } )
-.command('dns-gen ...', 'create DNS entries as appropriate', { isDefault: false, noHelp: true } )
+// .command('dns-gen ...', 'create DNS entries as appropriate', { isDefault: false, noHelp: true } )
+.command('fullstack-gen ...', 'create an entire stack from a new VPC, one or more subnets, one or more SGs and one or more EC2 instances', { isDefault: false, noHelp: false } )
 	;
 
 //==========================
@@ -52,8 +54,8 @@ CmdLine.on('--help', function(){
   console.log('Examples:');
   console.log('  $ %s --help', __filename);
   console.log('  $ %s --version', __filename);
-  console.log('  $ %s --verbose read .. ..', __filename);
-  console.log('  $ %s --no-verbose delete .. ..', __filename);
+  console.log('  $ %s --verbose aws.sdk list-regions', __filename);
+  console.log('  $ %s --offline aws.cfn .. ..', __filename);
 });
 
 //==========================
@@ -90,10 +92,10 @@ CmdLine.on('command:fullstack-gen', function () {
   processCFNCmd(COMMAND);
 });
 
-CmdLine.on('command:vpnclient-gen', function () {
-  COMMAND="vpnclient-gen";
-  processCFNCmd(COMMAND);
-});
+// CmdLine.on('command:vpnclient-gen', function () {
+//   COMMAND="vpnclient-gen";
+//   processCFNCmd(COMMAND);
+// });
 
 // Like the 'default' in a switch statement.. .. After all of the above "on" callbacks **FAIL** to trigger, we'll end up here.
 // If we end up here, then .. Show error about unknown command
