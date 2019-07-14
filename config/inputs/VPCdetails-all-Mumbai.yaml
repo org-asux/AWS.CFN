@@ -1,0 +1,3 @@
+- isDefault: 'true'
+  ID: vpc-ae0c2fc6
+  CIDRBlock: 172.31.0.0/16
