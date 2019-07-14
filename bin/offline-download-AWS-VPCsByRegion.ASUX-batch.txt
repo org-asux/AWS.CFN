@@ -1,0 +1,32 @@
+### This is the file 'AWS-VPCsByRegion-Batch.txt'
+### Run this command as:   asux.js yaml batch @ AWS-VPCsByRegion-Batch.txt -i /dev/null -o -
+### You'll find files created under ${ASUX::AWSCFN.HOME}/config/inputs/.
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+setProperty	?AWSCFNHOME=${ASUX::ORGASUXHOME}/AWS/CFN
+properties AWSLocationsRegion=${ASUX::AWSCFNHOME}/config/AWSLocationsRegions.properties
+properties AWSRegionLocations=${ASUX::AWSCFNHOME}/config/AWSRegionsLocations.properties
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+aws.sdk --list-regions --no-quote --offline
+
+//--------------------------------------------------
+foreach
+	print ${ASUX::foreach.iteration.value} \n
+	setProperty AWSRegion=${ASUX::foreach.iteration.value}
+
+	setProperty AWSLocation=${ASUX::AWS-${ASUX::AWSRegion}}
+
+	aws.sdk --describe-vpcs ${ASUX::AWSRegion}
+
+	saveTo @${ASUX::AWSCFNHOME}/config/inputs/VPCdetails-all-${ASUX::AWSLocation}.yaml
+end
+//--------------------------------------------------
+
+#EoF
