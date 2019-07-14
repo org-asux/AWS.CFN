@@ -177,7 +177,7 @@ public final class CmdProcessor
                     //             this.verbose, false,  _cmdInvoker.getMemoryAndContext(), (DumperOptions)_cmdInvoker.getLibraryOptionsObject() );
                     // final Object outputAsIs = nodeImplCmdInvoker.processCommand( cmdlineargs, inputNode );
 // above 3 lines  -versus-  below 3 lines
-                    final BatchCmdProcessor batcher = new BatchCmdProcessor( _cmdLA.verbose, /* showStats */ false, _cmdLA.getQuoteType(), this.cmdinvoker.dumperopt );
+                    final BatchCmdProcessor batcher = new BatchCmdProcessor( _cmdLA.verbose, /* showStats */ false, _cmdLA.isOffline(), _cmdLA.getQuoteType(), this.cmdinvoker.dumperopt );
                     batcher.setMemoryAndContext( this.cmdinvoker.getMemoryAndContext() ); // this will invoke.. batcher.initProperties()
                     if ( _cmdLA.verbose ) new org.ASUX.common.Debug(_cmdLA.verbose).printAllProps( HDR +" FULL DUMP of propsSetRef = ", _envParams.getAllPropsRef() );
 
