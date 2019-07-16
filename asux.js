@@ -114,32 +114,29 @@ CmdLine.parse(process.argv);
 
 function processCFNCmd( _CMD) {
 
-  if (process.env.VERBOSE) console.log( "Environment variables (As-Is): AWSHOME=" + process.env.AWSHOME +", AWSCFNHOME=" + process.env.AWSCFNHOME +"\n" );
+    if (process.env.VERBOSE) console.log( "Environment variables (As-Is): AWSHOME=" + process.env.AWSHOME +", AWSCFNHOME=" + process.env.AWSCFNHOME +"\n" );
 
-  // whether or not process.env.AWSHOME is already set already.. reset it based on the location of this file (./asux.js)
-    // if ( !  process.env.AWSHOME ) {
-      var parentDir = ""+__dirname;
-      parentDirArr = parentDir.split(PATH.sep);
-      parentDirArr.pop();
-      if (process.env.VERBOSE) console.log( "REGULAR variable: parentDirArr='" + parentDirArr.join('/') +"'." );
-      const afolder = ""+parentDirArr.join('/'); // for use by all scripts under process.env.ORGASUXHOME/AWS/CFN .. so it know where this asux.js is.
-      if ( (afolder != process.env.AWSHOME) && EXECUTESHELLCMD.checkIfExists( process.env.AWSHOME ) ) {
-        console.error( __filename +"\nThe parent-folder "+ afolder + " that contains this asux.js script conflicts with the Environment-variable AWSHOME="+ process.env.AWSHOME +".  Please unset the environment variable AWSHOME or remove the folder "+ afolder );
-        process.exitCode = 9;
-        return;
-      }
-      process.env.AWSHOME = afolder;
-    // } // if
+    // Following 15 lines are Common with {ORGASUXFLDR}/AWS/AWS-SDK/asux.js
+    // whether or not process.env.AWSHOME is already set already.. reset it based on the location of this file (./asux.js)
+    var parentDir = ""+__dirname;
+    parentDirArr = parentDir.split(PATH.sep);
+    parentDirArr.pop();
+    if (process.env.VERBOSE) console.log( "REGULAR variable: parentDirArr='" + parentDirArr.join('/') +"'." );
+    const afolder = ""+parentDirArr.join('/'); // for use by all scripts under process.env.ORGASUXHOME/AWS/CFN .. so it know where this asux.js is.
+    if ( (afolder != process.env.AWSHOME) && EXECUTESHELLCMD.checkIfExists( process.env.AWSHOME ) ) {
+      console.error( __filename +"\nThe parent-folder "+ afolder + " that contains this asux.js script conflicts with the Environment-variable AWSHOME="+ process.env.AWSHOME +".  Please unset the environment variable AWSHOME or remove the folder "+ afolder );
+      process.exitCode = 9;
+      return;
+    }
+    process.env.AWSHOME = afolder;
 
     // whether or not process.env.AWSCFNHOME is already set already.. reset it based on the location of this file (./asux.js)
-    // if ( ! process.env.AWSCFNHOME ) {
-      if ( (__dirname != process.env.AWSCFNHOME) && EXECUTESHELLCMD.checkIfExists( process.env.AWSCFNHOME ) ) {
-        console.error( __filename +"\nThe folder "+ __dirname + " that contains this asux.js script conflicts with the Environment-variable AWSCFNHOME="+ process.env.AWSCFNHOME +".  Please unset the environment variable AWSCFNHOME or remove the folder "+ __dirname );
-        process.exitCode = 9;
-        return;
-      }
-      process.env.AWSCFNHOME=__dirname; // for use by all scripts under process.env.ORGASUXHOME/AWS/CFN .. so it know where this asux.js is.
-    // } // if
+    if ( (__dirname != process.env.AWSCFNHOME) && EXECUTESHELLCMD.checkIfExists( process.env.AWSCFNHOME ) ) {
+      console.error( __filename +"\nThe folder "+ __dirname + " that contains this asux.js script conflicts with the Environment-variable AWSCFNHOME="+ process.env.AWSCFNHOME +".  Please unset the environment variable AWSCFNHOME or remove the folder "+ __dirname );
+      process.exitCode = 9;
+      return;
+    }
+    process.env.AWSCFNHOME=__dirname; // for use by all scripts under process.env.ORGASUXHOME/AWS/CFN .. so it know where this asux.js is.
 
     if (process.env.VERBOSE) console.log( "Environment variables (final): AWSHOME=" + process.env.AWSHOME +", AWSCFNHOME=" + process.env.AWSCFNHOME +"\n" );
 
