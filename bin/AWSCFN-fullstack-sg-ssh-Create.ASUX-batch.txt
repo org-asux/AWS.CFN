@@ -21,15 +21,6 @@ include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-FullStack.ASUX-batch.txt
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
-### Load the external inputs (in this case, the list of AZs for the region of interest)
-
-#________ aws.sdk --list-AZs      ${ASUX::AWSRegion}
-useAsInput @${ASUX::AWSCFNHOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
-saveTo !AWSAZs
-
-//=============================================================
-//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//=============================================================
 ### Now build the CFN script I want
 
 useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/TopYaml.yaml

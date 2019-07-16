@@ -23,8 +23,8 @@ include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-FullStack.ASUX-batch.txt
 //=============================================================
 ### Load the external inputs (in this case, the list of AZs for the region of interest)
 
-#________ aws.sdk --list-AZs      ${ASUX::AWSRegion}
-useAsInput @${ASUX::AWSCFNHOME}/config/inputs/AWS.AZlist-${ASUX::AWSRegion}.yaml
+#________ aws.sdk --list-AZs      ${ASUX::AWSRegion} --offline
+#________ useAsInput @${ASUX::AWSHOME}/AWS-SDK/etc/offline-downloads/AWS.AZlist-${ASUX::AWSRegion}.yaml   ### This code to the LEFT, should be automatically invoked by previous line for --offline
 saveTo !AWSAZs
 
 //=============================================================

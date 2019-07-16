@@ -13,8 +13,9 @@
 properties GLOBAL.VARIABLES=${ASUX::AWSCFNHOME}/config/DEFAULTS/FullStackJob-DEFAULTS.properties
 
 properties DigitToAlphaProps=${ASUX::AWSCFNHOME}/config/DigitToAlpha.properties
-properties AWSLocationsRegion=${ASUX::AWSCFNHOME}/config/AWSLocationsRegions.properties
-properties AWSRegionLocations=${ASUX::AWSCFNHOME}/config/AWSRegionsLocations.properties
+
+properties AWSLocationsRegion=${ASUX::AWSHOME}/AWS-SDK/config/AWSLocationsRegions.properties
+properties AWSRegionLocations=${ASUX::AWSHOME}/AWS-SDK/config/AWSRegionsLocations.properties
 
 
 //=============================================================
