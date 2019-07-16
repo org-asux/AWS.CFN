@@ -1,1 +1,0 @@
-AWSAMIID=ami-084040f99a74ce8c3
