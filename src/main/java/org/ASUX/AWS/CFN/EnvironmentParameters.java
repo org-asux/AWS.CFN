@@ -66,6 +66,7 @@ public final class EnvironmentParameters implements Serializable {
     public static final String TAGS_ENTERPRISE_MASTER = "Tags-Enterprise-Master.properties"; // one of the many Properties objects within this.allPropsRef (see go())
 
     public static final String AWSREGIONSLOCATIONS = "config/AWSRegionsLocations.properties";
+    public static final String AWSLOCATIONSREGIONS = "config/AWSLocationsRegions.properties";
 
     public static final String MYSTACKNAMEPREFIX = "MyStackNamePrefix";
     public static final String MYVPCSTACKPREFIX = "MyVPCStackPrefix";
@@ -223,6 +224,8 @@ public final class EnvironmentParameters implements Serializable {
     public String get_orgasuxhome()         { return this.orgasuxhome; }
 
     public String get_awshome()             { return this.awshome; }
+
+    public String get_awssdkhome()             { return this.awshome + "/AWS-SDK"; }
 
     public String get_awscfnhome()          { return this.awscfnhome; }
 

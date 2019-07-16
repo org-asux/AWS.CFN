@@ -122,7 +122,8 @@ public final class BootCheckAndConfig {
         //      throw new Exception( es );
         // }
 
-        fileCheck( this.envParams.get_awscfnhome(), EnvironmentParameters.AWSREGIONSLOCATIONS, false /* _bMissingIsOk */ );
+        fileCheck( this.envParams.get_awssdkhome(), EnvironmentParameters.AWSREGIONSLOCATIONS, false /* _bMissingIsOk */ );
+        fileCheck( this.envParams.get_awssdkhome(), EnvironmentParameters.AWSLOCATIONSREGIONS, false /* _bMissingIsOk */ );
         // Don't need checks for 'AWSprofile' (a.k.a. ~/.aws/.profile) as this check is done within org.ASUX.AWS-SDK project's code, prior to interacting with AWS-SDK.
 
         // --------------------
@@ -191,8 +192,10 @@ public final class BootCheckAndConfig {
         final Properties Tags        = this.envParams.getAllPropsRef().get( "Tags" );
         assertTrue( Tags != null );
 
-        final Properties AWSRegionLocations = org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.get_awscfnhome()  +"/"+ EnvironmentParameters.AWSREGIONSLOCATIONS );
-        this.envParams.getAllPropsRef().put( "AWSRegionLocations", AWSRegionLocations );
+        final Properties AWSRegionsLocations = org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.get_awssdkhome()  +"/"+ EnvironmentParameters.AWSREGIONSLOCATIONS );
+        final Properties AWSLocationsRegions = org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.get_awssdkhome()  +"/"+ EnvironmentParameters.AWSLOCATIONSREGIONS );
+        this.envParams.getAllPropsRef().put( "AWSRegionsLocations", AWSRegionsLocations );
+        this.envParams.getAllPropsRef().put( "AWSLocationsRegions", AWSLocationsRegions );
         // We need this specific '{AWSCFNHOME}/config/AWSRegionsLocations.properties' because we need to CONVERT a AWSRegion into an AWSLocation
 
         // --------------------
