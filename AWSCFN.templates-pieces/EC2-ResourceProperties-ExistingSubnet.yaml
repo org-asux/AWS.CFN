@@ -15,7 +15,7 @@
         - DeviceIndex: "0"
           GroupSet:
           - ${ASUX::ExistingSSHSecurityGroup}
-          SubnetId: My${ASUX::ExistingSubnetID}
+          SubnetId: ${ASUX::ExistingSubnetID}
           AssociatePublicIpAddress: !If [  isPublic, 'true' , 'false' ]   ### "true"
             # !If:    ### This set of 5 lines do NOT work :-(  .. .. An error occurred (ValidationError) when calling the CreateStack operation: Template error: Fn::If requires a list argument with the first element being a condition
             # - !Equals:
