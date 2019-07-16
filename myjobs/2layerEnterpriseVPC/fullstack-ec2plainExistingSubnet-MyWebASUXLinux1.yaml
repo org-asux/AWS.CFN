@@ -62,8 +62,8 @@ Resources:
       NetworkInterfaces:
       - DeviceIndex: "0"
         GroupSet:
-        - sg-999999999999999
-        SubnetId: Mysubnet-03713d5c56300fd2d
+        - sg-0fafaa98d0da6750e
+        SubnetId: subnet-03713d5c56300fd2d
         AssociatePublicIpAddress: !If [
           isPublic,
           'true',
@@ -119,9 +119,9 @@ Resources:
       - Key: AWSRegion
         Value: ap-northeast-1
       - Key: MyDomainName
-        Value: playground.asux.org
+        Value: playground.ASUX.org
       - Key: FQDN
-        Value: MyWebASUXLinux1.playground.asux.org
+        Value: MyWebASUXLinux1.playground.ASUX.org
       UserData: !Base64
         'Fn::Join':
         - ''
@@ -182,9 +182,9 @@ Resources:
   DnsRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneId: __OFFLINE_MODE - AWS.SDK PROJECT - getHostedZoneId()
+      HostedZoneId: Z2NF71MJ75KYXK
       Comment: DNS name for my instance.
-      Name: MyWebASUXLinux1.playground.asux.org.
+      Name: MyWebASUXLinux1.playground.ASUX.org.
       Type: A
       TTL: '900'
       ResourceRecords:

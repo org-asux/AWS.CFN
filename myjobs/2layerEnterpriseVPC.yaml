@@ -1,6 +1,6 @@
 AWS:
-  AWSRegion: ap-northeast-1
-  ### If the following 4 are NOT provided, check if VPCID is provided (below).  If so, check the Tags of VPCID, for these values.
+  AWSRegion: tokyo #___ ap-northeast-1
+  ### If the following 3 KV-Pairs are NOT provided, then .. 1st check if VPCID is provided (below).  If provided, then.. check the Tags of VPCID, for these 3 KV-pairs.
   #___ MyOrgName: org-ASUX
   #___ MyEnvironment: Playground
   #___ MyDomainName: playground.asux.org
@@ -9,7 +9,7 @@ AWS:
     VPCID: vpc-090ba06485bf32383    ### This means NO vpc.yaml will be created.
 
     SG-ssh:
-      SG-ssh-ID: sg-999999999999999 ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH must be specified.
+      SG-ssh-ID: sg-0fafaa98d0da6750e  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH must be specified.
 
     subnet:
       SubnetID: subnet-03713d5c56300fd2d ### Public subnet #1
@@ -27,6 +27,7 @@ AWS:
             tcsh: []
             git: []
             maven: []
+            java: []
 
           # rpm:
             # amazon-efs-utils: []
