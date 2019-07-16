@@ -151,9 +151,19 @@ public final class CmdProcessorFullStack
         final Node inputNode = yamlscanner.load( filereader );
         if ( this.verbose ) System.out.println( HDR +" file contents= '" + NodeTools.Node2YAMLString( inputNode ) + ".yaml'");
 
+        //-------------------------------------
+        // new org.ASUX.common.Debug(this.verbose).printAllProps( "!!!!!!!!!!!!!!!!!!!!!!!!!!", _envParams.getAllPropsRef() );
 
         //========================================================================
-        final String AWSRegion = yamltools.readStringFromYAML( inputNode, "AWS,AWSRegion" );
+        final String AWSRegionAsIs = yamltools.readStringFromYAML( inputNode, "AWS,AWSRegion" );
+        final String InitialCapitalStr = Character.toUpperCase( AWSRegionAsIs.charAt(0) ) + AWSRegionAsIs.substring(1).toLowerCase();
+        // Even after 'fixing' the case ---> Title-case, perhaps.. .. end-user put in a AWSLocation (example: Tokyo) instead of AWSRegion (example: ap-northeast-1) ??
+        final String macroStr = "${ASUX::AWS-"+InitialCapitalStr+"}";
+        final String AWSRegionLookupStr   = Macros.evalThoroughly( this.verbose, macroStr, _envParams.getAllPropsRef() );
+        final boolean bMacroEvalFailed =  macroStr.equals( AWSRegionLookupStr ); // if the Macros.evalThoroughly() actually worked..
+        final String AWSRegion = ( bMacroEvalFailed ) ? AWSRegionAsIs : AWSRegionLookupStr; // if the Macros.evalThoroughly() actually worked..
+        if (this.verbose) System.out.println( HDR +"macroStr="+ macroStr +"AWSRegionLookupStr="+ AWSRegionLookupStr +"bMacroEvalFailed="+ bMacroEvalFailed +"AWSRegion="+ AWSRegion );
+
         globalProps.setProperty( "AWSRegion", AWSRegion );
         if ( this.verbose ) System.out.println( HDR +"AWSRegion="+ AWSRegion );
         final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, this.cmdinvoker.getMemoryAndContext().getAllPropsRef() );
