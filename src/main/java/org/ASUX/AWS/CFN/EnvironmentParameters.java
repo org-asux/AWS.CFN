@@ -112,6 +112,11 @@ public final class EnvironmentParameters implements Serializable {
     private Enums.GenEnum cfnJobTypEnum = Enums.GenEnum.UNDEFINED;
     private String cfnJobTYPEString = "UNDEFINED";
 
+    private boolean bExistingVPC = false;
+    private boolean bExistingSubnet = false;
+    private String  existingVPCID = null;
+    private String  existingSubnetID = null;
+
     // ---------------- PRIVATE ----------------
     private transient LinkedHashMap<String, Properties> allPropsRef; // this could have been 'final' too, but for the fact that this.deepClone() needs to reset it.
 
@@ -166,6 +171,18 @@ public final class EnvironmentParameters implements Serializable {
         this.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( this.cfnJobTypEnum );
     }
 
+    /**
+     * Use this method to set the flags whether user has specified an existing VPC (+ optionally an existing subnet also).  Based on these flags, the appropriate '-gen.ASUX.batch.txt' scripts are executed.
+     * @param _existingVPCID a Nullable string. A non-null value represents the AWS VPC-ID of an existing VPC.
+     * @param _existingSubnetID a Nullable string. A non-null value represents the AWS SUBNET-ID of an existing Subnet (whether public or private).
+     */
+    public void setExisting( final String _existingVPCID, final String _existingSubnetID ) {
+        this.bExistingVPC = _existingVPCID != null;
+        this.bExistingSubnet = _existingSubnetID != null;
+        this.existingVPCID = _existingVPCID;
+        this.existingSubnetID = _existingSubnetID;
+    }
+
     // ==============================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // ==============================================================================
@@ -184,38 +201,6 @@ public final class EnvironmentParameters implements Serializable {
         return this.allPropsRef;
     }
 
-    // ==============================================================================
-    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    // ==============================================================================
-
-    /**
-     * This deepClone function is VERY MUCH necessary, as No cloning-code can handle 'transient' variables in this class.
-     * 
-     * @param _orig what you want to deep-clone
-     * @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
-     */
-    public static EnvironmentParameters deepClone( EnvironmentParameters _orig ) {
-        try {
-            final EnvironmentParameters newobj = org.ASUX.common.Utils.deepClone(_orig);
-            newobj.deepCloneFix(_orig);
-            return newobj;
-        } catch (Exception e) {
-            e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping this on the user.
-            return null;
-        }
-    }
-
-    /**
-     * In order to allow deepClone() to work seamlessly up and down the class-hierarchy.. I should allow subclasses to EXTEND (Not semantically override) this method.
-     * 
-     * @param _orig the original NON-Null object
-     */
-    protected void deepCloneFix( final EnvironmentParameters _orig ) {
-        // because this class has at least one TRANSIENT class-variable.. ..
-        // we need to 'restore' that object's transient variable to a 'replica'
-        this.allPropsRef = _orig.allPropsRef;
-    }
-
     // =================================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // =================================================================================
@@ -225,47 +210,53 @@ public final class EnvironmentParameters implements Serializable {
     }
 
     public String getCfnJobTYPEString() {
-        if (this.bInRecursionByFullStack)
-            return prefixFULLSTACK +"-"+ this.cfnJobTYPEString;
-        else
+        if (this.bInRecursionByFullStack) {
+            if ( this.bExistingSubnet )
+                return this.prefixFULLSTACK +"-"+ this.cfnJobTYPEString + "ExistingSubnet";
+            else
+            return this.prefixFULLSTACK +"-"+ this.cfnJobTYPEString;
+        } else {
             return this.cfnJobTYPEString;
+        }
     }
 
-    public String get_orgasuxhome() {
-        return this.orgasuxhome;
-    }
+    public String get_orgasuxhome()         { return this.orgasuxhome; }
 
-    public String get_awshome() {
-        return this.awshome;
-    }
+    public String get_awshome()             { return this.awshome; }
 
-    public String get_awscfnhome() {
-        return this.awscfnhome;
-    }
+    public String get_awscfnhome()          { return this.awscfnhome; }
 
-    public String getAWSRegion() {
-        return this.AWSRegion;
-    }
+    public String getAWSRegion()            { return this.AWSRegion; }
 
-    public String getAWSLocation() {
-        return this.AWSLocation;
-    }
+    public String getAWSLocation()          { return this.AWSLocation; }
 
-    public String getMyStackNamePrefix() {
-        return this.MyStackNamePrefix;
-    }
+    public String getMyStackNamePrefix()    { return this.MyStackNamePrefix; }
 
-    public String getMyVPCStackPrefix() {
-        return this.MyVPCStackPrefix;
-    }
+    public String getMyVPCStackPrefix()     { return this.MyVPCStackPrefix; }
 
-    // =================================================================================
+    public boolean isExistingVPC()          { return this.bExistingVPC; }
+    public boolean isExistingSubnet()       { return this.bExistingSubnet; }
+
+    /**
+     * @return can be Null. Depending on whether user has specified an existing VPC (in the full-stack job's YAML)
+     */
+    public String getExistingVPCID()        { return this.existingVPCID; }
+
+    /**
+     * @return can be Null. Depending on whether user has specified an existing subnet (in the full-stack job's YAML).
+     */
+    public String getExistingSubnetID()     { return this.existingSubnetID; }
+
+    // ==============================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // ==============================================================================
+
     public String getJOB_DEFAULTS()
                 throws Exception
     {   final String HDR = CLASSNAME + ": getJOB_DEFAULTS(): ";
         switch (this.cfnJobTypEnum) {
-        case FULLSTACK:
-            return prefixFULLSTACK +"/"+ JOB_DEFAULTS;
+            case FULLSTACK:
+                            return prefixFULLSTACK +"/"+ JOB_DEFAULTS;
             case SUBNET:
             case EC2PLAIN:
             case VPC:
@@ -300,6 +291,42 @@ public final class EnvironmentParameters implements Serializable {
                             System.err.println( es );
                             throw new Exception( es );
         } // switch
+    }
+
+    // ==============================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // ==============================================================================
+
+    // ==============================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // ==============================================================================
+
+    /**
+     * This deepClone function is VERY MUCH necessary, as No cloning-code can handle 'transient' variables in this class.
+     * 
+     * @param _orig what you want to deep-clone
+     * @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
+     */
+    public static EnvironmentParameters deepClone( EnvironmentParameters _orig ) {
+        try {
+            final EnvironmentParameters newobj = org.ASUX.common.Utils.deepClone(_orig);
+            newobj.deepCloneFix(_orig);
+            return newobj;
+        } catch (Exception e) {
+            e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping this on the user.
+            return null;
+        }
+    }
+
+    /**
+     * In order to allow deepClone() to work seamlessly up and down the class-hierarchy.. I should allow subclasses to EXTEND (Not semantically override) this method.
+     * 
+     * @param _orig the original NON-Null object
+     */
+    protected void deepCloneFix( final EnvironmentParameters _orig ) {
+        // because this class has at least one TRANSIENT class-variable.. ..
+        // we need to 'restore' that object's transient variable to a 'replica'
+        this.allPropsRef = _orig.allPropsRef;
     }
 
     // =================================================================================
