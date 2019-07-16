@@ -53,6 +53,14 @@ Resources:
         Value: org.ASUX
       - Key: VALIDATED
         Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: AWSRegion
+        Value: ap-northeast-1
+      - Key: MyDomainName
+        Value: playground.asux.org
 Outputs:
   SGSSHPlayground:
     Description: Security Group for enabling SSH access to Linux EC2 instances for the ___UNKNOWN__ application(s) and EC2-instances within the Playground environment

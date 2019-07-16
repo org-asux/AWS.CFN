@@ -122,6 +122,14 @@ Resources:
         Value: org.ASUX
       - Key: VALIDATED
         Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: AWSRegion
+        Value: ap-northeast-1
+      - Key: MyDomainName
+        Value: playground.asux.org
       - Key: FQDN
         Value: OrgASUXplayEC2plain.playground.asux.org
       UserData: !Base64
