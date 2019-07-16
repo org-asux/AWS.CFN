@@ -1,0 +1,74 @@
+AWS:
+  AWSRegion: ap-northeast-1
+  ### If the following 4 are NOT provided, check if VPCID is provided (below).  If so, check the Tags of VPCID, for these values.
+  #___ MyOrgName: org-ASUX
+  #___ MyEnvironment: Playground
+  #___ MyDomainName: playground.asux.org
+
+  VPC:
+    VPCID: vpc-090ba06485bf32383    ### This means NO vpc.yaml will be created.
+
+    SG-ssh:
+      SG-ssh-ID: sg-999999999999999 ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH must be specified.
+
+    subnet:
+      SubnetID: subnet-03713d5c56300fd2d ### Public subnet #1
+
+      SERVERS:
+        MyWebASUXLinux1:            ### This is the name of the 1st SERVER.   This is also used to create the DNS name as 'MyWebASUXLinux1.{MyDomainName}'
+          EC2InstanceType: t2.micro
+          # public: no  ### By default this server will be publicly accessible, as it's in the public-subnet.
+
+          MyIAM-roles:
+          - EC2-ReadWrite-to-S3
+
+          yum:
+            amazon-efs-utils: []
+            tcsh: []
+            git: []
+            maven: []
+
+          # rpm:
+            # amazon-efs-utils: []
+            # tcsh: []
+            # git: []
+            # maven: []
+          # configCustomCommands: 
+            # customCommand1: 
+            #   testShell: 
+            #     command: "echo \"$CFNTEST\" > /tmp/test.txt"
+            #     env: 
+            #       CFNTEST: "I come from CFN-template's configCustomCommands/customCommand1."
+            #     cwd: "/tmp"
+
+    subnet:
+      SubnetID: subnet-0f4aa5480cb1ba2ec  ### PRIVATE subnet #1
+
+      SERVERS:
+        MyPrivASUXLinux2:           ### This is the name of the 2nd SERVER.   This is also used to create the DNS name as 'MyPrivASUXLinux2.{MyDomainName}'
+          EC2InstanceType: t2.micro
+          # public: no    ### By default this server is ___NOT___ publicly accessible, as it's in the private-subnet.
+
+          MyIAM-roles:
+          - EC2-ReadWrite-to-S3
+
+          yum:
+            amazon-efs-utils: []
+            tcsh: []
+            git: []
+            maven: []
+
+          # rpm:
+            # amazon-efs-utils: []
+            # tcsh: []
+            # git: []
+            # maven: []
+          # configCustomCommands: 
+            # customCommand1: 
+            #   testShell: 
+            #     command: "echo \"$CFNTEST\" > /tmp/test.txt"
+            #     env: 
+            #       CFNTEST: "I come from CFN-template's configCustomCommands/customCommand1."
+            #     cwd: "/tmp"
+
+            ### EoF
