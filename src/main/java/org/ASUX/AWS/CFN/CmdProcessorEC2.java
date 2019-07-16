@@ -101,6 +101,35 @@ public final class CmdProcessorEC2
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
+    public String genYAMLBatchFile( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
+    {
+        final String HDR = CLASSNAME + ": genYAML(): ";
+        final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
+
+        final String MyDomainName       = globalProps.getProperty( EnvironmentParameters.MYDOMAINNAME );
+        if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName );
+        final String Rt53HostedZoneId   = awssdk.getHostedZoneId( _envParams.getAWSRegion(), MyDomainName );
+        if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName + " Rt53HostedZoneId " + Rt53HostedZoneId  );
+        globalProps.setProperty( EnvironmentParameters.MYRT53HOSTEDZONEID, Rt53HostedZoneId ); // will define ${ASUX::MyRt53HostedZoneId}
+
+        final String batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+ _envParams.getCfnJobTYPEString() +"-Create.ASUX-batch.txt";
+        return batchFilePath;
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    /**
+     *  <p>Runs the command to generate CFN-Template YAML via: //${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}</p>
+     *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
+     *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
+     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
+     *  @return a String (containing {ASUX::_} macros) that should be used to executed using BATCH-YAML-Processor within {@link CmdProcessor#genCFNShellScript}
+     *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
+     *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
+     */
     public String genCFNShellScript( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
     {
         final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
