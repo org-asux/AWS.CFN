@@ -27,3 +27,13 @@
           Value: ${ASUX::Tag_SvcGrp}
         - Key: VALIDATED
           Value: ${ASUX::Tag_isRegulated}
+
+        - Key: MyOrgName
+          Value: ${ASUX::MyOrgName}
+        - Key: MyEnvironment
+          Value: ${ASUX::MyEnvironment}
+        - Key: AWSRegion
+          Value: ${ASUX::AWSRegion}
+        - Key: MyDomainName
+          Value: ${ASUX::MyDomainName}
+
