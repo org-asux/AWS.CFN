@@ -147,8 +147,8 @@ public final class CmdProcessorEC2
         // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, "AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _envParams.getAllPropsRef() );
         final String AMIIDCachePropsFileName = "AMZNLinux2_AMI_ID-"+ _envParams.getAWSLocation() +".txt";
         try {
-            // BootCheckAndConfig.fileCheck( _envParams.get_awscfnhome() +"/config/inputs", AMIIDCachePropsFileName, _envParams.bInRecursionByFullStack );
-            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _envParams.get_awscfnhome() +"/config/inputs/"+ AMIIDCachePropsFileName ) );
+            // BootCheckAndConfig.fileCheck( _envParams.get_awssdkhome() +"/etc/offline-downloads", AMIIDCachePropsFileName, _envParams.bInRecursionByFullStack );
+            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _envParams.get_awssdkhome() +"/etc/offline-downloads/"+ AMIIDCachePropsFileName ) );
             // Will contain a SINGLE row like:-     AWSAMIID=ami-084040f99a74ce8c3
         } catch (Exception e) {
             if ( e.getMessage().startsWith("ERROR! File missing/unreadable/empty") ) {
@@ -157,7 +157,7 @@ public final class CmdProcessorEC2
                 System.out.println( HDR +"Need your _MANUAL_HELP_ in Querying AWS to figure out .. what the AMI-ID for "+ EC2AMI_AMZN2Linux_LookupKey +" is, in the Location "+ _envParams.getAWSLocation() +"." );
                 System.out.println( HDR +"aws ssm get-parameters --names '/aws/service/ami-amazon-linux-latest/"+ EC2AMI_AMZN2Linux_LookupKey +"' --region "+ _envParams.getAWSRegion() +" --profile ${AWSprofile} --output json" );
                 System.out.println( HDR +"aws ssm get-parameters --names '/aws/service/ami-amazon-linux-latest/"+ EC2AMI_AMZN2Linux_LookupKey +"' --region "+ _envParams.getAWSRegion() +" --profile ${AWSprofile} --output json > /tmp/o.json" );
-                System.out.println( HDR +"asux yaml batch 'useAsInput @/tmp/o.json ; yaml --read Parameters,0,Value --delimiter ,' --no-quote -i /dev/null -o '"+ _envParams.get_awscfnhome() +"/config/inputs"+ AMIIDCachePropsFileName +"'" );
+                System.out.println( HDR +"asux yaml batch 'useAsInput @/tmp/o.json ; yaml --read Parameters,0,Value --delimiter ,' --no-quote -i /dev/null -o '"+ _envParams.get_awssdkhome() +"/etc/offline-downloads/"+ AMIIDCachePropsFileName +"'" );
                 System.exit(111);
                 return null;
 
