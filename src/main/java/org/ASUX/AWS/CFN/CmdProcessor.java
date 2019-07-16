@@ -133,13 +133,8 @@ public final class CmdProcessor
         //-------------------------------------
         switch ( _cmdLA.getCmdName() ) {
             case EC2PLAIN:
-                            final String MyDomainName       = globalProps.getProperty( EnvironmentParameters.MYDOMAINNAME );
-                            if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName );
-                            final String Rt53HostedZoneId   = awssdk.getHostedZoneId( _envParams.getAWSRegion(), MyDomainName );
-                            if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName + " Rt53HostedZoneId " + Rt53HostedZoneId  );
-                            globalProps.setProperty( EnvironmentParameters.MYRT53HOSTEDZONEID, Rt53HostedZoneId ); // will define ${ASUX::MyRt53HostedZoneId}
-                            // fall thru below.
-                            batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
+                            final CmdProcessorEC2 ec2Processor = new CmdProcessorEC2( this );
+                            batchFilePath = ec2Processor.genYAMLBatchFile( _cmdLA, _envParams );
                             break;
             case VPC:
             case SGSSH:
