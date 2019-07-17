@@ -36,4 +36,6 @@
           Value: ${ASUX::AWSRegion}
         - Key: MyDomainName
           Value: ${ASUX::MyDomainName}
+        - Key: Created
+          Value: ${ASUX::CreatedDateTimeStamp}
 

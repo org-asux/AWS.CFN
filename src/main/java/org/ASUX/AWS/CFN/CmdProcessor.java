@@ -46,6 +46,7 @@ import org.ASUX.YAML.NodeImpl.InputsOutputs;
 import java.util.List;
 import java.util.LinkedList;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Properties;
 
@@ -108,6 +109,9 @@ public final class CmdProcessor
         final String HDR = CLASSNAME + ": genYAML(..,"+ _cfnJobType +",..): ";
         final Properties globalProps    = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
+
+        final String CreatedDateTimeStamp = new Date().toString();
+        globalProps.setProperty( "CreatedDateTimeStamp", CreatedDateTimeStamp );
 
         String batchFilePath = null;
         {
