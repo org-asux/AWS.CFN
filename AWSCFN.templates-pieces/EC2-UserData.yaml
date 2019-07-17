@@ -29,6 +29,8 @@
               mkdir /mnt/development
             - |
               chown ec2-user /mnt/development
+            - |
+              ln -s ~ /mnt/development/src
             - |+
 
             - EC2_REGION=
