@@ -63,7 +63,7 @@ diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
 echo $DIVIDER
 
 set CMD=subnets
-set PublicOrPrivate=public
+set PublicOrPrivate=Public
 echo ${CMD}
 eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
@@ -72,7 +72,7 @@ diff /tmp/${CMD}-${PublicOrPrivate}.sh  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate
 echo $DIVIDER
 
 set CMD=subnets
-set PublicOrPrivate=private
+set PublicOrPrivate=Private
 echo ${CMD}
 eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
@@ -97,7 +97,7 @@ echo $DIVIDER
 # echo $DIVIDER
 
 set CMD=ec2plain
-set PublicOrPrivate=public
+set PublicOrPrivate=Public
 echo ${CMD}
 echo "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote ${OFFLINE}"
 eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote ${OFFLINE}"
