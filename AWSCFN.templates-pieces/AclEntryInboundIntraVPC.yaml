@@ -9,6 +9,6 @@
       CidrBlock: ${ASUX::VPCCIDRBLOCK}
       PortRange:
         From: '0'
-        To: '655535'
+        To: '65535'
 
 #EOF
