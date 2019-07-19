@@ -1,0 +1,27 @@
+### This is the file 'AWSCFN-NACL-subnet-Private.txt'
+
+### HOW TO USE THIS?
+### Step 1: Before 'include' this file.. set the property 'WhichNACLRef' 1st !!!
+### Step 2: include @${ASUX::AWSCFNHOME}/bin/AWSCFN-NACL-subnet-Public.txt
+
+#___	setProperty WhichNACLRef=MyDefaultNetworkAcl	### The RHS of the '=' refers to the CFN-Template-Parameter that points to the EXPORT for the NACL - for Public SUBNET
+#___	setProperty WhichNACLRef=MyPrivateNetworkAcl	### The RHS of the '=' refers to the CFN-Template-Parameter that points to the EXPORT for the NACL - for PRIVATE SUBNET
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/InboundIntraVPCAclEntry.yaml
+#___	yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/InboundHTTPNetworkAclEntry.yaml
+#___	yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/InboundSSHNetworkAclEntry.yaml	### FYI: The InboundIntraVPC (#1) above will allow ALL traffic within VPC
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/InboundResponsePortsVPCOnlyAclEntry.yaml
+
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/OutBoundIntraVPCAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/OutBoundHTTPNetworkAclEntry.yaml
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/OutBoundHTTPSNetworkAclEntry.yaml
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+#EoF

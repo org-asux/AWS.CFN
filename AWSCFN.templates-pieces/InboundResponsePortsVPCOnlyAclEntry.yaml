@@ -1,0 +1,14 @@
+  InboundResponsePortsVPCOnlyAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref ${ASUX::WhichNACLRef}  ### MyDefaultNetworkAcl
+      RuleNumber: '120'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'   ### Whether this rule applies to egress traffic from the subnet (true) or ingress traffic to the subnet (false). By default, AWS CloudFormation specifies false
+      CidrBlock: ${ASUX::VPCCIDRBLOCK}
+      PortRange:
+        From: '1024'
+        To: '65535'
+
+#EOF
