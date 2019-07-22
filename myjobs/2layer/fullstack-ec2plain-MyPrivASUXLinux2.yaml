@@ -58,6 +58,14 @@ Resources:
                 ]
               maven: [
                 ]
+        Services:
+          sysvinit:
+            httpd:
+              enabled: 'false'
+              ensureRunning: 'false'
+            sendmail:
+              enabled: false'
+              ensureRunning: 'false'
     Properties:
       NetworkInterfaces:
       - DeviceIndex: "0"
@@ -91,7 +99,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-2layer-EC2-MyPrivASUXLinux2
+        Value: EC2-MyPrivASUXLinux2.playground.asux.org
       - Key: APPLNAME
         Value: UndefinedApplication
       - Key: CHRGCODE
@@ -122,6 +130,10 @@ Resources:
         Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 21 20:11:01 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
       - Key: FQDN
         Value: MyPrivASUXLinux2.playground.asux.org
       UserData: !Base64
@@ -148,9 +160,11 @@ Resources:
           - |2+
 
           - |
-            mkdir /mnt/development
+            mkdir /mnt/development /home/ec2-user/.aws /home/ec2-user/.ASUX.org
           - |
             chown ec2-user /mnt/development
+          - |
+            ln -s ~ /mnt/development/src
           - |2+
 
           - EC2_REGION=
@@ -184,7 +198,7 @@ Resources:
   DnsRecord:
     Type: AWS::Route53::RecordSet
     Properties:
-      HostedZoneId: Z2NF71MJ75KYXK
+      HostedZoneId: Z1QW2WCVBUE2Z1
       Comment: DNS name for my instance.
       Name: MyPrivASUXLinux2.playground.asux.org.
       Type: A
