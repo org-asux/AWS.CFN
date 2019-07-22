@@ -144,11 +144,12 @@ public final class CmdProcessorFullStack
         if ( this.verbose ) System.out.println( HDR +" about to read file '" + fullStackJob_Filename + "'" );
         // final Node emptyInput = NodeTools.getEmptyYAML( this.cmdinvoker.dumperopt );
 
-        final java.io.InputStream is1 = new java.io.FileInputStream( fullStackJob_Filename );
-        final java.io.Reader filereader = new java.io.InputStreamReader(is1);
-        final GenericYAMLScanner yamlscanner = new GenericYAMLScanner( _cmdLA.verbose );
-        yamlscanner.setYamlLibrary( YAML_Libraries.NodeImpl_Library );
-        final Node inputNode = yamlscanner.load( filereader );
+        // final java.io.InputStream is1 = new java.io.FileInputStream( fullStackJob_Filename );
+        // final java.io.Reader filereader = new java.io.InputStreamReader(is1);
+        // final GenericYAMLScanner yamlscanner = new GenericYAMLScanner( _cmdLA.verbose );
+        // yamlscanner.setYamlLibrary( YAML_Libraries.NodeImpl_Library );
+        // final Node inputNode = yamlscanner.load( filereader );
+        final Node inputNode = yamltools.readYamlFile( fullStackJob_Filename );
         if ( this.verbose ) System.out.println( HDR +" file contents= '" + NodeTools.Node2YAMLString( inputNode ) + ".yaml'");
 
         //-------------------------------------
@@ -454,7 +455,7 @@ public final class CmdProcessorFullStack
         globalProps.setProperty( EnvironmentParameters.EC2INSTANCETYPE, EC2InstanceType );  // <<----------- <<-------------
 
         //-----------------
-        final Node IAMRoles      = _yamltools.readNodeFromYAML( _mapNode, EnvironmentParameters.EC2IAMROLES );
+        final Node IAMRoles = _yamltools.readNodeFromYAML( _mapNode, EnvironmentParameters.EC2IAMROLES );
 
         if ( IAMRoles instanceof ScalarNode ) {
             final ScalarNode scalar = (ScalarNode) IAMRoles;
@@ -487,6 +488,7 @@ public final class CmdProcessorFullStack
         final Node rpm      = _yamltools.readNodeFromYAML( _mapNode, "rpm" );
         final Node configCustomCommands = _yamltools.readNodeFromYAML( _mapNode, "configCustomCommands" );
         // final Node parent   = NodeTools.getNewSingleMap( "Packages", "", this.cmdinvoker.dumperopt );
+
         final java.util.List<NodeTuple> tuples = new LinkedList<NodeTuple>();
         if ( yum != null ) { // && yum.getValue().size() > 0 ) {
             final ScalarNode keyN = new ScalarNode( Tag.STR, "yum", null, null, this.cmdinvoker.dumperopt.getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
@@ -504,10 +506,11 @@ public final class CmdProcessorFullStack
             tuples.add( tuple );
         }
 
+        // This will be the YAML-CONTENTS __UNDER__  'Metadata' / 'AWS::CloudFormation::Init' / 'Standup' / 'Packages'
         final MappingNode parentMapN = new MappingNode ( Tag.MAP, false, tuples, null, null, this.cmdinvoker.dumperopt.getDefaultFlowStyle() ); // DumperOptions.FlowStyle.BLOCK
 
         //-----------------
-        // now.. create the topmost '_cfnInitContext: ' YAML entry
+        // now.. create the topmost '_cfnInitContext: ' YAML-entry (for 'AWS::CloudFormation::Init')
         final java.util.List<NodeTuple> tuples2 = new LinkedList<NodeTuple>();
         final ScalarNode keyN2 = new ScalarNode( Tag.STR, _cfnInitContext, null, null, this.cmdinvoker.dumperopt.getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
         final NodeTuple tuple2 = new NodeTuple( keyN2, parentMapN );
@@ -520,7 +523,15 @@ public final class CmdProcessorFullStack
         // this.cmdinvoker.getMemoryAndContext().saveDataIntoMemory( EnvironmentParameters.CFNINIT_PACKAGES +".rpm", rpm );
         // this.cmdinvoker.getMemoryAndContext().saveDataIntoMemory( EnvironmentParameters.CFNINIT_PACKAGES +".configCustomCommands", configCustomCommands );
 
-        // this.cmdinvoker.getMemoryAndContext().saveDataIntoMemory( EnvironmentParameters.CFNINIT_SERVICES, null );   // <<----------- <<-------------
+        //-----------------
+        if ( this.verbose ) System.out.println( HDR +"_mapNode =\n"+ NodeTools.Node2YAMLString( _mapNode ) );
+        Node services = _yamltools.readNodeFromYAML( _mapNode, "Services" );
+        if ( services == null ) {
+            // That is, "Services" is missing within the Full-stack YAML-file
+            services = _yamltools.readUserDefaultsYamlFile( "EC2-Services" ); // This is VERY likely to throw an EXCEPTION.  If so, it indicates a _LOT_ of missing info!!!
+        }
+        if ( this.verbose ) System.out.println( HDR +"YAML for CFNINIT_PACKAGES/Services =\n"+ NodeTools.Node2YAMLString( services ) );
+        this.cmdinvoker.getMemoryAndContext().saveDataIntoMemory( EnvironmentParameters.CFNINIT_SERVICES, services );   // <<----------- <<-------------
 
     }
 
