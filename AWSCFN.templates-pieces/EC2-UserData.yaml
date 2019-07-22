@@ -26,7 +26,7 @@
             - |+
 
             - |
-              mkdir /mnt/development
+              mkdir /mnt/development /home/ec2-user/.aws /home/ec2-user/.ASUX.org
             - |
               chown ec2-user /mnt/development
             - |
