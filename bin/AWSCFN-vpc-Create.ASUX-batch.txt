@@ -97,17 +97,32 @@ useAsInput !TopElemResources
 ### Internet gateways per Region = 5.  This limit is directly correlated with the limit on 5 VPCs per Region.
 
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGW.yaml
+setProperty Tag_Name=IGW-${ASUX::MyVPCStackPrefix}
 yaml --insert Resources,MyInternetGateway,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro @/dev/null
 
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGWAttach.yaml
+yaml --macro @/dev/null
 
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRouteTable.yaml
+setProperty Tag_Name=PublicRT-${ASUX::MyVPCStackPrefix}
 yaml --insert Resources,MyPublicRouteTable,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 yaml --macro @/dev/null
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRoute.yaml
 
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateRouteTable.yaml
+setProperty Tag_Name=PrivateRT-${ASUX::MyVPCStackPrefix}
+yaml --insert Resources,MyPrivateRouteTable,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro @/dev/null
+
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/ACLDefault.yaml
+setProperty Tag_Name=NACL-Public-${ASUX::MyVPCStackPrefix}
 yaml --insert Resources,MyDefaultNetworkAcl,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro @/dev/null
+
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/ACLPrivate.yaml
+setProperty Tag_Name=NACL-Private-${ASUX::MyVPCStackPrefix}
+yaml --insert Resources,MyPrivateNetworkAcl,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 yaml --macro @/dev/null
 
 saveTo !TopElemResources
@@ -115,12 +130,15 @@ saveTo !TopElemResources
 //--------------------------------------------------
 useAsInput !TopElemResources
 
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/InboundHTTPNetworkAclEntry.yaml
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/InboundSSHNetworkAclEntry.yaml
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/InboundResponsePortsNetworkAclEntry.yaml
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/OutBoundHTTPNetworkAclEntry.yaml
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/OutBoundHTTPSNetworkAclEntry.yaml
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/OutBoundResponsePortsNetworkAclEntry.yaml
+setProperty WhichNACLRef=MyDefaultNetworkAcl	### The RHS of the '=' refers to the CFN-Template-Parameter that points to the EXPORT for the NACL - for Public SUBNET
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-NACL-subnet-Public.txt
+yaml --macro @/dev/null
+yaml --macro @/dev/null		### Attention! Having to run it twice, else the following setProperty is in effect for above 'include' :-(
+
+setProperty WhichNACLRef=MyPrivateNetworkAcl	### The RHS of the '=' refers to the CFN-Template-Parameter that points to the EXPORT for the NACL - for PRIVATE SUBNET
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-NACL-subnet-Private.txt
+yaml --macro @/dev/null
+yaml --macro @/dev/null		### Attention! Having to run it twice, else the following setProperty is in effect for above 'include' :-(
 
 saveTo !TopElemResources
 
