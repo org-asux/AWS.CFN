@@ -50,6 +50,11 @@ import java.util.LinkedHashMap;
 import java.util.Properties;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.io.FileNotFoundException;
 
 import java.util.regex.*;
 import java.util.Properties;
@@ -104,6 +109,69 @@ public final class YAMLTools
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
+    public Node readYamlFile( final String _filename ) throws java.io.FileNotFoundException, java.io.IOException, Exception
+    {   final String HDR = CLASSNAME + ": readYamlFile("+ _filename +"): ";
+        if ( this.verbose ) System.out.println( HDR +" Reading YAML from file: '"+ _filename +"'" );
+        final InputStream is1                = new FileInputStream( _filename );
+        final InputStreamReader filereader   = new InputStreamReader(is1);
+        final GenericYAMLScanner yamlscanner = new GenericYAMLScanner( this.verbose );
+        yamlscanner.setYamlLibrary( YAML_Libraries.NodeImpl_Library );
+        if ( this.verbose ) System.out.println( HDR +" Reading YAML from file: '"+ _filename +"'" );
+        final Node node = yamlscanner.load( filereader );
+        if ( this.verbose ) System.out.println( NodeTools.Node2YAMLString( node ) );
+        return node;
+    }
+
+    /**
+     *  <p>Given a 'filenamePrefix' === 'Services', This method will check for the following 3 files - in that order.  And return the contents of the 1st file found.</p>
+     * <ol><li>~/.aws/Services-Alone.yaml</li><li>Services-Department.yaml</li><li>Services-Enterprise.yaml</li></ul>
+     *  @param _filenamePrefix NotNull String. If you provide the '.yaml' file-name-extension, it will be automatically addressed.
+     *  @return a NotNull Node (Any failure will lead to Exceptions being thrown)
+     *  @throws FileNotFoundException if the file whose name is derived as described above, do Not exist
+     *  @throws IOException if any error reading the contents of the file
+     *  @throws Exception any trouble with reading the YAML contents
+     */
+    public Node readUserDefaultsYamlFile( final String _filename )
+                throws FileNotFoundException, IOException, Exception
+    {
+        final String HDR = CLASSNAME + ": readUserDefaultsYamlFile("+ _filename +"): ";
+        final String filenamePrefix = _filename.endsWith(".yaml") ? _filename.replaceAll(".yaml$","") : _filename;
+        final String fnAlone        = EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ filenamePrefix +"-"+ EnvironmentParameters.ALONE       +".yaml";
+        final String fnDept         = EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ filenamePrefix +"-"+ EnvironmentParameters.DEPT        +".yaml";
+        final String fnEnterprise   = EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ filenamePrefix +"-"+ EnvironmentParameters.ENTERPRISE  +".yaml";
+        String nameOfFileThatExists;
+        InputStream is1;
+        try {
+            nameOfFileThatExists = fnAlone;
+            if ( this.verbose ) System.out.println( HDR +" About to open file: '" + nameOfFileThatExists +"'" );
+            // is1 = new FileInputStream( nameOfFileThatExists );
+            return this.readYamlFile( nameOfFileThatExists );
+        } catch (FileNotFoundException fnfe) {
+            try {
+                nameOfFileThatExists = fnDept;
+                if ( this.verbose ) System.out.println( HDR +" About to open file: '" + nameOfFileThatExists +"'" );
+                // is1 = new FileInputStream( nameOfFileThatExists );
+                return this.readYamlFile( nameOfFileThatExists );
+            } catch (FileNotFoundException fnfe2) {
+                nameOfFileThatExists = fnEnterprise;
+                if ( this.verbose ) System.out.println( HDR +" About to open file: '" + nameOfFileThatExists +"'" );
+                // is1 = new FileInputStream( nameOfFileThatExists );
+                return this.readYamlFile( nameOfFileThatExists );
+            }
+        }
+        // final InputStreamReader filereader   = new InputStreamReader( is1 );
+        // final GenericYAMLScanner yamlscanner = new GenericYAMLScanner( this.verbose );
+        // yamlscanner.setYamlLibrary( YAML_Libraries.NodeImpl_Library );
+        // if ( this.verbose ) System.out.println( HDR +" Reading YAML from file: '"+ nameOfFileThatExists +"'" );
+        // final Node node = yamlscanner.load( filereader );
+        // if ( this.verbose ) System.out.println( NodeTools.Node2YAMLString( node ) );
+        // return node;
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
 	// *  @param _readcmd a NotNull instance
 
     /**
@@ -111,8 +179,8 @@ public final class YAMLTools
      *  <p>Warning! if you are expecting a simple string, and you either make a mistake with "_YAMLPath" or .. the user enters much more than a simple string @ '_YAMLPath' .. you've got a problem!</p>
      *  @param _inputNode NotNull Node object
      *  @param _YAMLPath NotNull String representing a COMMA-Delimited YAML-Path-String
-     *  @return a Not-Null String (or else a runtime-assertion-exception is thrown, as determined within {@link #getScalarContent}
-     *  @throws Exception logic inside method will throw if the right YAML-structure is not provided, or the '_YAMLPath' does not point to a simple String
+     *  @return a Nullable String 
+     *  @throws Exception logic inside method will throw if the right YAML-structure is not provided, or the '_YAMLPath' does not point to a simple String .. (Also, potentially, a org.junit.Assert.AssertionError (Throwable) is thrown, as determined within {@link #getScalarContent})
      */
     public String readStringFromYAML( final Node _inputNode, final String _YAMLPath ) throws Exception {
         final String HDR = CLASSNAME + ": readStringFromYAML(<Node>, "+ _YAMLPath +"): ";
@@ -136,6 +204,7 @@ public final class YAMLTools
         this.readcmd.searchYamlForPattern( _inputNode, _YAMLPath, "," );
         final SequenceNode output = this.readcmd.getOutput();
         if ( this.verbose ) System.out.println( HDR +" output =\n" + NodeTools.Node2YAMLString( output ) +"\n" );
+        // return output;
         final java.util.List<Node> seqs = output.getValue();
         if ( seqs.size() <= 0 )
             return null;
@@ -152,7 +221,7 @@ public final class YAMLTools
      *  <p>If its not a valid assumption, either an Exception or an Assertion-RuntimeException is thrown</p>
      *  @param _n a NotNull Node object
      *  @param _YAMLPath NotNull String representing a COMMA-Delimited YAML-Path-String (to be used exclusively for describing any Exception to the user)
-     *  @return a simple String
+     *  @return a Nullable simple String
      *  @throws Exception logic inside method will throw if the right YAML-structure is not provided.
      */
     public String getScalarContent( final Node _n, final String _YAMLPath ) throws Exception {
@@ -165,7 +234,8 @@ public final class YAMLTools
         } else if ( _n instanceof SequenceNode ) {
             final SequenceNode seqNode = (SequenceNode) _n;
             final java.util.List<Node> seqs = seqNode.getValue();
-            assertTrue( seqs.size() == 1 );
+            if( seqs.size() < 1 )
+                return null;
             assertTrue( seqs.get(0) instanceof ScalarNode );
             final ScalarNode scalar = (ScalarNode) seqs.get(0);
             return scalar.getValue();
