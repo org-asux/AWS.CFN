@@ -6,7 +6,7 @@ AWS:
 
   VPC:
     subnet:
-      public: yes
+      public: yes   ### Attention: The public subnet must _ALWAYS_ _PRECEDE_ the _PRIVATE_ subnet(s) creation.
 
       SERVERS:
         MyWebASUXLinux1:            ### This is the name of the 1st SERVER.   This is also used to create the DNS name as 'MyWebASUXLinux1.{MyDomainName}'
@@ -27,6 +27,7 @@ AWS:
             # tcsh: []
             # git: []
             # maven: []
+
           # configCustomCommands: 
             # customCommand1: 
             #   testShell: 
@@ -34,6 +35,15 @@ AWS:
             #     env: 
             #       CFNTEST: "I come from CFN-template's configCustomCommands/customCommand1."
             #     cwd: "/tmp"
+
+          Services:
+            sysvinit:
+              httpd:
+                enabled: 'false'
+                ensureRunning: 'false'
+              sendmail:
+                enabled: false'
+                ensureRunning: 'false'
 
     subnet:
       public: no
@@ -57,6 +67,7 @@ AWS:
             # tcsh: []
             # git: []
             # maven: []
+
           # configCustomCommands: 
             # customCommand1: 
             #   testShell: 
@@ -64,5 +75,15 @@ AWS:
             #     env: 
             #       CFNTEST: "I come from CFN-template's configCustomCommands/customCommand1."
             #     cwd: "/tmp"
+
+          Services:
+            sysvinit:
+              httpd:
+                enabled: 'false'
+                ensureRunning: 'false'
+              sendmail:
+                enabled: false'
+                ensureRunning: 'false'
+
 
             ### EoF
