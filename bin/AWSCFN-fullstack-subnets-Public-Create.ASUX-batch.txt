@@ -72,6 +72,8 @@ useAsInput !AWSAZs
 		useAsInput !TopElemResources
 		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicSubnet.yaml
 		yaml --macro @/dev/null
+		### !!!! ATTENTION !!!!! Try to match the BELOW Tag-name -- with EXPORT name of this Public Subnet
+		setProperty Tag_Name=Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
 		yaml --insert 'Resources,MyPublicSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 		yaml --macro @/dev/null
 		saveTo !TopElemResources
