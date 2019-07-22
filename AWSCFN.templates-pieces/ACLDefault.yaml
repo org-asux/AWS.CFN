@@ -3,9 +3,4 @@
     Properties:
       VpcId: !Ref ${ASUX::MyVPCName}
 
-      ### Do _NOT_ think it's useful for ACLs to have other tags.
-      Tags:
-      - Key: Name
-        Value: DEFAULT Network-ACL for http/s,ssh
-
 #EOF
