@@ -52,15 +52,19 @@ public final class EnvironmentParameters implements Serializable {
 
     public static final String CLASSNAME = EnvironmentParameters.class.getName();
 
-    public static final String ORGASUXHOME = "ORGASUXHOME";
-    public static final String AWSHOME = "AWSHOME";
-    public static final String AWSCFNHOME = "AWSCFNHOME";
-    public static final String HOMEDIR = System.getProperty("user.home");
-    public static final String USERCONFIGHOME = HOMEDIR + "/.ASUX.org";
-    public static final String USERCONFIGHOME_CFN = USERCONFIGHOME + "/AWS.CFN";
+    public static final String ORGASUXHOME  = "ORGASUXHOME";
+    public static final String AWSHOME      = "AWSHOME";
+    public static final String AWSCFNHOME   = "AWSCFNHOME";
+    public static final String USERHOMEDIR          = System.getProperty("user.home");
+    public static final String USERCONFIGHOME       = USERHOMEDIR + "/.ASUX.org";
+    public static final String USERCONFIGHOME_CFN   = USERCONFIGHOME + "/AWS.CFN";
 
     public static final String PROPERTIES_FOR_CFN = "cfn.properties"; // one of the many Properties objects within this.allPropsRef (see go())
     public static final String PROPERTIES_FOR_JOB = "job.properties"; // one of the many Properties objects within this.allPropsRef (see go())
+
+    public static final String ALONE = "Alone";
+    public static final String DEPT = "Dept";
+    public static final String ENTERPRISE = "Enterprise";
     public static final String TAGS_ALONE_MASTER = "Tags-Alone-Master.properties"; // one of the many Properties objects within this.allPropsRef (see go())
     public static final String TAGS_DEPT_MASTER = "Tags-Dept-Master.properties"; // one of the many Properties objects within this.allPropsRef (see go())
     public static final String TAGS_ENTERPRISE_MASTER = "Tags-Enterprise-Master.properties"; // one of the many Properties objects within this.allPropsRef (see go())
