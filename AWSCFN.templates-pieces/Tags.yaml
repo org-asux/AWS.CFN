@@ -38,4 +38,6 @@
           Value: ${ASUX::MyDomainName}
         - Key: Created
           Value: ${ASUX::CreatedDateTimeStamp}
+        - Key: CreatedBy
+          Value: ${ASUX::IAMUserARN}
 
