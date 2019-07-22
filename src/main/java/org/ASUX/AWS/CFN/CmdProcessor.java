@@ -112,6 +112,8 @@ public final class CmdProcessor
 
         final String CreatedDateTimeStamp = new Date().toString();
         globalProps.setProperty( "CreatedDateTimeStamp", CreatedDateTimeStamp );
+        final String IAMUserARN = awssdk.getUserARN();
+        globalProps.setProperty( "IAMUserARN", IAMUserARN );
 
         String batchFilePath = null;
         {
