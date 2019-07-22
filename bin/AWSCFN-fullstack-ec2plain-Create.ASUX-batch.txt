@@ -51,16 +51,20 @@ yaml --macro @/dev/null
 yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Standup	!AWS-CFNInit-Standup  --no-quote    --delimiter ,
 yaml --macro @/dev/null
 
-#________ yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Services	!AWS-CFNInit-Services --no-quote    --delimiter ,
-#________ yaml --macro @/dev/null
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Metadata,AWS::CloudFormation::Init,Services	!AWS-CFNInit-Services --no-quote    --delimiter ,
+yaml --macro @/dev/null
 
 yaml --insert Resources,${ASUX::MyEC2InstanceName}		@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2-ResourceProperties.yaml --no-quote  --delimiter ,
 yaml --macro @/dev/null
 
+//---------
+setProperty FQDN=${ASUX::MyEC2InstanceName}.${ASUX::MyDomainName}
+setProperty Tag_Name=EC2-${ASUX::FQDN}
+
 yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties	@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml  --delimiter ,
 yaml --macro @/dev/null
 
-yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties,Tags	'Key: FQDN ; Value: ${ASUX::MyEC2InstanceName}.${ASUX::MyDomainName}'  --delimiter ,
+yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties,Tags	'Key: FQDN ; Value: ${ASUX::FQDN}'  --delimiter ,
 yaml --macro @/dev/null
 
 yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties	@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2-UserData.yaml  --delimiter ,
