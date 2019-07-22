@@ -49,7 +49,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public1
+        Value: Subnet-Public1-org-ASUX-Playground-Tokyo-simple
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -80,6 +80,10 @@ Resources:
         Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 21 23:32:31 EDT 2019
+      - Key: CreatedBy
+        Value: running--offline
   MyPublicSubnetAZ2:
     Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
     Type: 'AWS::EC2::Subnet'
@@ -96,7 +100,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public2
+        Value: Subnet-Public2-org-ASUX-Playground-Tokyo-simple
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -127,6 +131,10 @@ Resources:
         Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 21 23:32:31 EDT 2019
+      - Key: CreatedBy
+        Value: running--offline
   MyPublicSubnetAZ3:
     Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
     Type: 'AWS::EC2::Subnet'
@@ -143,7 +151,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public3
+        Value: Subnet-Public3-org-ASUX-Playground-Tokyo-simple
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -174,6 +182,10 @@ Resources:
         Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 21 23:32:31 EDT 2019
+      - Key: CreatedBy
+        Value: running--offline
   MyPublicSubnetRouteTableAssociationAZ1:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Condition: doesExistSubnet1

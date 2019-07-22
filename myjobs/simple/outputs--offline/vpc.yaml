@@ -64,6 +64,10 @@ Resources:
         Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 21 23:32:29 EDT 2019
+      - Key: CreatedBy
+        Value: running--offline
   MyInternetGateway:
     Description: >-
       REMEMBER: an IGW is associated with entire VPC.  Only NATs are associated with a single public-subnet.
@@ -75,7 +79,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: VPC-by-ASUX.org-simple
+        Value: IGW-org-ASUX-Playground-Tokyo
       - Key: APPLNAME
         Value: NOTRELEVANT_FOR_VPC
       - Key: CHRGCODE
@@ -106,6 +110,10 @@ Resources:
         Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 21 23:32:29 EDT 2019
+      - Key: CreatedBy
+        Value: running--offline
   MyVPCGatewayAttachment:
     Type: 'AWS::EC2::VPCGatewayAttachment'
     DependsOn:
@@ -120,15 +128,12 @@ Resources:
     Properties:
       VpcId: !Ref 'VPCbyASUXorg'
       Tags:
-      - Key: Name
-        Value: PUBLIC Route table
-      Tags:
       - Key: LOCATION
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: VPC-by-ASUX.org-simple
+        Value: PublicRT-org-ASUX-Playground-Tokyo
       - Key: APPLNAME
         Value: NOTRELEVANT_FOR_VPC
       - Key: CHRGCODE
@@ -159,6 +164,10 @@ Resources:
         Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 21 23:32:29 EDT 2019
+      - Key: CreatedBy
+        Value: running--offline
   MyPublicRoute:
     Type: 'AWS::EC2::Route'
     DependsOn: MyVPCGatewayAttachment
@@ -166,20 +175,19 @@ Resources:
       RouteTableId: !Ref 'MyPublicRouteTable'
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref 'MyInternetGateway'
-  MyDefaultNetworkAcl:
-    Type: 'AWS::EC2::NetworkAcl'
+  MyPrivateRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    DependsOn:
+    - MyVPCGatewayAttachment
     Properties:
       VpcId: !Ref 'VPCbyASUXorg'
-      Tags:
-      - Key: Name
-        Value: DEFAULT Network-ACL for http/s,ssh
       Tags:
       - Key: LOCATION
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: VPC-by-ASUX.org-simple
+        Value: PrivateRT-org-ASUX-Playground-Tokyo
       - Key: APPLNAME
         Value: NOTRELEVANT_FOR_VPC
       - Key: CHRGCODE
@@ -210,11 +218,105 @@ Resources:
         Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 21 23:32:29 EDT 2019
+      - Key: CreatedBy
+        Value: running--offline
+  MyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAcl'
+    Properties:
+      VpcId: !Ref 'VPCbyASUXorg'
+      Tags:
+      - Key: LOCATION
+        Value: ap-northeast-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: NACL-Public-org-ASUX-Playground-Tokyo
+      - Key: APPLNAME
+        Value: NOTRELEVANT_FOR_VPC
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: AWSRegion
+        Value: ap-northeast-1
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 21 23:32:29 EDT 2019
+      - Key: CreatedBy
+        Value: running--offline
+  MyPrivateNetworkAcl:
+    Type: 'AWS::EC2::NetworkAcl'
+    Properties:
+      VpcId: !Ref 'VPCbyASUXorg'
+      Tags:
+      - Key: LOCATION
+        Value: ap-northeast-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: NACL-Private-org-ASUX-Playground-Tokyo
+      - Key: APPLNAME
+        Value: NOTRELEVANT_FOR_VPC
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: AWSRegion
+        Value: ap-northeast-1
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 21 23:32:29 EDT 2019
+      - Key: CreatedBy
+        Value: running--offline
   InboundHTTPNetworkAclEntry:
     Type: 'AWS::EC2::NetworkAclEntry'
     Properties:
       NetworkAclId: !Ref 'MyDefaultNetworkAcl'
-      RuleNumber: '100'
+      RuleNumber: '1100'
       Protocol: '6'
       RuleAction: allow
       Egress: 'false'
@@ -222,11 +324,11 @@ Resources:
       PortRange:
         From: '80'
         To: '80'
-  InboundSSHNetworkAclEntry:
+  InboundSSHAclEntry:
     Type: 'AWS::EC2::NetworkAclEntry'
     Properties:
       NetworkAclId: !Ref 'MyDefaultNetworkAcl'
-      RuleNumber: '101'
+      RuleNumber: '1110'
       Protocol: '6'
       RuleAction: allow
       Egress: 'false'
@@ -234,11 +336,11 @@ Resources:
       PortRange:
         From: '22'
         To: '22'
-  InboundResponsePortsNetworkAclEntry:
+  InboundResponsePortsAclEntry:
     Type: 'AWS::EC2::NetworkAclEntry'
     Properties:
       NetworkAclId: !Ref 'MyDefaultNetworkAcl'
-      RuleNumber: '102'
+      RuleNumber: '1120'
       Protocol: '6'
       RuleAction: allow
       Egress: 'false'
@@ -246,11 +348,23 @@ Resources:
       PortRange:
         From: '1024'
         To: '65535'
-  OutBoundHTTPNetworkAclEntry:
+  InboundIntraVPCAclEntry:
     Type: 'AWS::EC2::NetworkAclEntry'
     Properties:
       NetworkAclId: !Ref 'MyDefaultNetworkAcl'
-      RuleNumber: '100'
+      RuleNumber: '1140'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 172.31.0.0/16
+      PortRange:
+        From: '0'
+        To: '65535'
+  OutBoundHTTPAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1200'
       Protocol: '6'
       RuleAction: allow
       Egress: 'true'
@@ -258,11 +372,11 @@ Resources:
       PortRange:
         From: '80'
         To: '80'
-  OutBoundHTTPSNetworkAclEntry:
+  OutBoundHTTPSAclEntry:
     Type: 'AWS::EC2::NetworkAclEntry'
     Properties:
       NetworkAclId: !Ref 'MyDefaultNetworkAcl'
-      RuleNumber: '101'
+      RuleNumber: '1210'
       Protocol: '6'
       RuleAction: allow
       Egress: 'true'
@@ -270,17 +384,77 @@ Resources:
       PortRange:
         From: '443'
         To: '443'
-  OutBoundResponsePortsNetworkAclEntry:
+  OutBoundResponsePortsAclEntry:
     Type: 'AWS::EC2::NetworkAclEntry'
     Properties:
       NetworkAclId: !Ref 'MyDefaultNetworkAcl'
-      RuleNumber: '102'
+      RuleNumber: '1220'
       Protocol: '6'
       RuleAction: allow
       Egress: 'true'
       CidrBlock: 0.0.0.0/0
       PortRange:
         From: '1024'
+        To: '65535'
+  OutBoundIntraVPCAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1240'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 172.31.0.0/16
+      PortRange:
+        From: '0'
+        To: '65535'
+  InboundIntraVPCAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyPrivateNetworkAcl'
+      RuleNumber: '2140'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 172.31.0.0/16
+      PortRange:
+        From: '0'
+        To: '65535'
+  OutBoundHTTPAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyPrivateNetworkAcl'
+      RuleNumber: '2200'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '80'
+        To: '80'
+  OutBoundHTTPSAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyPrivateNetworkAcl'
+      RuleNumber: '2210'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '443'
+        To: '443'
+  OutBoundIntraVPCAclEntry:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyPrivateNetworkAcl'
+      RuleNumber: '2240'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 172.31.0.0/16
+      PortRange:
+        From: '0'
         To: '65535'
 Outputs:
   VPCID:

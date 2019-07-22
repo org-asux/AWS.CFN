@@ -130,6 +130,10 @@ Resources:
         Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 21 23:32:36 EDT 2019
+      - Key: CreatedBy
+        Value: running--offline
       - Key: FQDN
         Value: OrgASUXplayEC2plain.playground.asux.org
       UserData: !Base64
@@ -156,9 +160,11 @@ Resources:
           - |2+
 
           - |
-            mkdir /mnt/development
+            mkdir /mnt/development /home/ec2-user/.aws /home/ec2-user/.ASUX.org
           - |
             chown ec2-user /mnt/development
+          - |
+            ln -s ~ /mnt/development/src
           - |2+
 
           - EC2_REGION=
