@@ -11,22 +11,26 @@
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
 
-setProperty NACLRuleNumber=1100
 useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryInboundHTTP.yaml
+setProperty NACLRuleNumber=1100
 yaml --macro ''
 saveTo !NACLInp1
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryInboundHTTPS.yaml
 setProperty NACLRuleNumber=1110
-useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryInboundSSH.yaml
 yaml --macro ''
 saveTo !NACLInp2
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryInboundSSH.yaml
 setProperty NACLRuleNumber=1120
-useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryInboundResponse.yaml
 yaml --macro ''
 saveTo !NACLInp3
-setProperty NACLRuleNumber=1140
-useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryInboundIntraVPC.yaml
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryInboundResponse.yaml
+setProperty NACLRuleNumber=1150
 yaml --macro ''
 saveTo !NACLInp4
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryInboundIntraVPC.yaml
+setProperty NACLRuleNumber=1160
+yaml --macro ''
+saveTo !NACLInp5
 
 //-------------------------------------
 useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryOutBoundHTTP.yaml
@@ -37,14 +41,18 @@ useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryOutBoundHTTPS.ya
 setProperty NACLRuleNumber=1210
 yaml --macro ''
 saveTo !NACLOutp2
-useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryOutBoundResponse.yaml
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryOutBoundSSH.yaml
 setProperty NACLRuleNumber=1220
 yaml --macro ''
 saveTo !NACLOutp3
-useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryOutBoundIntraVPC.yaml
-setProperty NACLRuleNumber=1240
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryOutBoundResponse.yaml
+setProperty NACLRuleNumber=1250
 yaml --macro ''
 saveTo !NACLOutp4
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AclEntryOutBoundIntraVPC.yaml
+setProperty NACLRuleNumber=1260
+yaml --macro ''
+saveTo !NACLOutp5
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -56,11 +64,13 @@ yaml --insert Resources !NACLInp1
 yaml --insert Resources !NACLInp2
 yaml --insert Resources !NACLInp3
 yaml --insert Resources !NACLInp4
+yaml --insert Resources !NACLInp5
 
 yaml --insert Resources !NACLOutp1
 yaml --insert Resources !NACLOutp2
 yaml --insert Resources !NACLOutp3
 yaml --insert Resources !NACLOutp4
+yaml --insert Resources !NACLOutp5
 
 yaml --macro ''
 
