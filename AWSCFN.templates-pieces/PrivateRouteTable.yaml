@@ -1,4 +1,4 @@
-  MyPrivateRouteTable:
+  MyPrivateRouteTableAZ${ASUX::foreach.index+1}:
     Type: 'AWS::EC2::RouteTable'
     DependsOn:  ### Keep this for _PRIVATE_ RouteTable _ALSO_, so CloudFormation creates these components in the RIGHT __ORDER__ (basically, at the same time the PublicRouteTable is created).
       - MyVPCGatewayAttachment
