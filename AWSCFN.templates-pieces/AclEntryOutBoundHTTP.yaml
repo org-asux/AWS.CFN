@@ -1,4 +1,4 @@
-  OutBoundHTTPAclEntry:
+  OutBoundHTTPAclEntryFor${ASUX::WhichNACLRef}:
     Type: 'AWS::EC2::NetworkAclEntry'
     Properties:
       NetworkAclId: !Ref ${ASUX::WhichNACLRef}  ### MyDefaultNetworkAcl
