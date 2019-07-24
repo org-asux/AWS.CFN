@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   WARNING!!!!  WARNING!!!! Note that you are billed for the AWS resources that you use when you create a stack from this template. WARNING!!!!  WARNING!!!!  This YAML file is generated using ASUX.org's Batch-based scripting. The command used was - .. tbd .. See details of ASUX.org project at https://github.com/org-asux/org-ASUX.github.io/wiki These were in-turn based on the AWS CloudFormation Sample Template @ https://s3.amazonaws.com/cloudformation-examples/user-guide/cross-stack/SampleNetworkCrossStack.template VPC_with_PublicIPs_And_DNS - Sample template that creates a VPC with DNS and public IPs enabled.
 Parameters:
-  MyStackNamePrefix:
+  MyVPCStackPrefix:
     Description: Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
     Type: String
     Default: org-ASUX-Playground-Tokyo
@@ -62,7 +62,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sun Jul 21 20:10:58 EDT 2019
+        Value: Wed Jul 24 13:11:40 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
 Outputs:

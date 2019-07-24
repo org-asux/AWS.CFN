@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   WARNING!!!!  WARNING!!!! Note that you are billed for the AWS resources that you use when you create a stack from this template. WARNING!!!!  WARNING!!!!  This YAML file is generated using ASUX.org's Batch-based scripting. The command used was - .. tbd .. See details of ASUX.org project at https://github.com/org-asux/org-ASUX.github.io/wiki These were in-turn based on the AWS CloudFormation Sample Template @ https://s3.amazonaws.com/cloudformation-examples/user-guide/cross-stack/SampleNetworkCrossStack.template VPC_with_PublicIPs_And_DNS - Sample template that creates a VPC with DNS and public IPs enabled.
 Parameters:
-  MyStackNamePrefix:
+  MyVPCStackPrefix:
     Description: The prefix for almost ALL Exports by CFN-templates created by ASUX.org tools.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
     Type: String
     Default: org-ASUX-Playground-Tokyo
@@ -18,20 +18,16 @@ Parameters:
     Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-2layer-PublicRouteTableID"
     Type: String
     Default: org-ASUX-Playground-Tokyo-PublicRouteTableID
-  MyPrivateRouteTable:
-    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PrivateRouteTable is associated with only the VPC CIDRBlock.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-2layer-PrivateRouteTableID"
-    Type: String
-    Default: org-ASUX-Playground-Tokyo-PrivateRouteTableID
 Conditions:
   doesExistSubnet1: !Equals
-  - ASUXorgWorks
-  - ASUXorgWorks
+  - ASUXorg_Tools_Work
+  - ASUXorg_Tools_Work
   doesExistSubnet2: !Equals
-  - ASUXorgWorks
-  - ASUXorgWorks
+  - ASUXorg_Tools_Work
+  - ASUXorg_Tools_Work
   doesExistSubnet3: !Equals
-  - ASUXorgWorks
-  - ASUXorgWorks
+  - ASUXorg_Tools_Work
+  - ASUXorg_Tools_Work
 Resources:
   MyPrivateSubnetAZ1:
     Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
@@ -81,7 +77,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sun Jul 21 20:11:01 EDT 2019
+        Value: Wed Jul 24 13:11:43 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetAZ2:
@@ -132,7 +128,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sun Jul 21 20:11:01 EDT 2019
+        Value: Wed Jul 24 13:11:43 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetAZ3:
@@ -183,7 +179,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sun Jul 21 20:11:01 EDT 2019
+        Value: Wed Jul 24 13:11:43 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetRouteTableAssociationAZ1:
@@ -191,22 +187,37 @@ Resources:
     Condition: doesExistSubnet1
     Properties:
       SubnetId: !Ref 'MyPrivateSubnetAZ1'
-      RouteTableId: !ImportValue
-        Ref: MyPrivateRouteTable
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ1-ID'
   MyPrivateSubnetRouteTableAssociationAZ2:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Condition: doesExistSubnet2
     Properties:
       SubnetId: !Ref 'MyPrivateSubnetAZ2'
-      RouteTableId: !ImportValue
-        Ref: MyPrivateRouteTable
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ2-ID'
   MyPrivateSubnetRouteTableAssociationAZ3:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Condition: doesExistSubnet3
     Properties:
       SubnetId: !Ref 'MyPrivateSubnetAZ3'
-      RouteTableId: !ImportValue
-        Ref: MyPrivateRouteTable
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ3-ID'
+  PrivateRouteToNATGW1:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ1-ID'
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !ImportValue 'org-ASUX-Playground-Tokyo-NATGW-1-ID'
+  PrivateRouteToNATGW2:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ2-ID'
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !ImportValue 'org-ASUX-Playground-Tokyo-NATGW-2-ID'
+  PrivateRouteToNATGW3:
+    Type: 'AWS::EC2::Route'
+    Properties:
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ3-ID'
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !ImportValue 'org-ASUX-Playground-Tokyo-NATGW-3-ID'
   MyPrivateSubnetNetworkAclAssociation1:
     Type: 'AWS::EC2::SubnetNetworkAclAssociation'
     Condition: doesExistSubnet1
