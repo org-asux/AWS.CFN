@@ -13,13 +13,7 @@
       ## Alternative #1:  Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-PublicRouteTableID-1"
       ## Alternative #2:  Name: !Sub '${MyStackNamePrefix}-PublicRouteTableID'
 
-  PrivateRouteTableID: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
-    Description: Export ID of the only _PRIVATE_ Route Table associated with a VPC's private subnets
-    Value: !Ref MyPrivateRouteTable   ## The value of the property returned by the aws cloudformation describe-stacks command
-    Export:             ## The name of the resource output to be exported for a cross-stack reference.
-      Name: '${ASUX::MyVPCStackPrefix}-PrivateRouteTableID'  ## For each AWS account, Export names must be unique within a region.
-      ## Alternative #1:  Name: "${OrgName}-${MyEnvironment}-${AWS::Region}-PrivateRouteTableID-1"
-      ## Alternative #2:  Name: !Sub '${MyStackNamePrefix}-PrivateRouteTableID'
+  ### For PrivateRouteTableID - see separate 'Outputs-PrivateRouteTable.yaml'
 
   DefaultNetworkAcl: ## This is the INTRA-identifier for this output-item. The logical-ID must be alphanumeric (a-z, A-Z, 0-9) and unique within the template
     Description: Export ID of the only Default-Network-ACL associated with a VPC + IGW
