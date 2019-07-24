@@ -60,7 +60,7 @@ useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/TopYaml.yaml
 saveTo !YAMLROOT
 
 yaml --insert / @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-Subnets.yaml
-yaml --macro @/dev/null
+yaml --macro ''
 saveTo !YAMLROOT
 
 //--------------------------------------------------
@@ -78,7 +78,7 @@ useAsInput !AWSAZs
 	foreach
 		useAsInput !Conditions
 		yaml --insert Conditions @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Conditions-Subnets.yaml
-		yaml --macro @/dev/null
+		yaml --macro ''
 		saveTo !Conditions
 	end
 
@@ -94,10 +94,26 @@ useAsInput !AWSAZs
 		#______print ${ASUX::foreach.iteration.value}
 		
 		useAsInput !TopElemResources
-		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicSubnet.yaml
-		yaml --macro @/dev/null
+		yaml --insert     Resources    @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicSubnet.yaml
+		yaml --macro ''
+		### !!!! ATTENTION !!!!! Try to match the BELOW Tag-name -- with EXPORT name of this Public Subnet
+		setProperty Tag_Name=Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
 		yaml --insert 'Resources,MyPublicSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
-		yaml --macro @/dev/null
+		yaml --macro ''
+		saveTo !TopElemResources
+	end
+
+
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemResources
+		yaml --insert     Resources    @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/NATGW.yaml
+		yaml --macro ''
+		### !!!! ATTENTION !!!!! Try to match the BELOW Tag-name -- with EXPORT name of this NATGW
+		setProperty Tag_Name=NATGW-${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
+		yaml --insert 'Resources,MyNATGW${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+		yaml --macro ''
 		saveTo !TopElemResources
 	end
 
@@ -107,7 +123,7 @@ useAsInput !AWSAZs
 	foreach
 		useAsInput !TopElemResources
 		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRouteForAZ.yaml
-		yaml --macro @/dev/null
+		yaml --macro ''
 		saveTo !TopElemResources
 	end
 
@@ -117,7 +133,7 @@ useAsInput !AWSAZs
 	foreach
 		useAsInput !TopElemResources
 		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicSubnetACLAssoc.yaml
-		yaml --macro @/dev/null
+		yaml --macro ''
 		saveTo !TopElemResources
 	end
 
@@ -134,18 +150,29 @@ makeNewRoot Outputs
 saveTo !TopElemOutputs
 
 //--------------------------------------------------
-	useAsInput !AWSAZs
+useAsInput !AWSAZs
+
 	foreach
 		useAsInput !TopElemOutputs
-		yaml --insert Outputs @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-DefaultPublicSubnet.yaml
-		yaml --macro @/dev/null
+		yaml --insert     Outputs   @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-DefaultPublicSubnet.yaml
+		yaml --macro ''
+		saveTo !TopElemOutputs
+	end
+
+
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemOutputs
+		yaml --insert     Outputs   @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-NATGW.yaml
+		yaml --macro ''
 		saveTo !TopElemOutputs
 	end
 
 //--------------------------------------------------
 useAsInput !YAMLROOT
 yaml --insert / !TopElemOutputs
-yaml --macro @/dev/null
+yaml --macro ''
 saveTo !YAMLROOT
 
 //--------------------------------------------------
