@@ -60,7 +60,7 @@ useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/TopYaml.yaml
 saveTo !YAMLROOT
 
 yaml --insert / @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-Subnets.yaml
-yaml --macro @/dev/null
+yaml --macro ''
 saveTo !YAMLROOT
 
 //--------------------------------------------------
@@ -78,7 +78,7 @@ useAsInput !AWSAZs
 	foreach
 		useAsInput !Conditions
 		yaml --insert Conditions @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Conditions-Subnets.yaml
-		yaml --macro @/dev/null
+		yaml --macro ''
 		saveTo !Conditions
 	end
 
@@ -95,9 +95,11 @@ useAsInput !AWSAZs
 		
 		useAsInput !TopElemResources
 		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateSubnet.yaml
-		yaml --macro @/dev/null
+		yaml --macro ''
+		### !!!! ATTENTION !!!!! Try to match the BELOW Tag-name -- with EXPORT name of this Public Subnet
+		setProperty Tag_Name=Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
 		yaml --insert 'Resources,MyPrivateSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
-		yaml --macro @/dev/null
+		yaml --macro ''
 		saveTo !TopElemResources
 	end
 
@@ -107,7 +109,18 @@ useAsInput !AWSAZs
 	foreach
 		useAsInput !TopElemResources
 		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateRouteForAZ.yaml
-		yaml --macro @/dev/null
+		yaml --macro ''
+		saveTo !TopElemResources
+	end
+
+
+
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemResources
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateRouteToNATGW.yaml
+		yaml --macro ''
 		saveTo !TopElemResources
 	end
 
@@ -117,7 +130,7 @@ useAsInput !AWSAZs
 	foreach
 		useAsInput !TopElemResources
 		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateSubnetACLAssoc.yaml
-		yaml --macro @/dev/null
+		yaml --macro ''
 		saveTo !TopElemResources
 	end
 
@@ -138,14 +151,14 @@ saveTo !TopElemOutputs
 	foreach
 		useAsInput !TopElemOutputs
 		yaml --insert Outputs @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-DefaultPrivateSubnet.yaml
-		yaml --macro @/dev/null
+		yaml --macro ''
 		saveTo !TopElemOutputs
 	end
 
 //--------------------------------------------------
 useAsInput !YAMLROOT
 yaml --insert / !TopElemOutputs
-yaml --macro @/dev/null
+yaml --macro ''
 saveTo !YAMLROOT
 
 //--------------------------------------------------
