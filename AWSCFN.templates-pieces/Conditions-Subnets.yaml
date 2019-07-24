@@ -1,5 +1,7 @@
-  doesExistSubnet${ASUX::foreach.index+1}: !Equals ## This is a workaround to get 'true' as the condition-value
-    - ASUXorgWorks
-    - ASUXorgWorks
+  # doesExistSubnet${ASUX::foreach.index+1}: true ### !!!!!!!!!!!! ATTENTION !!!!!!!!!!!!! Error message is:- Template format error: Conditions can only be boolean operations on parameters and other conditions
+
+  doesExistSubnet${ASUX::foreach.index+1}: !Equals ## NOTE: This is a workaround to get 'true' as the condition-value
+    - ASUXorg_Tools_Work
+    - ASUXorg_Tools_Work
 
 #EOF
