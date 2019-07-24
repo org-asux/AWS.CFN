@@ -1,0 +1,8 @@
+  NATGW${ASUX::foreach.index+1}:
+    Description: The NAT-Gateway specific to the PUBLIC-Subnet '${ASUX::MyStackNamePrefix}-Subnet-Public${ASUX::foreach.index+1}-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
+    Value: !Ref MyNATGW${ASUX::foreach.index+1}
+    Condition: doesExistSubnet${ASUX::foreach.index+1}
+    Export:             ## The name of the resource output to be exported for a cross-stack reference.
+      Name: !Sub '${MyVPCStackPrefix}-NATGW-${ASUX::foreach.index+1}-ID'  ## For each AWS account, Export names must be unique within a region.
+
+#EOF

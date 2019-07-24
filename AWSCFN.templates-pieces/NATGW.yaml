@@ -1,0 +1,30 @@
+  EIPForNATGateway${ASUX::foreach.index+1}:
+    Description: NOTE, NAT-GW (NAT-Gateway) No.${ASUX::foreach.index+1} is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet '${ASUX::MyStackNamePrefix}-Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+      # InstanceId: ..  ### This property is _ONLY_ required when associating EIP with an EC2-instance.
+
+    ### Since I'm creating VPCs and Subnets independently.. since I'm creating IGW __WITHIN__ the CFN-template for a VPC..
+    ###   .. I __CANNOT__  have the following dependencies
+    # DependsOn:
+    #   - MyPublicSubnetAZ1
+    #   - MyPublicSubnetAZ2
+    #   - MyPublicSubnetAZ3
+    #   ### Per AWS documentation: If you define an Elastic IP address and associate it with a VPC that is defined in the same template, you must declare a dependency on the VPC-gateway attachment by using the DependsOn Attribute on this resource.
+    #   ### https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-ec2-eip.html
+    #   - MyVPCGatewayAttachment
+
+  ### https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-natgateway.html
+  MyNATGW${ASUX::foreach.index+1}:
+    Type : AWS::EC2::NatGateway 
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - EIPForNATGateway${ASUX::foreach.index+1}
+        - 'AllocationId'
+      SubnetId: !Ref MyPublicSubnetAZ${ASUX::foreach.index+1}
+      # SubnetId: !ImportValue
+      #   Ref: '${ASUX::MyStackNamePrefix}-Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-ID'
+
+#EOF

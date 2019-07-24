@@ -1,0 +1,14 @@
+  PrivateRouteToNATGW${ASUX::foreach.index+1}:
+    Type: 'AWS::EC2::Route'
+
+    ### Since I'm creating VPCs and Subnets independently.. since I'm creating NATGW __WITHIN__ the CFN-template for a VPC..
+    ###   .. I __CANNOT__  have the following dependencies
+    #___  DependsOn:
+    #___    - MyNATGW1
+
+    Properties:
+      RouteTableId: !ImportValue '${ASUX::MyVPCStackPrefix}-PrivateRouteTable-AZ${ASUX::foreach.index+1}-ID'          ### Must match the output in {AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-VPC.yaml
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !ImportValue '${ASUX::MyVPCStackPrefix}-NATGW-${ASUX::foreach.index+1}-ID'  ### Must match the output in {AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-NATGW.yaml
+
+# EOF
