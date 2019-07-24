@@ -28,7 +28,9 @@
             - |
               mkdir /mnt/development /home/ec2-user/.aws /home/ec2-user/.ASUX.org
             - |
-              chown ec2-user /mnt/development
+              chown ec2-user /mnt/development /home/ec2-user/.aws /home/ec2-user/.ASUX.org
+            - |
+              chgrp ec2-user /mnt/development /home/ec2-user/.aws /home/ec2-user/.ASUX.org
             - |
               ln -s ~ /mnt/development/src
             - |+
