@@ -32,7 +32,7 @@
             - |
               chgrp ec2-user /mnt/development /home/ec2-user/.aws /home/ec2-user/.ASUX.org
             - |
-              ln -s ~ /mnt/development/src
+              ln -s ~ec2-user /mnt/development/src
             - |+
 
             - EC2_REGION=
