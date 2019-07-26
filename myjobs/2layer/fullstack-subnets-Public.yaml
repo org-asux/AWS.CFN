@@ -41,6 +41,8 @@ Resources:
       AvailabilityZone: ap-northeast-1a
       Tags:
       - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
@@ -72,12 +74,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:41 EDT 2019
+        Value: Thu Jul 25 14:29:43 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetAZ2:
@@ -92,6 +92,8 @@ Resources:
       AvailabilityZone: ap-northeast-1c
       Tags:
       - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
@@ -123,12 +125,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:41 EDT 2019
+        Value: Thu Jul 25 14:29:43 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetAZ3:
@@ -143,6 +143,8 @@ Resources:
       AvailabilityZone: ap-northeast-1d
       Tags:
       - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
@@ -174,12 +176,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:41 EDT 2019
+        Value: Thu Jul 25 14:29:43 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway1:
@@ -197,6 +197,8 @@ Resources:
       SubnetId: !Ref 'MyPublicSubnetAZ1'
       Tags:
       - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
@@ -228,12 +230,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:41 EDT 2019
+        Value: Thu Jul 25 14:29:43 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway2:
@@ -251,6 +251,8 @@ Resources:
       SubnetId: !Ref 'MyPublicSubnetAZ2'
       Tags:
       - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
@@ -282,12 +284,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:41 EDT 2019
+        Value: Thu Jul 25 14:29:43 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway3:
@@ -305,6 +305,8 @@ Resources:
       SubnetId: !Ref 'MyPublicSubnetAZ3'
       Tags:
       - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
@@ -336,12 +338,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:41 EDT 2019
+        Value: Thu Jul 25 14:29:43 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetRouteTableAssociationAZ1:
