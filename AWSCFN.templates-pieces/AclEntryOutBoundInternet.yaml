@@ -1,0 +1,19 @@
+### This - if you ask me - should be the ONLY outbound-rule for the internet - for ANY SUBNET.
+
+### !!!! Warning !!!!  Make sure to have inbound-rules be fully locked down - for ALL SUBNETs in the VPC.
+### 0.0.0.0/0 refers to the internet as well as all subnets in the VPC.
+
+  OutBoundInternetAllPortsAclEntryFor${ASUX::WhichNACLRef}:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref ${ASUX::WhichNACLRef}  ### 'MyDefaultNetworkAcl'
+      RuleNumber: '${ASUX::NACLRuleNumber}'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'    ### Whether this rule applies to egress traffic from the subnet (true) or ingress traffic to the subnet (false). By default, AWS CloudFormation specifies false
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '0'
+        To: '65535'
+
+#EOF
