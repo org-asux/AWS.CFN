@@ -6,13 +6,13 @@ AWS:
   #___ MyDomainName: playground.asux.org
 
   VPC:
-    VPCID: vpc-090ba06485bf32383    ### This means NO vpc.yaml will be created.
+    VPCID: vpc-0f99bc8bd45b7b074    ### This means NO vpc.yaml will be created.
 
     SG-ssh:
-      SG-ssh-ID: sg-0fafaa98d0da6750e  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH must be specified.
+      SG-ssh-ID: sg-059720e48dfe892ca  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH must be specified.
 
     subnet:
-      SubnetID: subnet-03713d5c56300fd2d ### Public subnet #1
+      SubnetID: subnet-05f8377b65c182e13 ### Public subnet #1
 
       SERVERS:
         MyWebASUXLinux1:            ### This is the name of the 1st SERVER.   This is also used to create the DNS name as 'MyWebASUXLinux1.{MyDomainName}'
@@ -41,9 +41,17 @@ AWS:
             #     env: 
             #       CFNTEST: "I come from CFN-template's configCustomCommands/customCommand1."
             #     cwd: "/tmp"
+          Services:
+            sysvinit:
+              httpd:
+                enabled: 'false'
+                ensureRunning: 'false'
+              sendmail:
+                enabled: false'
+                ensureRunning: 'false'
 
     subnet:
-      SubnetID: subnet-0f4aa5480cb1ba2ec  ### PRIVATE subnet #1
+      SubnetID: subnet-0db2d4801aaa44393  ### PRIVATE subnet #1
 
       SERVERS:
         MyPrivASUXLinux2:           ### This is the name of the 2nd SERVER.   This is also used to create the DNS name as 'MyPrivASUXLinux2.{MyDomainName}'
@@ -71,5 +79,13 @@ AWS:
             #     env: 
             #       CFNTEST: "I come from CFN-template's configCustomCommands/customCommand1."
             #     cwd: "/tmp"
+          Services:
+            sysvinit:
+              httpd:
+                enabled: 'false'
+                ensureRunning: 'false'
+              sendmail:
+                enabled: false'
+                ensureRunning: 'false'
 
             ### EoF
