@@ -33,7 +33,7 @@
 package org.ASUX.AWS.CFN;
 
 import org.ASUX.common.Macros;
-
+import org.ASUX.common.Tuple;
 import org.ASUX.yaml.YAML_Libraries;
 
 import org.ASUX.YAML.NodeImpl.ReadYamlEntry;
@@ -179,6 +179,38 @@ public final class CmdProcessorFullStack
 // above 3 lines  -versus-  below 2 lines
         final ReadYamlEntry readcmd = yamltools.getReadcmd(); // new ReadYamlEntry( _cmdLA.verbose, /* showStats */ false, this.cmdinvoker.dumperopt );
         final String existingVPCID  = yamltools.readStringFromYAML( inputNode, "AWS,VPC,VPCID" );
+
+        globalProps.setProperty( "MyIGW", "" );                 // default, unless - inside the IF-below - we detect an existing IGW that we can re-use.
+        globalProps.setProperty( "IGWExistingOrNew", "new" );   // default, unless - inside the IF-below - we detect an existing IGW that we can re-use.
+        final ArrayList< Tuple<String,String> > existingIGWIDs  = awssdk.getIGWs( AWSRegion );
+
+        if ( existingVPCID == null ) {
+            if ( existingIGWIDs.size() > 0 ) {
+                final String IGWID = existingIGWIDs.get(0).key;
+                globalProps.setProperty( "MyIGW", IGWID );
+                globalProps.setProperty( "IGWExistingOrNew", "existing" );
+                if (this.verbose) System.out.println( HDR + "Will associate an existing IGW ith ID# " + IGWID +" for this _NEW_ VPC." );
+            }
+        } else {
+            final String IGWID = awssdk.getIGWForVPC( AWSRegion, existingVPCID );
+            if ( IGWID != null ) {
+                globalProps.setProperty( "MyIGW", IGWID );
+                globalProps.setProperty( "IGWExistingOrNew", "existing" );
+                if (this.verbose) System.out.println( HDR + "All good! IGW ith ID# " + IGWID +" is _ALREADY_  _ASSOCIATED_ with this VPC "+ existingVPCID +"." );
+            } else {
+                // looks like this _EXISTING_ VPC does _NOT_ an IGW attached to it!
+                if ( existingIGWIDs.size() > 0 ) {
+                    final String anotherIGWID = existingIGWIDs.get(0).key; // taking the 1st available InternetGateway, to associate with this _EXISTING_ VPC is NOT a bad idea.
+                    globalProps.setProperty( "MyIGW", anotherIGWID );
+                    globalProps.setProperty( "IGWExistingOrNew", "existing" );
+                    if (this.verbose) System.out.println( HDR + "All good! " );
+                    System.err.println("!!!!!! ATTENTION !!!!!!! Manually __ATTACH__ the InternetGateway with ID# " + anotherIGWID +" to existing VPC "+ existingVPCID +".!!!!!" );
+                } else {
+                    System.err.println("!!!!!! ATTENTION !!!!!!! Manually create a __NEW__ InternetGateway & associate it __MANUALLY__ with this existing VPC "+ existingVPCID +"!!!!!" );
+                }
+            }
+        }
+        // if IGW ID is null, we'll create a new IGW (within the @${ASUX::AWSCFNHOME}/bin/AWSCFN-fullstack-vpc-create.txt).
 
         final String MyOrgName      = (existingVPCID == null) ? yamltools.readStringFromYAML( inputNode, "AWS,MyOrgName" )     : getVPCTag( existingVPCID, "MyOrgName", _cmdLA, _envParams );
         final String MyEnvironment  = (existingVPCID == null) ? yamltools.readStringFromYAML( inputNode, "AWS,MyEnvironment" ) : getVPCTag( existingVPCID, "MyEnvironment", _cmdLA, _envParams );
