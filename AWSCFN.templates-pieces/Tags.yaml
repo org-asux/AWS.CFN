@@ -1,5 +1,7 @@
       Tags:
         - Key: LOCATION
+          Value: ${ASUX::AWSLocation}
+        - Key: AWSRegion
           Value: ${ASUX::AWSRegion}
         - Key: ENV
           Value: ${ASUX::MyEnvironment}
@@ -32,8 +34,6 @@
           Value: ${ASUX::MyOrgName}
         - Key: MyEnvironment
           Value: ${ASUX::MyEnvironment}
-        - Key: AWSRegion
-          Value: ${ASUX::AWSRegion}
         - Key: MyDomainName
           Value: ${ASUX::MyDomainName}
         - Key: Created
