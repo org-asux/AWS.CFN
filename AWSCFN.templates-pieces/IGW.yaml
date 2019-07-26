@@ -1,7 +1,5 @@
   MyInternetGateway:
-    Description: >-
-      REMEMBER: an IGW is associated with entire VPC.  Only NATs are associated
-      with a single public-subnet.
+    Description:  REMEMBER, an IGW is associated with entire VPC.  Only NATs are associated with a single public-subnet.
     Type: 'AWS::EC2::InternetGateway'
     Properties:
 
