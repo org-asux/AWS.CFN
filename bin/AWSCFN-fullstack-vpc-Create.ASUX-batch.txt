@@ -39,6 +39,17 @@ yaml --insert / @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-VPC.yaml
 yaml --macro ''
 saveTo !YAMLROOT
 
+	// Depending on whether we are CREATING a new IGW.. or leveraging an existing one
+useAsInput ''
+saveTo		!Parameter-IGW
+useAsInput	?@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-IGW${ASUX::IGWExistingOrNew}.yaml	### If the following file _EXISTS_ it will overwrite the saveTo label 'Parameter-IGW'
+saveTo		!Parameter-IGW
+
+useAsInput !YAMLROOT
+yaml --insert     Parameters   !Parameter-IGW
+yaml --macro ''
+saveTo !YAMLROOT
+
 //--------------------------------------------------
 
 #____	makeNewRoot Conditions
@@ -73,13 +84,12 @@ useAsInput !TopElemResources
 ### !!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!
 ### Internet gateways per Region = 5.  This limit is directly correlated with the limit on 5 VPCs per Region.
 
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGW.yaml
-setProperty Tag_Name=IGW-${ASUX::MyVPCStackPrefix}
-yaml --insert Resources,MyInternetGateway,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
-yaml --macro ''
+include ?@${ASUX::AWSCFNHOME}/bin/AWSCFN-IGW-${ASUX::IGWExistingOrNew}.txt
+	### Note: '?' Prefix implies optional include, ONLY if it exists.
 
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGWAttach.yaml
 yaml --macro ''
+	### Whether or NOT IGW existed, let's attach it to this __NEW__ VPC.
 
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRouteTable.yaml
 setProperty Tag_Name=PublicRT-${ASUX::MyVPCStackPrefix}
