@@ -40,6 +40,8 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: ap-northeast-1a
       Tags:
+      - Name: PublicOrPrivate
+        Value: Public
       - Key: LOCATION
         Value: Tokyo
       - Key: AWSRegion
@@ -77,7 +79,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Jul 25 14:29:43 EDT 2019
+        Value: Fri Jul 26 15:53:21 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetAZ2:
@@ -91,6 +93,8 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: ap-northeast-1c
       Tags:
+      - Name: PublicOrPrivate
+        Value: Public
       - Key: LOCATION
         Value: Tokyo
       - Key: AWSRegion
@@ -128,7 +132,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Jul 25 14:29:43 EDT 2019
+        Value: Fri Jul 26 15:53:21 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetAZ3:
@@ -142,6 +146,8 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: ap-northeast-1d
       Tags:
+      - Name: PublicOrPrivate
+        Value: Public
       - Key: LOCATION
         Value: Tokyo
       - Key: AWSRegion
@@ -179,7 +185,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Jul 25 14:29:43 EDT 2019
+        Value: Fri Jul 26 15:53:21 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway1:
@@ -233,7 +239,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Jul 25 14:29:43 EDT 2019
+        Value: Fri Jul 26 15:53:21 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway2:
@@ -287,7 +293,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Jul 25 14:29:43 EDT 2019
+        Value: Fri Jul 26 15:53:21 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway3:
@@ -341,7 +347,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Jul 25 14:29:43 EDT 2019
+        Value: Fri Jul 26 15:53:21 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetRouteTableAssociationAZ1:

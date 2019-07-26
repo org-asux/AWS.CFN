@@ -40,6 +40,8 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: ap-northeast-1a
       Tags:
+      - Name: PublicOrPrivate
+        Value: Private
       - Key: LOCATION
         Value: Tokyo
       - Key: AWSRegion
@@ -77,7 +79,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Jul 25 14:29:46 EDT 2019
+        Value: Fri Jul 26 15:53:22 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetAZ2:
@@ -91,6 +93,8 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: ap-northeast-1c
       Tags:
+      - Name: PublicOrPrivate
+        Value: Private
       - Key: LOCATION
         Value: Tokyo
       - Key: AWSRegion
@@ -128,7 +132,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Jul 25 14:29:46 EDT 2019
+        Value: Fri Jul 26 15:53:22 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetAZ3:
@@ -142,6 +146,8 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: ap-northeast-1d
       Tags:
+      - Name: PublicOrPrivate
+        Value: Private
       - Key: LOCATION
         Value: Tokyo
       - Key: AWSRegion
@@ -179,7 +185,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Jul 25 14:29:46 EDT 2019
+        Value: Fri Jul 26 15:53:22 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetRouteTableAssociationAZ1:
