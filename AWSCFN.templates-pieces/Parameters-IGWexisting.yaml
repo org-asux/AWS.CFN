@@ -1,0 +1,6 @@
+  MyInternetGateway:
+    Description: This represents an EXISTING Internet-Gateway in the region in which a new VPC is being created.
+    Type: String
+    Default: ${ASUX::MyIGW}
+
+#EOF
