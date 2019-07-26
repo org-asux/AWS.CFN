@@ -95,6 +95,8 @@ Resources:
         Ref: MySSHKeyName
       Tags:
       - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
@@ -126,12 +128,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:42 EDT 2019
+        Value: Thu Jul 25 14:29:43 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
       - Key: FQDN
@@ -166,7 +166,7 @@ Resources:
           - |
             chgrp ec2-user /mnt/development /home/ec2-user/.aws /home/ec2-user/.ASUX.org
           - |
-            ln -s ~ /mnt/development/src
+            ln -s ~ec2-user /mnt/development/src
           - |2+
 
           - EC2_REGION=
