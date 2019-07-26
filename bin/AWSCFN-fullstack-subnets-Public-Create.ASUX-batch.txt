@@ -75,6 +75,7 @@ useAsInput !AWSAZs
 		### !!!! ATTENTION !!!!! Try to match the BELOW Tag-name -- with EXPORT name of this Public Subnet
 		setProperty Tag_Name=Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
 		yaml --insert 'Resources,MyPublicSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+		yaml --insert 'Resources,My${ASUX::PublicOrPrivate}SubnetAZ${ASUX::foreach.index+1},Properties,Tags,0'  'Name: PublicOrPrivate;Value: ${ASUX::PublicOrPrivate}'     --delimiter ,
 		yaml --macro ''
 		saveTo !TopElemResources
 	end
