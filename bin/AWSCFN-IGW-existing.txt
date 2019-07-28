@@ -1,0 +1,22 @@
+### This is the file 'AWSCFN-IGW-create.txt'
+
+### HOW TO USE THIS FILE?
+
+### Step 1:	IF:	you are RE-USING an existing Gateway, set the {ASUX::IGWExistingOrNew} variable to 'existing'.
+###		ELSE:	set {ASUX::IGWExistingOrNew} variable to 'new'
+
+### Step 2: include ?@${ASUX::AWSCFNHOME}/bin/AWSCFN-IGW-${ASUX::IGWExistingOrNew}-create.txt
+###		// This 'include' command will be effective - in loading _this_ file, only when {ASUX::IGWExistingOrNew} variable === 'new'
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGWExistingAttach.yaml
+yaml --macro ''
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+#EoF
