@@ -1,0 +1,9 @@
+  MyVPCGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    ### These 2 commented lines are the ONLY
+    ###     difference -- vs. IGWNewAttach.yaml
+    Properties:
+      VpcId: !Ref ${ASUX::MyVPCName}
+      InternetGatewayId: !Ref MyInternetGateway
+
+#EOF
