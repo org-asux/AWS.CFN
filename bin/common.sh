@@ -5,80 +5,39 @@
 
 
 
-###-------------------
+
+### !!!!!!!!!! NOTE:  $0 is _NOT_ === this-file /aka/  {AWSSDKHOME}/bin/common.sh)"
+
+###=============================================================
+###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+###=============================================================
+
+### Attention !!!!!!!!! SCRIPTFULLFLDRPATH must be set .. before sourcing/including '{SCRIPTFULLFLDRPATH}/../../bin.common.sh'
 if [ -z ${SCRIPTFULLFLDRPATH+x} ]; then  ### if [ -z "$var" ]    <-- does NOT distinguish between 'unset var' & var=""
-	>&2 echo "The topmost script that 'includes/sources' common.sh and 'cfngen-common.sh' must define SCRIPTFULLFLDRPATH ${SCRIPTFULLFLDRPATH}"
-	exit 9
+	>&2 echo "The topmost script that 'includes (a.k.a.) sources' common.sh must define SCRIPTFULLFLDRPATH ${SCRIPTFULLFLDRPATH}"
+	kill -SIGUSR1 `ps --pid $$ -oppid=`
+	exit $1
 fi
 
-ERRMSG1="Coding-ERROR: BEFORE sourcing common.sh, you MUST set variables like AWSRegion (=${AWSRegion}) and ORGASUXHOME (=${ORGASUXHOME}).   The best way is to run using 'asux.js' and to _LOAD_ job-Master.properties"
+ERRMSG1="Coding-ERROR: BEFORE sourcing common.sh, you MUST set variables like AWSRegion (=${AWSRegion}) and ORGASUXHOME (=${ORGASUXHOME}).   The best way is to run using 'asux.js aws .. .. ..' commands."
 if [ -z ${ORGASUXHOME+x} ]; then  ### if [ -z "$var" ]    <-- does NOT distinguish between 'unset var' & var=""
-	>&2 echo $ERRMSG1
-	exit 9
-fi
-if [ -z ${AWSRegion+x} ]; then  ### if [ -z "$var" ]    <-- does NOT distinguish between 'unset var' & var=""
-	>&2 echo $ERRMSG1
-	exit 10
+	#__ echo SCRIPTFULLFLDRPATH=${SCRIPTFULLFLDRPATH}
+	#__ ls -la ${SCRIPTFULLFLDRPATH}/../../..
+	if [ -e ${SCRIPTFULLFLDRPATH}/../../../asux.js ] && [ -e ${SCRIPTFULLFLDRPATH}/../../../bin/common.sh ]; then
+		### !!!!!!!! Unlike  {AWSSDKHOME}/bin/common.sh .. we're taking an EASIER route, but leveraging that file!
+		#___ export ORGASUXHOME=${SCRIPTFULLFLDRPATH}/../../..
+		.  ${SCRIPTFULLFLDRPATH}/../../AWS-SDK/bin/common.sh  ### <<--- This should be sourcing {ORGASUXHOME}/bin/common.sh, which will automatically set value of ORGASUXHOME
+	else
+		>&2 echo $ERRMSG1
+		kill -SIGUSR1 `ps -p $$ -oppid=`	### On MacOS Shell, 'ps --pid' does _NOT_ work.  Instead using 'ps -p'
+		exit $1
+	fi
 fi
 
 ###-------------------------------------
-#___ ORGASUXHOME=/mnt/development/src/org.ASUX
-if [ -z ${AWSHOME+x} ]; then
-	export AWSHOME=${ORGASUXHOME}/AWS
-fi
+
 if [ -z ${AWSCFNHOME+x} ]; then 
 	export AWSCFNHOME=${AWSHOME}/CFN
-fi
-
-###=============================================================
-###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-###=============================================================
-
-export PATH=${PATH}:${ORGASUXHOME}
-
-if [ ! -e "${ORGASUXHOME}/asux.js" ]; then
-	>&2 echo "Please edit this file $0 to set the correct value of 'ORGASUXHOME'"
-	>&2 echo "	This command will fail until correction is made from current value of ${ORGASUXHOME}"
-	exit 5
-fi
-
-###-------------------
-### Check to see if org.ASUX project (Specifically, the program 'node' and asux.js) exists - and.. is in the path.
-
-command -v asux.js > /dev/null
-if [ $? -ne 0 ]; then
-	>&2 echo ' '
-	>&2 echo "Either Node.JS (node) is NOT installed or .. org.ASUX git-project's folder is NOT in the path."
-	>&2 echo "ATTENTION !!! Unfortunately, you have to do fix this MANUALLY."
-	>&2 echo "	This command will fail until correction is made"
-	sleep 2
-	exit 6
-else
-	if [ "${VERBOSE}" == "1" ]; then
-		echo "[y] verified that Node.JS (node) is installed"
-		echo "[y] verified that ${ORGASUXHOME}/asux.js can be executed"
-	fi
-fi
-
-if [ ! -e ${AWSprofile} ]; then
-	if [ -z ${AWSprofile+x} ]; then  ### if [ -z "$AWSprofile" ]    <-- does NOT distinguish between 'unset AWSprofile' & AWSprofile=""
-        echo "AWS login credentials missing in a file, and also AWSprofile is NOT set"
-        exit 7
-	fi
-fi
-
-###=============================================================
-###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-###=============================================================
-
-grep ${AWSRegion} ${AWSCFNHOME}/config/AWSRegionsLocations.properties | \sed -e 's/.*=/AWSLocation=/' > /tmp/$$
-. /tmp/$$
-\rm /tmp/$$
-
-#_____ read -p "ATTENTION! Need manual help to convert AWS-REGION ${AWSRegion} into a Location.  Enter Location:>" AWSLocation
-if [ "${VERBOSE}" == "1" ]; then
-	echo "AWSRegion=${AWSRegion}"
-	read -p "The official Location of AWS-REGION ${AWSRegion} is ${AWSLocation}.  Correct?" USERRESPONSE
 fi
 
 ###=============================================================
