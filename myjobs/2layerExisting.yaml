@@ -1,0 +1,89 @@
+AWS:
+  MyOrgName: org-ASUX
+  MyEnvironment: Playground
+  AWSRegion: Canada
+  MyDomainName: playground.asux.org
+
+  VPC:
+    subnet:
+      public: yes   ### Attention: The public subnet must _ALWAYS_ _PRECEDE_ the _PRIVATE_ subnet(s) creation.
+
+      SERVERS:
+        MyWebASUXLinux1:            ### This is the name of the 1st SERVER.   This is also used to create the DNS name as 'MyWebASUXLinux1.{MyDomainName}'
+          EC2InstanceType: t2.micro
+          # public: no  ### By default this server will be publicly accessible, as it's in the public-subnet.
+
+          MyIAM-roles:
+          - EC2-ReadWrite-to-S3
+
+          yum:
+            amazon-efs-utils: []
+            tcsh: []
+            git: []
+            maven: []
+
+          # rpm:
+            # amazon-efs-utils: []
+            # tcsh: []
+            # git: []
+            # maven: []
+
+          # configCustomCommands: 
+            # customCommand1: 
+            #   testShell: 
+            #     command: "echo \"$CFNTEST\" > /tmp/test.txt"
+            #     env: 
+            #       CFNTEST: "I come from CFN-template's configCustomCommands/customCommand1."
+            #     cwd: "/tmp"
+
+          Services:
+            sysvinit:
+              httpd:
+                enabled: 'false'
+                ensureRunning: 'false'
+              sendmail:
+                enabled: false'
+                ensureRunning: 'false'
+
+    subnet:
+      public: no
+
+      SERVERS:
+        MyPrivASUXLinux2:           ### This is the name of the 2nd SERVER.   This is also used to create the DNS name as 'MyPrivASUXLinux2.{MyDomainName}'
+          EC2InstanceType: t2.micro
+          # public: no    ### By default this server is ___NOT___ publicly accessible, as it's in the private-subnet.
+
+          MyIAM-roles:
+          - EC2-ReadWrite-to-S3
+
+          yum:
+            amazon-efs-utils: []
+            tcsh: []
+            git: []
+            maven: []
+
+          # rpm:
+            # amazon-efs-utils: []
+            # tcsh: []
+            # git: []
+            # maven: []
+
+          # configCustomCommands: 
+            # customCommand1: 
+            #   testShell: 
+            #     command: "echo \"$CFNTEST\" > /tmp/test.txt"
+            #     env: 
+            #       CFNTEST: "I come from CFN-template's configCustomCommands/customCommand1."
+            #     cwd: "/tmp"
+
+          Services:
+            sysvinit:
+              httpd:
+                enabled: 'false'
+                ensureRunning: 'false'
+              sendmail:
+                enabled: false'
+                ensureRunning: 'false'
+
+
+            ### EoF

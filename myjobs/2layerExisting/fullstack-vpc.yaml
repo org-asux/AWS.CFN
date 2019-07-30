@@ -1,0 +1,527 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  WARNING!!!!  WARNING!!!! Note that you are billed for the AWS resources that you use when you create a stack from this template. WARNING!!!!  WARNING!!!!  This YAML file is generated using ASUX.org's Batch-based scripting. The command used was - .. tbd .. See details of ASUX.org project at https://github.com/org-asux/org-ASUX.github.io/wiki These were in-turn based on the AWS CloudFormation Sample Template @ https://s3.amazonaws.com/cloudformation-examples/user-guide/cross-stack/SampleNetworkCrossStack.template VPC_with_PublicIPs_And_DNS - Sample template that creates a VPC with DNS and public IPs enabled.
+Parameters:
+  MyVPCStackPrefix:
+    Description: Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
+    Type: String
+    Default: org-ASUX-Playground-Canada
+  MyInternetGateway:
+    Description: This represents an EXISTING Internet-Gateway in the region in which a new VPC is being created.
+    Type: String
+    Default: igw-886f60e1
+Resources:
+  orgASUXPlaygroundCanadaVPCID:
+    Type: 'AWS::EC2::VPC'
+    Properties:
+      CidrBlock: 172.31.0.0/16
+      EnableDnsSupport: 'true'
+      EnableDnsHostnames: 'true'
+      InstanceTenancy: default
+      Tags:
+      - Key: LOCATION
+        Value: Canada
+      - Key: AWSRegion
+        Value: ca-central-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: VPC-by-ASUX.org-2layerExisting
+      - Key: APPLNAME
+        Value: NOTRELEVANT_FOR_VPC
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 28 18:23:14 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
+  MyVPCGatewayAttachment:
+    Type: 'AWS::EC2::VPCGatewayAttachment'
+    Properties:
+      VpcId: !Ref 'orgASUXPlaygroundCanadaVPCID'
+      InternetGatewayId: !Ref 'MyInternetGateway'
+  MyPublicRouteTable:
+    Type: 'AWS::EC2::RouteTable'
+    DependsOn:
+    - MyVPCGatewayAttachment
+    Properties:
+      VpcId: !Ref 'orgASUXPlaygroundCanadaVPCID'
+      Tags:
+      - Key: LOCATION
+        Value: Canada
+      - Key: AWSRegion
+        Value: ca-central-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: PublicRT-org-ASUX-Playground-Canada
+      - Key: APPLNAME
+        Value: NOTRELEVANT_FOR_VPC
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 28 18:23:14 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
+  MyPublicRoute:
+    Type: 'AWS::EC2::Route'
+    DependsOn: MyVPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref 'MyPublicRouteTable'
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref 'MyInternetGateway'
+  MyPrivateRouteTableAZ1:
+    Type: 'AWS::EC2::RouteTable'
+    DependsOn:
+    - MyVPCGatewayAttachment
+    Properties:
+      VpcId: !Ref 'orgASUXPlaygroundCanadaVPCID'
+      Tags:
+      - Key: LOCATION
+        Value: Canada
+      - Key: AWSRegion
+        Value: ca-central-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: PrivateRT-AZ1-org-ASUX-Playground-Canada
+      - Key: APPLNAME
+        Value: NOTRELEVANT_FOR_VPC
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 28 18:23:14 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
+  MyPrivateRouteTableAZ2:
+    Type: 'AWS::EC2::RouteTable'
+    DependsOn:
+    - MyVPCGatewayAttachment
+    Properties:
+      VpcId: !Ref 'orgASUXPlaygroundCanadaVPCID'
+      Tags:
+      - Key: LOCATION
+        Value: Canada
+      - Key: AWSRegion
+        Value: ca-central-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: PrivateRT-AZ2-org-ASUX-Playground-Canada
+      - Key: APPLNAME
+        Value: NOTRELEVANT_FOR_VPC
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 28 18:23:14 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
+  MyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAcl'
+    Properties:
+      VpcId: !Ref 'orgASUXPlaygroundCanadaVPCID'
+      Tags:
+      - Key: LOCATION
+        Value: Canada
+      - Key: AWSRegion
+        Value: ca-central-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: NACL-Public-org-ASUX-Playground-Canada
+      - Key: APPLNAME
+        Value: NOTRELEVANT_FOR_VPC
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 28 18:23:14 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
+  MyPrivateNetworkAcl:
+    Type: 'AWS::EC2::NetworkAcl'
+    Properties:
+      VpcId: !Ref 'orgASUXPlaygroundCanadaVPCID'
+      Tags:
+      - Key: LOCATION
+        Value: Canada
+      - Key: AWSRegion
+        Value: ca-central-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: NACL-Private-org-ASUX-Playground-Canada
+      - Key: APPLNAME
+        Value: NOTRELEVANT_FOR_VPC
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Sun Jul 28 18:23:14 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
+  InboundHTTPNetworkAclEntryForMyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1100'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '80'
+        To: '80'
+  InboundHTTPSNetworkAclEntryForMyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1110'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '443'
+        To: '443'
+  InboundSSHAclEntryForMyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1120'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '22'
+        To: '22'
+  InboundResponsePortsAclEntryForMyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1150'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '1024'
+        To: '65535'
+  InboundIntraVPCAclEntryForMyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1160'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 172.31.0.0/16
+      PortRange:
+        From: '0'
+        To: '65535'
+  OutBoundHTTPAclEntryForMyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1200'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '80'
+        To: '80'
+  OutBoundHTTPSAclEntryForMyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1210'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '443'
+        To: '443'
+  OutBoundSSHAclEntryForMyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1220'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '22'
+        To: '22'
+  OutBoundResponsePortsAclEntryForMyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1250'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '1024'
+        To: '65535'
+  OutBoundIntraVPCAclEntryForMyDefaultNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyDefaultNetworkAcl'
+      RuleNumber: '1260'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 172.31.0.0/16
+      PortRange:
+        From: '0'
+        To: '65535'
+  InboundResponsePortsAclEntryForMyPrivateNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyPrivateNetworkAcl'
+      RuleNumber: '2150'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '1024'
+        To: '65535'
+  InboundIntraVPCAclEntryForMyPrivateNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyPrivateNetworkAcl'
+      RuleNumber: '2160'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'false'
+      CidrBlock: 172.31.0.0/16
+      PortRange:
+        From: '0'
+        To: '65535'
+  OutBoundHTTPAclEntryForMyPrivateNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyPrivateNetworkAcl'
+      RuleNumber: '2200'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '80'
+        To: '80'
+  OutBoundHTTPSAclEntryForMyPrivateNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyPrivateNetworkAcl'
+      RuleNumber: '2210'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '443'
+        To: '443'
+  OutBoundSSHAclEntryForMyPrivateNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyPrivateNetworkAcl'
+      RuleNumber: '2220'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 0.0.0.0/0
+      PortRange:
+        From: '22'
+        To: '22'
+  OutBoundIntraVPCAclEntryForMyPrivateNetworkAcl:
+    Type: 'AWS::EC2::NetworkAclEntry'
+    Properties:
+      NetworkAclId: !Ref 'MyPrivateNetworkAcl'
+      RuleNumber: '2260'
+      Protocol: '6'
+      RuleAction: allow
+      Egress: 'true'
+      CidrBlock: 172.31.0.0/16
+      PortRange:
+        From: '0'
+        To: '65535'
+Outputs:
+  VPCID:
+    Description: VPC ID
+    Value: !Ref 'orgASUXPlaygroundCanadaVPCID'
+    Export:
+      Name: !Sub '${MyVPCStackPrefix}-VPCID'
+  PublicRouteTableID:
+    Description: Export ID of the only Public Route Table associated with a VPC + IGW
+    Value: !Ref 'MyPublicRouteTable'
+    Export:
+      Name: 'org-ASUX-Playground-Canada-PublicRouteTableID'
+  DefaultNetworkAcl:
+    Description: Export ID of the only Default-Network-ACL associated with a VPC + IGW
+    Value: !Ref 'MyDefaultNetworkAcl'
+    Export:
+      Name: 'org-ASUX-Playground-Canada-DefaultNetworkAclID'
+  PrivateNetworkAcl:
+    Description: Export ID of the only Private-Network-ACL associated with a VPC's private subnets
+    Value: !Ref 'MyPrivateNetworkAcl'
+    Export:
+      Name: 'org-ASUX-Playground-Canada-PrivateNetworkAclID'
+  PrivateRouteTableIDAZ1:
+    Description: Export ID of the only _PRIVATE_ Route Table associated with a VPC's _PRIVATE_ subnet 'org-ASUX-Playground-Canada-2layerExisting-Subnet-NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable1-ID'
+    Value: !Ref 'MyPrivateRouteTableAZ1'
+    Export:
+      Name: 'org-ASUX-Playground-Canada-PrivateRouteTable-AZ1-ID'
+  PrivateRouteTableIDAZ2:
+    Description: Export ID of the only _PRIVATE_ Route Table associated with a VPC's _PRIVATE_ subnet 'org-ASUX-Playground-Canada-2layerExisting-Subnet-NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable2-ID'
+    Value: !Ref 'MyPrivateRouteTableAZ2'
+    Export:
+      Name: 'org-ASUX-Playground-Canada-PrivateRouteTable-AZ2-ID'

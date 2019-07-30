@@ -1,0 +1,235 @@
+### File name: VPN-Client.yaml
+
+# Credit to John Creecy
+# Original can be found at https://gist.github.com/zugdud/0bf8b2bab65ede19dc42a58d2db721a4
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: OpenVPN Stack, derived from John Creecy's sample (Un-modified Original can be found at https://gist.github.com/zugdud/0bf8b2bab65ede19dc42a58d2db721a4)
+
+Parameters:
+  OpenVPNPort:
+    Type: Number
+    Default: 1194
+    Description: OpenVPN UDP port
+
+  SSHKeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: existing EC2 KeyPair (SSH Key) for the OpenVPN Instance
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair.
+    ### NO DEFAULT
+
+  ClientIPCIDR: ### Client-IP-CIDRBlock
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR IP to be granted access by the SG, use 0.0.0.0/0 to accept all IPs
+
+Mappings:
+  RegionMap:
+    us-east-1:
+      "AMAZONLINUXAMI" : "ami-8c1be5f6" # Amazon Linux AMI 2017.09
+    us-east-2:
+      "AMAZONLINUXAMI" : "ami-c5062ba0" # Amazon Linux AMI 2017.09
+    us-west-1:
+      "AMAZONLINUXAMI" : "ami-02eada62" # Amazon Linux AMI 2017.09
+    us-west-2:
+      "AMAZONLINUXAMI" : "ami-e689729e" # Amazon Linux AMI 2017.09
+    ca-central-1:
+      "AMAZONLINUXAMI" : "ami-fd55ec99" # Amazon Linux AMI 2017.09
+    eu-west-1:
+      "AMAZONLINUXAMI" : "ami-acd005d5" # Amazon Linux AMI 2017.09
+    eu-central-1:
+      "AMAZONLINUXAMI" : "ami-c7ee5ca8" # Amazon Linux AMI 2017.09
+    eu-west-2:
+      "AMAZONLINUXAMI" : "ami-1a7f6d7e" # Amazon Linux AMI 2017.09
+    ap-southeast-1:
+      "AMAZONLINUXAMI" : "ami-0797ea64" # Amazon Linux AMI 2017.09
+    ap-southeast-2:
+      "AMAZONLINUXAMI" : "ami-8536d6e7" # Amazon Linux AMI 2017.09
+    ap-northeast-2:
+      "AMAZONLINUXAMI" : "ami-9bec36f5" # Amazon Linux AMI 2017.09
+    ap-northeast-1:
+      "AMAZONLINUXAMI" : "ami-2a69be4c" # Amazon Linux AMI 2017.09
+    ap-south-1:
+      "AMAZONLINUXAMI" : "ami-4fc58420" # Amazon Linux AMI 2017.09
+    sa-east-1:
+      "AMAZONLINUXAMI" : "ami-f1344b9d" # Amazon Linux AMI 2017.09
+
+Resources:
+
+  # Our VPC, most of our resources will be provisioned within
+  myVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/22 # We only need 1 IPaddress for our OpenVPN server, I just like even numbers and 8-bit subnets
+      Tags:
+      - Key: Name
+        Value: personal-OpenVPN-vpc
+
+  # The only subnet we will create within our VPC, our OpenVPN server will be provisioned within
+  # This subnet will be assigned a default route out to the internet, hence the name.
+  MyPublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref myVPC
+      CidrBlock: 10.0.0.0/24 # 8-bit subnet provides 256 addresses, 251 of which are usable
+      Tags:
+      - Key: Name
+        Value: personal-OpenVPN-publicSubnet
+
+  # We will need our VPC to have access to the internet
+  myInternetGateway:
+      Type: "AWS::EC2::InternetGateway"
+      Properties:
+        Tags:
+        - Key: Name
+          Value: personal-OpenVPN-myIGW
+
+  # The VPC route table
+  myRouteTablePublic:
+      Type: "AWS::EC2::RouteTable"
+      Properties:
+        VpcId: !Ref myVPC
+        Tags:
+          - Key: Name
+            Value: personal-OpenVPN-myRouteTablePublic
+
+  # Attach the Internet Gateway to myVPC
+  AttachInternetGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref myVPC
+      InternetGatewayId: !Ref myInternetGateway
+
+  # Add a default route to our VPCs internet gateway
+  RouteDefaultPublic:
+    Type: "AWS::EC2::Route"
+    DependsOn: myInternetGateway
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref myInternetGateway
+      RouteTableId: !Ref myRouteTablePublic
+
+  # Associate our route table to our subnet
+  MyPublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref MyPublicSubnet
+      RouteTableId: !Ref myRouteTablePublic
+
+  # Request a new Elastic IP Address
+  myEIP:
+    Type: "AWS::EC2::EIP"
+    Properties:
+      Domain: vpc
+
+  # Bind our Elastic IP Address to an Elastic Network Interface
+  AssociateManagementAccessPort:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt myEIP.AllocationId
+      NetworkInterfaceId: !Ref myNetworkInterface
+
+  # Create a security group for the ENI that will be attached to our OpenVPN server
+  # OpenVPN and SSH port access
+  OpenVPNInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: SG for OpenVPN Server
+      VpcId: !Ref myVPC
+      SecurityGroupIngress:
+        - IpProtocol: udp
+          FromPort: !Ref OpenVPNPort
+          ToPort: !Ref OpenVPNPort
+          CidrIp: !Ref ClientIPCIDR
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: !Ref ClientIPCIDR
+
+  # This is the IAM role which will be associated with our EC2 instance
+  myEC2InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+
+  # This is the IAM policy which will be attached to our EC2 instance role
+  myAccessPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: myAccessPolicy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Action:
+              - s3:*
+            Effect: Allow
+            Resource: "*"
+      Roles:
+        - !Ref myEC2InstanceRole
+
+  # Binding profile for our myEC2InstanceRole to the actual EC2 instance
+  ec2InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: "/"
+      Roles:
+       - !Ref myEC2InstanceRole
+
+  # The Elastic Network Interface which will be attached to our EC2 instance
+  # Our security group, OpenVPNInstanceSG is also associated with this interface
+  myNetworkInterface:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId: !Ref MyPublicSubnet
+      Description: Public Interface
+      GroupSet:
+      - !Ref OpenVPNInstanceSG
+      SourceDestCheck: false
+      Tags:
+        -
+          Key: Name
+          Value: Public ENI
+
+  # This is the S3 bucket where our client profile and secrets will be stored
+  myS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      AccessControl: Private
+
+  # The EC2 instance which will host OpenVPN
+  EC2OpenVPNInstance:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      ImageId: !FindInMap [RegionMap, !Ref "AWS::Region", AMAZONLINUXAMI]
+      InstanceType: t2.micro
+      SourceDestCheck: false
+      KeyName: !Ref SSHKeyName
+      NetworkInterfaces:
+        -
+          NetworkInterfaceId: !Ref myNetworkInterface
+          DeviceIndex: 0
+      IamInstanceProfile: !Ref ec2InstanceProfile
+      Tags:
+        -
+          Key: Name
+          Value: OpenVPN Server
+
+Outputs:
+  myS3BucketOut:
+    Description: S3 bucket name
+    Value: !Ref myS3Bucket
+  myEIPOut:
+    Description: Instance EIP
+    Value: !Ref myEIP
+  EC2OpenVPNInstanceOut:
+    Description: EC2 Instance
+    Value: !Ref EC2OpenVPNInstance#EOF
