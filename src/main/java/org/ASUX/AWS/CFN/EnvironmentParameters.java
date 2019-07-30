@@ -69,16 +69,19 @@ public final class EnvironmentParameters implements Serializable {
     public static final String TAGS_DEPT_MASTER = "Tags-Dept-Master.properties"; // one of the many Properties objects within this.allPropsRef (see go())
     public static final String TAGS_ENTERPRISE_MASTER = "Tags-Enterprise-Master.properties"; // one of the many Properties objects within this.allPropsRef (see go())
 
-    public static final String AWSREGIONSLOCATIONS = "config/AWSRegionsLocations.properties";
-    public static final String AWSLOCATIONSREGIONS = "config/AWSLocationsRegions.properties";
+    public static final String AWSREGIONSLOCATIONS  = "config/AWSRegionsLocations.properties";
+    public static final String AWSLOCATIONSREGIONS  = "config/AWSLocationsRegions.properties";
 
-    public static final String MYSTACKNAMEPREFIX = "MyStackNamePrefix";
-    public static final String MYVPCSTACKPREFIX = "MyVPCStackPrefix";
-    public static final String MYEC2INSTANCENAME = "MyEC2InstanceName";
-    public static final String MYDOMAINNAME = "MyDomainName";
-    public static final String MYRT53HOSTEDZONEID = "MyRt53HostedZoneId";
+    public static final String MYSTACKNAMEPREFIX    = "MyStackNamePrefix";
+    public static final String MYVPCSTACKPREFIX     = "MyVPCStackPrefix";
+    public static final String MYEC2INSTANCENAME    = "MyEC2InstanceName";
 
-    public static final String VPCCIDRBLOCK = "VPCCIDRBLOCK";
+    public static final String MYORGNAME            = "MyOrgName";
+    public static final String MYENVIRONMENT        = "MyEnvironment";
+    public static final String MYDOMAINNAME         = "MyDomainName";
+    public static final String MYRT53HOSTEDZONEID   = "MyRt53HostedZoneId";
+
+    public static final String VPCCIDRBLOCK         = "VPCCIDRBLOCK";
     public static final String CIDRBLOCK_BYTE3_DELTA = "CIDRBLOCK_Byte3_Delta";
 
     public static final String CIDRBLOCKELEMENTpattern = "([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
