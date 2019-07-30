@@ -1,6 +1,6 @@
 ### This is the file 'AWSCFN-IGW-create.txt'
 
-### HOW TO USE THIS?
+### HOW TO USE THIS FILE?
 
 ### Step 1:	IF:	you are RE-USING an existing Gateway, set the {ASUX::IGWExistingOrNew} variable to 'existing'.
 ###		ELSE:	set {ASUX::IGWExistingOrNew} variable to 'new'
@@ -15,6 +15,11 @@
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGW.yaml
 setProperty Tag_Name=IGW-${ASUX::MyVPCStackPrefix}
 yaml --insert Resources,MyInternetGateway,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+yaml --macro ''
+
+
+
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGWNewAttach.yaml
 yaml --macro ''
 
 //=============================================================
