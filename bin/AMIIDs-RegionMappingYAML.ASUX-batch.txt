@@ -1,0 +1,52 @@
+### This is the file 'AMIIDs-RegionMappingYAML.ASUX-batch.txt'
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### How to run this ASUX.org BATCH script?
+
+### 	{AWSCFNHOME}/bin/AMIIDs-RegionMappingYAML-gen.sh
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### 1st: Load the MOST __FUNDAMENTAL__ properties files!
+
+properties AWSRegionLocations=${ASUX::AWSHOME}/AWS-SDK/config/AWSRegionsLocations.properties
+
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### 2nd: Load the 'existing' YAML file under {AWSCFNHOME}/AWSCFN.templates-pieces
+
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/AMIID-Region-Mapping.yaml
+
+saveTo !AMIIDbyREGIONMAPPING
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+aws.sdk --list-regions --offline
+
+foreach
+	print ${ASUX::foreach.iteration.value} 
+	setProperty AWSRegion=${ASUX::foreach.iteration.value} 
+	setProperty AWSLocation=${ASUX::AWS-${ASUX::AWSRegion}} 
+	print ${ASUX::AWSLocation} \n
+
+	useAsInput  !AMIIDbyREGIONMAPPING 
+	yaml --delete AMIIDRegionMap.${ASUX::AWSRegion} 
+
+	properties OneAMI=${ASUX::AWSHOME}/AWS-SDK/etc/offline-downloads/AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt 
+
+	yaml --insert AMIIDRegionMap.${ASUX::AWSRegion} ${ASUX::AWSAMIID} 
+	saveTo  !AMIIDbyREGIONMAPPING 
+end
+
+useAsInput !AMIIDbyREGIONMAPPING
+
+//--------------------------------------------------
+
+#EoF
