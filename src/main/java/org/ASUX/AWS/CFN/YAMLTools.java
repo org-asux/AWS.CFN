@@ -124,8 +124,8 @@ public final class YAMLTools
 
     /**
      *  <p>Given a 'filenamePrefix' === 'Services', This method will check for the following 3 files - in that order.  And return the contents of the 1st file found.</p>
-     * <ol><li>~/.aws/Services-Alone.yaml</li><li>Services-Department.yaml</li><li>Services-Enterprise.yaml</li></ul>
-     *  @param _filenamePrefix NotNull String. If you provide the '.yaml' file-name-extension, it will be automatically addressed.
+     * <ol><li>~/.aws/Services-Alone.yaml</li><li>Services-Department.yaml</li><li>Services-Enterprise.yaml</li></ol>
+     *  @param _filename NotNull String. Does NOT matter, whether you provide a file-name, with OR without the '.yaml' file-name-extension, it will be automatically addressed.
      *  @return a NotNull Node (Any failure will lead to Exceptions being thrown)
      *  @throws FileNotFoundException if the file whose name is derived as described above, do Not exist
      *  @throws IOException if any error reading the contents of the file
