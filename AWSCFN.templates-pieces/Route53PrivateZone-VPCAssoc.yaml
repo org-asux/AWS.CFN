@@ -1,12 +1,16 @@
-  MyRt53HostedZone:
+  MyRt53PrivateZoneWithVPCAssociation:
+
     Description: >-
-      .. !!!!!!!!!! NOT SURE - IF HostedZone ALREADY EXISTS !!!!!!!!!
+      .. !!!!!!!!!! NOT SURE - what happens if HostedZone ALREADY EXISTS !!!!!!!!!
 
     Type: AWS::Route53::HostedZone
     ### https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-route53-hostedzone.html
 
     ### PUBLIC vs. PRIVATE HostedZones?
     ### The differentiating factor is:- creating a Private Hosted Zone requires providing VPC IDs.
+
+    DependsOn:
+    - ${ASUX::MyVPCName}
 
     Properties: 
 
@@ -16,7 +20,7 @@
 
       HostedZoneConfig: 
         ### For PRIVATE Hosted-Zone:-
-        PrivateZone: true
+        #___ PrivateZone: true ### <---- <---- !!!!!!!!!! CFN Error: Encountered unsupported property PrivateZone
         ### For PUBLIC Hosted-Zone __REMOVE__ above 'PrivateZone' element
         Comment: Public/Private HostedZone ${ASUX::FQDN}
 
@@ -24,7 +28,7 @@
       #   - !!!! Tags associaged with this SPECIFIC ZONE <<------ <<--------  <<--------  <<--------  <<-------- 
 
       VPCs: ### https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-route53-hostedzone-hostedzonevpcs.html
-        - VPCId: ${ASUX::VPCID}
+        - VPCId: !Ref ${ASUX::MyVPCName}
           VPCRegion: ${ASUX::AWSRegion}
 
 #EOF
