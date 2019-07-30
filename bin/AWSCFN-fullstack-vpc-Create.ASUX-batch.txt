@@ -87,9 +87,6 @@ useAsInput !TopElemResources
 include ?@${ASUX::AWSCFNHOME}/bin/AWSCFN-IGW-${ASUX::IGWExistingOrNew}.txt
 	### Note: '?' Prefix implies optional include, ONLY if it exists.
 
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGWAttach.yaml
-yaml --macro ''
-	### Whether or NOT IGW existed, let's attach it to this __NEW__ VPC.
 
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRouteTable.yaml
 setProperty Tag_Name=PublicRT-${ASUX::MyVPCStackPrefix}
@@ -117,7 +114,6 @@ end
 //--------------------------------------------------
 useAsInput !TopElemResources
 
-
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/ACLDefault.yaml
 setProperty Tag_Name=NACL-Public-${ASUX::MyVPCStackPrefix}
 yaml --insert Resources,MyDefaultNetworkAcl,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
@@ -140,7 +136,12 @@ setProperty WhichNACLRef=MyPrivateNetworkAcl	### The RHS of the '=' refers to th
 include @${ASUX::AWSCFNHOME}/bin/AWSCFN-NACL-subnet-Private.txt
 
 //--------------------------------------------------
+#____	useAsInput !TopElemResources
+#____	yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Route53PrivateZone-VPCAssoc.yaml
+#____	yaml --macro ''
+#____	saveTo !TopElemResources
 
+//--------------------------------------------------
 useAsInput !YAMLROOT
 yaml --insert / !TopElemResources
 saveTo !YAMLROOT
