@@ -82,12 +82,6 @@ public final class EnvironmentParameters implements Serializable {
     public static final String MYRT53HOSTEDZONEID   = "MyRt53HostedZoneId";
 
     public static final String VPCCIDRBLOCK         = "VPCCIDRBLOCK";
-    public static final String CIDRBLOCK_BYTE3_DELTA = "CIDRBLOCK_Byte3_Delta";
-
-    public static final String CIDRBLOCKELEMENTpattern = "([01]?\\d\\d?|2[0-4]\\d|25[0-5])";
-    public static final String CIDRBLOCKRANGEpattern = "([0-9]|[12][0-9]|3[0-2])";
-    public static final String CIDRBLOCKpattern = "^" + CIDRBLOCKELEMENTpattern + "\\." + CIDRBLOCKELEMENTpattern
-            + "\\." + CIDRBLOCKELEMENTpattern + "\\." + CIDRBLOCKELEMENTpattern + "/" + CIDRBLOCKRANGEpattern + "$";
 
     public static final String CFNINIT_PACKAGES = "AWS-CFNInit-Standup";
     public static final String CFNINIT_SERVICES = "AWS-CFNInit-Services";
@@ -266,7 +260,7 @@ public final class EnvironmentParameters implements Serializable {
     {   final String HDR = CLASSNAME + ": getJOB_DEFAULTS(): ";
         switch (this.cfnJobTypEnum) {
             case FULLSTACK:
-                            return prefixFULLSTACK +"/"+ JOB_DEFAULTS;
+                            return FULLSTACKJOB_DEFAULTS; // prefixFULLSTACK +"/"+ JOB_DEFAULTS;
             case SUBNET:
             case EC2PLAIN:
             case VPC:
