@@ -1,0 +1,1 @@
+aws cloudformation create-stack --stack-name org-ASUX-Playground-Sydney-2layerExisting-SG-SSH  --region ap-southeast-2 --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=org-ASUX-Playground-Sydney-VPCID --template-body file:///Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layerExisting/fullstack-sg-ssh-existing.yaml

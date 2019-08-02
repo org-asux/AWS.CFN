@@ -1,0 +1,1 @@
+aws cloudformation create-stack --stack-name org-ASUX-Playground-Sydney-VPC  --region ap-southeast-2 --profile ${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=org-ASUX-Playground-Sydney --template-body file:///Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layerExisting/fullstack-vpc-existing.yaml
