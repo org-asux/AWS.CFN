@@ -1,0 +1,40 @@
+Parameters:
+
+
+  MyVPCStackPrefix:
+    Description: The prefix for almost ALL Exports by CFN-templates created by ASUX.org tools.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
+    Type: String
+    Default: ${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}
+
+  MyVPCName:
+    Description: Export ID of the VPC.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
+    Type: String
+    Default: ${ASUX::MyVPCStackPrefix}-VPCID
+
+  MyPublicSubnet1:
+    Description: The "OpenVPN-SERVER" will be in this PUBLIC subnet.  This is the EXPORTED/OUTPUT NAME of the Appropriate PUBLIC-SUBNET no.1 - from the other VPC CFN-template".
+    Type: String
+
+
+  SSHKeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: An existing EC2 KeyPair (SSH Key) for the OpenVPN Instance
+    ConstraintDescription: Must be the name of an existing EC2 KeyPair.
+    ### NO DEFAULT
+
+  VPNClientSourceIPCIDR: ### Representing the internet-IP of home computers, which is pretty much the internet
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR IP to be granted access by the SG, use 0.0.0.0/0 to accept all IPs
+
+  VPNClientEndPtIPCIDR: ### Representing the IPs assigned to VPN-Clients (home computers) IP-CIDRBlock - - These IPs will be a _SUBSET_ of a PUBLIC subnet in the VPC.
+    Type: String
+    Default: 0.0.0.0/0
+    Description: CIDR IP to be granted access by the SG, use 0.0.0.0/0 to accept all IPs
+
+  # OpenVPNPort:
+  #   Type: Number
+  #   Default: 1194
+  #   Description: OpenVPN UDP port (industry standard)
+
+#EOF
