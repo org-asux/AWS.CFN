@@ -224,7 +224,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         // let's do this check once more.. in case something slipped-thru the above complexity.
         if ( this.jobSetName.endsWith(".yaml") )
             this.jobSetName = this.jobSetName.replaceAll( ".yaml$", "" );
-        if ( this.verbose ) System.err.println( "this.jobSetName="+ this.jobSetName );
+        if ( this.verbose ) System.out.println( "this.jobSetName="+ this.jobSetName );
         if ( this.verbose ) System.out.println( HDR + this.toString() );
 
         assert( this.cmdName == Enums.GenEnum.UNDEFINED ); // sanity check
