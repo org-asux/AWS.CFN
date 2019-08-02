@@ -5,24 +5,27 @@ Parameters:
   MyVPCStackPrefix:
     Description: The prefix for almost ALL Exports by CFN-templates created by ASUX.org tools.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
     Type: String
-    Default: org-ASUX-Playground-Canada
+    Default: org-ASUX-Playground-Sydney
   MyVPCName:
     Description: Export ID of the VPC.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
     Type: String
-    Default: org-ASUX-Playground-Canada-VPCID
+    Default: org-ASUX-Playground-Sydney-VPCID
   EC2getsPublicIPByDefault:
     Description: Whether any EC2 instance created within this VPC automatically gets a PUBLIC-IP (accessible via internet)
     Type: String
     Default: 'false'
   MyPublicRouteTable:
-    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Canada-2layerExisting-PublicRouteTableID"
+    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Sydney-2layerExisting-PublicRouteTableID"
     Type: String
-    Default: org-ASUX-Playground-Canada-PublicRouteTableID
+    Default: org-ASUX-Playground-Sydney-PublicRouteTableID
 Conditions:
   doesExistSubnet1: !Equals
   - ASUXorg_Tools_Work
   - ASUXorg_Tools_Work
   doesExistSubnet2: !Equals
+  - ASUXorg_Tools_Work
+  - ASUXorg_Tools_Work
+  doesExistSubnet3: !Equals
   - ASUXorg_Tools_Work
   - ASUXorg_Tools_Work
 Resources:
@@ -35,18 +38,18 @@ Resources:
         Ref: MyVPCName
       CidrBlock: 172.31.0.0/20
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
-      AvailabilityZone: ca-central-1a
+      AvailabilityZone: ap-southeast-2a
       Tags:
       - Name: PublicOrPrivate
         Value: Public
       - Key: LOCATION
-        Value: Canada
+        Value: Sydney
       - Key: AWSRegion
-        Value: ca-central-1
+        Value: ap-southeast-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: Subnet-Public1-org-ASUX-Playground-Canada-2layerExisting
+        Value: Subnet-Public1-org-ASUX-Playground-Sydney-2layerExisting
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -76,7 +79,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sun Jul 28 18:23:17 EDT 2019
+        Value: Fri Aug 02 18:44:50 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetAZ2:
@@ -88,18 +91,18 @@ Resources:
         Ref: MyVPCName
       CidrBlock: 172.31.16.0/20
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
-      AvailabilityZone: ca-central-1b
+      AvailabilityZone: ap-southeast-2b
       Tags:
       - Name: PublicOrPrivate
         Value: Public
       - Key: LOCATION
-        Value: Canada
+        Value: Sydney
       - Key: AWSRegion
-        Value: ca-central-1
+        Value: ap-southeast-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: Subnet-Public2-org-ASUX-Playground-Canada-2layerExisting
+        Value: Subnet-Public2-org-ASUX-Playground-Sydney-2layerExisting
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -129,11 +132,64 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sun Jul 28 18:23:17 EDT 2019
+        Value: Fri Aug 02 18:44:50 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
+  MyPublicSubnetAZ3:
+    Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
+    Type: 'AWS::EC2::Subnet'
+    Condition: doesExistSubnet3
+    Properties:
+      VpcId: !ImportValue
+        Ref: MyVPCName
+      CidrBlock: 172.31.32.0/20
+      MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
+      AvailabilityZone: ap-southeast-2c
+      Tags:
+      - Name: PublicOrPrivate
+        Value: Public
+      - Key: LOCATION
+        Value: Sydney
+      - Key: AWSRegion
+        Value: ap-southeast-2
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: Subnet-Public3-org-ASUX-Playground-Sydney-2layerExisting
+      - Key: APPLNAME
+        Value: UNDEFINED-APPLNAME
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Fri Aug 02 18:44:50 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway1:
-    Description: NOTE, NAT-GW (NAT-Gateway) No.1 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Canada-2layerExisting-Subnet-Public1-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
+    Description: NOTE, NAT-GW (NAT-Gateway) No.1 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Sydney-2layerExisting-Subnet-Public1-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: vpc
@@ -147,13 +203,13 @@ Resources:
       SubnetId: !Ref 'MyPublicSubnetAZ1'
       Tags:
       - Key: LOCATION
-        Value: Canada
+        Value: Sydney
       - Key: AWSRegion
-        Value: ca-central-1
+        Value: ap-southeast-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: NATGW-1-org-ASUX-Playground-Canada-2layerExisting
+        Value: NATGW-1-org-ASUX-Playground-Sydney-2layerExisting
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -183,11 +239,11 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sun Jul 28 18:23:17 EDT 2019
+        Value: Fri Aug 02 18:44:50 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway2:
-    Description: NOTE, NAT-GW (NAT-Gateway) No.2 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Canada-2layerExisting-Subnet-Public2-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
+    Description: NOTE, NAT-GW (NAT-Gateway) No.2 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Sydney-2layerExisting-Subnet-Public2-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: vpc
@@ -201,13 +257,13 @@ Resources:
       SubnetId: !Ref 'MyPublicSubnetAZ2'
       Tags:
       - Key: LOCATION
-        Value: Canada
+        Value: Sydney
       - Key: AWSRegion
-        Value: ca-central-1
+        Value: ap-southeast-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: NATGW-2-org-ASUX-Playground-Canada-2layerExisting
+        Value: NATGW-2-org-ASUX-Playground-Sydney-2layerExisting
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -237,7 +293,61 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sun Jul 28 18:23:17 EDT 2019
+        Value: Fri Aug 02 18:44:50 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
+  EIPForNATGateway3:
+    Description: NOTE, NAT-GW (NAT-Gateway) No.3 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Sydney-2layerExisting-Subnet-Public3-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  MyNATGW3:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - EIPForNATGateway3
+        - 'AllocationId'
+      SubnetId: !Ref 'MyPublicSubnetAZ3'
+      Tags:
+      - Key: LOCATION
+        Value: Sydney
+      - Key: AWSRegion
+        Value: ap-southeast-2
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: NATGW-3-org-ASUX-Playground-Sydney-2layerExisting
+      - Key: APPLNAME
+        Value: UNDEFINED-APPLNAME
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Fri Aug 02 18:44:50 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetRouteTableAssociationAZ1:
@@ -254,40 +364,65 @@ Resources:
       SubnetId: !Ref 'MyPublicSubnetAZ2'
       RouteTableId: !ImportValue
         Ref: MyPublicRouteTable
+  MyPublicSubnetRouteTableAssociationAZ3:
+    Type: 'AWS::EC2::SubnetRouteTableAssociation'
+    Condition: doesExistSubnet3
+    Properties:
+      SubnetId: !Ref 'MyPublicSubnetAZ3'
+      RouteTableId: !ImportValue
+        Ref: MyPublicRouteTable
   MyPublicSubnetNetworkAclAssociation1:
     Type: 'AWS::EC2::SubnetNetworkAclAssociation'
     Condition: doesExistSubnet1
     Properties:
       SubnetId: !Ref 'MyPublicSubnetAZ1'
-      NetworkAclId: !ImportValue 'org-ASUX-Playground-Canada-DefaultNetworkAclID'
+      NetworkAclId: !ImportValue 'org-ASUX-Playground-Sydney-DefaultNetworkAclID'
   MyPublicSubnetNetworkAclAssociation2:
     Type: 'AWS::EC2::SubnetNetworkAclAssociation'
     Condition: doesExistSubnet2
     Properties:
       SubnetId: !Ref 'MyPublicSubnetAZ2'
-      NetworkAclId: !ImportValue 'org-ASUX-Playground-Canada-DefaultNetworkAclID'
+      NetworkAclId: !ImportValue 'org-ASUX-Playground-Sydney-DefaultNetworkAclID'
+  MyPublicSubnetNetworkAclAssociation3:
+    Type: 'AWS::EC2::SubnetNetworkAclAssociation'
+    Condition: doesExistSubnet3
+    Properties:
+      SubnetId: !Ref 'MyPublicSubnetAZ3'
+      NetworkAclId: !ImportValue 'org-ASUX-Playground-Sydney-DefaultNetworkAclID'
 Outputs:
   DefaultPublicSubnet1:
     Description: The subnet no.1's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPublicSubnetAZ1'
     Condition: doesExistSubnet1
     Export:
-      Name: 'org-ASUX-Playground-Canada-2layerExisting-Subnet-Public1-ID'
+      Name: 'org-ASUX-Playground-Sydney-2layerExisting-Subnet-Public1-ID'
   DefaultPublicSubnet2:
     Description: The subnet no.2's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPublicSubnetAZ2'
     Condition: doesExistSubnet2
     Export:
-      Name: 'org-ASUX-Playground-Canada-2layerExisting-Subnet-Public2-ID'
+      Name: 'org-ASUX-Playground-Sydney-2layerExisting-Subnet-Public2-ID'
+  DefaultPublicSubnet3:
+    Description: The subnet no.3's ID to use for web servers if public, or for databases if private.
+    Value: !Ref 'MyPublicSubnetAZ3'
+    Condition: doesExistSubnet3
+    Export:
+      Name: 'org-ASUX-Playground-Sydney-2layerExisting-Subnet-Public3-ID'
   NATGW1:
-    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Canada-2layerExisting-Subnet-Public1-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
+    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Sydney-2layerExisting-Subnet-Public1-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
     Value: !Ref 'MyNATGW1'
     Condition: doesExistSubnet1
     Export:
       Name: !Sub '${MyVPCStackPrefix}-NATGW-1-ID'
   NATGW2:
-    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Canada-2layerExisting-Subnet-Public2-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
+    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Sydney-2layerExisting-Subnet-Public2-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
     Value: !Ref 'MyNATGW2'
     Condition: doesExistSubnet2
     Export:
       Name: !Sub '${MyVPCStackPrefix}-NATGW-2-ID'
+  NATGW3:
+    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Sydney-2layerExisting-Subnet-Public3-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
+    Value: !Ref 'MyNATGW3'
+    Condition: doesExistSubnet3
+    Export:
+      Name: !Sub '${MyVPCStackPrefix}-NATGW-3-ID'
