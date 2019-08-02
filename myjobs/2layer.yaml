@@ -1,7 +1,7 @@
 AWS:
+  AWSRegion: Ohio
   MyOrgName: org-ASUX
   MyEnvironment: Playground
-  AWSRegion: ap-northeast-1
   MyDomainName: playground.asux.org
 
   VPC:
