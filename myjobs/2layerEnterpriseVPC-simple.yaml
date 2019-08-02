@@ -1,9 +1,9 @@
 AWS:
-  AWSRegion: tokyo #___ ap-northeast-1
+  AWSRegion: tokyo    #___ ap-northeast-1
   ### If the following 3 KV-Pairs are NOT provided, then .. 1st check if VPCID is provided (below).  If provided, then.. check the Tags of VPCID, for these 3 KV-pairs.
-  #___ MyOrgName: org-ASUX
-  #___ MyEnvironment: Playground
-  #___ MyDomainName: playground.asux.org
+  #___ MyOrgName: org-ASUX                  ### assuming ASUX.org tools were used to create the VPC (the VPC that is specified below as 'existing')
+  #___ MyEnvironment: Playground            ### assuming ASUX.org tools were used to create the VPC (the VPC that is specified below as 'existing')
+  #___ MyDomainName: playground.asux.org    ### assuming ASUX.org tools were used to create the VPC (the VPC that is specified below as 'existing')
 
   VPC:
     VPCID: existing
@@ -16,12 +16,22 @@ AWS:
           ###   (5) There is only one VPC that is also a DEFAULT-VPC
 
     SG:
-      SG-type: ssh  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH _CANNOT_ be created.
-                    ###     Use the 'SG-type' to search for existing-SecurityGroups, for an SG that has a Tag/Name: APPLNAME .. whose Value: startsWith(SG-type)
+      SG-ID: existing
+      sg-type: ssh  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH _CANNOT_ be created.
                     ### Multiple SG-type?  Simply add another entry of 'SG-type'!
+          ### Code will use the 'SG-type' to search for existing-SecurityGroups, for an SG in the following sequence:-
+          ###   (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
+          ###       + matches the port-type specified
+          ###   (2) Tag/Name: SG-SSH-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSRegion}
+          ###       + matches the port-type specified
+          ###   (3) Tag/CreatedBy: matches that of the AWSProfile used for SDK calls.
+          ###       + matches the port-type specified
+          ###   (3) Any existing SG ..
+          ###       + matches the port-type specified
 
     subnet:
-      SubnetID: existing public ### Attention: there are 2 words in the LHS!
+      public: yes   ### Attention: The public subnet must _ALWAYS_ _PRECEDE_ the _PRIVATE_ subnet(s) creation.
+      SubnetID: existing
                 ### This means NO subnet.yaml will be created.  This if for 'developers' who don't care, or want freedom to work within their own world (a.ka. their own VPC)
                 ### Code will search for SUBNETS in the following sequence :-
                 ###   (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided @ Top of this YAML comfiguration
@@ -67,7 +77,8 @@ AWS:
                 ensureRunning: 'false'
 
     subnet:
-      SubnetID: existing public ### Attention: there are 2 words in the LHS!
+      public: no
+      SubnetID: existing
                 ### This means NO subnet.yaml will be created.  This if for 'developers' who don't care, or want freedom to work within their own world (a.ka. their own VPC)
                 ### Code will search for SUBNETS in the following sequence :-
                 ###   (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided @ Top of this YAML comfiguration
