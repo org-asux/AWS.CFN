@@ -1,10 +1,40 @@
+### !!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!
+### Step 1: /Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layerExisting/fullstack-vpc-existing.sh
+### Step 1: /Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layerExisting/fullstack-sg-ssh-existing.sh
+### Note: the '-existing' suffix in the filename.
+### !!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!
+
 AWS:
-  MyOrgName: org-ASUX
-  MyEnvironment: Playground
-  AWSRegion: Canada
-  MyDomainName: playground.asux.org
+  AWSRegion: Sydney
+  ### If the following 3 KV-Pairs are NOT provided, then .. 1st check if VPCID is provided (below).  If provided, then.. check the Tags of VPCID, for these 3 KV-pairs.
+  #___ MyOrgName: org-ASUX                 ### assuming ASUX.org tools were used to create the VPC (the VPC that is specified below as 'existing')
+  #___ MyEnvironment: Playground           ### assuming ASUX.org tools were used to create the VPC (the VPC that is specified below as 'existing')
+  #___ MyDomainName: playground.asux.org   ### assuming ASUX.org tools were used to create the VPC (the VPC that is specified below as 'existing')
 
   VPC:
+    VPCID: existing
+          ### This means NO vpc.yaml will be created.  This if for 'developers' who don't care, or want freedom to work within their own world (a.ka. their own VPC)
+          ### Code will search for VPCs in the following sequence :-
+          ###   (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
+          ###   (2) Tag/Name: VPC-by-ASUX.org-${ASUX::JobSetName}
+          ###   (3) Tag/CreatedBy: matches that of the AWSProfile used for SDK calls.
+          ###   (4) There is only one NON-Default-VPC (that this AWSProfile has access to, in this region)_
+          ###   (5) There is only one VPC that is also a DEFAULT-VPC
+
+    SG:
+      SG-ID: existing
+      sg-type: ssh  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH _CANNOT_ be created.
+                    ### Multiple SG-type?  Simply add another entry of 'SG-type'!
+          ### Code will use the 'SG-type' to search for existing-SecurityGroups, for an SG in the following sequence:-
+          ###   (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
+          ###       + matches the port-type specified
+          ###   (2) Tag/Name: SG-SSH-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSRegion}
+          ###       + matches the port-type specified
+          ###   (3) Tag/CreatedBy: matches that of the AWSProfile used for SDK calls.
+          ###       + matches the port-type specified
+          ###   (3) Any existing SG ..
+          ###       + matches the port-type specified
+
     subnet:
       public: yes   ### Attention: The public subnet must _ALWAYS_ _PRECEDE_ the _PRIVATE_ subnet(s) creation.
 
