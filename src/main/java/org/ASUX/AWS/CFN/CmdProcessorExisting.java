@@ -34,6 +34,7 @@ package org.ASUX.AWS.CFN;
 
 import org.ASUX.common.Macros;
 import org.ASUX.common.Tuple;
+import org.ASUX.common.Triple;
 import org.ASUX.yaml.YAML_Libraries;
 
 import org.ASUX.YAML.NodeImpl.ReadYamlEntry;
@@ -52,6 +53,8 @@ import java.util.Properties;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+
+import java.util.regex.*;
 
 // https://yaml.org/spec/1.2/spec.html#id2762107
 import org.yaml.snakeyaml.nodes.NodeTuple;
@@ -77,16 +80,16 @@ public final class CmdProcessorExisting
     public static final String CLASSNAME = CmdProcessorExisting.class.getName();
 
     public boolean verbose;
-    protected CmdProcessor cmdProcessor;
     protected CmdInvoker cmdinvoker;
+    // protected CmdProcessor cmdProcessor;
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
-    public CmdProcessorExisting( final CmdProcessor _cmdProcessor, final CmdInvoker _cmdinvoker ) {
-        this.verbose = _cmdProcessor.verbose;
-        this.cmdProcessor = _cmdProcessor;
+    // public CmdProcessorExisting( final CmdProcessor _cmdProcessor, final CmdInvoker _cmdinvoker )
+    public CmdProcessorExisting( final CmdInvoker _cmdinvoker ) {
+        this.verbose = _cmdinvoker.verbose;
         this.cmdinvoker = _cmdinvoker;
     }
 
@@ -95,12 +98,14 @@ public final class CmdProcessorExisting
     //=================================================================================
 
     /**
-     *  if '_VPCID' === 'existing', then .. Code will search for VPCs in the following sequence :-
-     *  (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
-     *  (2) Tag/Name: VPC-by-ASUX.org-${ASUX::JobSetName}
-     *  (3) Tag/CreatedBy: matches that of the AWSProfile used for SDK calls.
-     *  (4) There is only one NON-Default-VPC (that this AWSProfile has access to, in this region)_
-     *  (5) There is only one VPC that is a DEFAULT-VPC
+     *  <p>if '_VPCID' === 'existing', then .. Code will search for VPCs in the following sequence :-</p>
+     *  <ul>
+     *  <li>(1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above</li>
+     *  <li>(2) Tag/Name: VPC-by-ASUX.org-${ASUX::JobSetName}</li>
+     *  <li>(3) Tag/CreatedBy: matches that of the AWSProfile used for SDK calls.</li>
+     *  <li>(4) There is only one NON-Default-VPC (that this AWSProfile has access to, in this region)</li>
+     *  <li>(5) There is only one VPC that is a DEFAULT-VPC</li>
+     *  </ul>
      *  @param _regionStr NotNull string for the AWSRegion (Not the AWSLocation)
      *  @param _VPCID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
      *  @param _MyOrgName NotNull string like 'example.org' or 'MySubsidiary'
@@ -114,8 +119,11 @@ public final class CmdProcessorExisting
                             final String _MyOrgName, final String _MyEnvironment, final String _MyDomainName,
                             final boolean _offline )
                             throws Exception
-    {   final String HDR = CLASSNAME + ": getVPCID(): ";
-        assertTrue( _VPCID != null );
+    {   final String HDR = CLASSNAME + ": getVPCID("+ _regionStr +","+ _VPCID +","+ _MyOrgName +","+ _MyEnvironment +","+ _MyDomainName +","+ _offline +": ";
+        if ( _VPCID == null ) {
+            if ( this.verbose ) System.out.println( HDR +" VPC ID entered by user is '"+ _VPCID +"'" );
+            return null;
+        }
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
 
         //-------------------
@@ -136,9 +144,11 @@ public final class CmdProcessorExisting
         // (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
         if ( _MyOrgName != null && _MyDomainName != null ) {
             for( LinkedHashMap<String,Object> vpc: vpcs ) {
+                if ( this.verbose ) System.out.println( HDR +"checking out VPC: "+ vpc );
                 if ( _MyOrgName.equals(vpc.get(EnvironmentParameters.MYORGNAME)) &&  _MyDomainName.equals(vpc.get(EnvironmentParameters.MYDOMAINNAME)) ) {
                     final String s = (String) vpc.get( org.ASUX.AWSSDK.AWSSDK.VPC_ID );
                     if ( this.verbose ) System.out.println( HDR +"Found a VPC that matched the OrgName and DomainName provided: '"+ s +"' "+ vpc );
+                    System.out.print( "Using 'existing' VPC '"+ s +"'\t" );
                     return s;
                 }
             } // for
@@ -147,9 +157,10 @@ public final class CmdProcessorExisting
         // (2) Tag/Name: VPC-by-ASUX.org-${ASUX::JobSetName}
         for( LinkedHashMap<String,Object> vpc: vpcs ) {
             final String tag_name = (String) vpc.get("Name");
-            if ( tag_name != null && tag_name.startsWith("vpc") ) {
+            if ( tag_name != null && tag_name.startsWith("VPC-by-") ) {
                 final String s = (String) vpc.get( org.ASUX.AWSSDK.AWSSDK.VPC_ID );
                 if ( this.verbose ) System.out.println( HDR +"Found a VPC whose Tag_Name indicates ASUX.org tools were used to create it: '"+ s +"' "+ vpc );
+                System.out.print( "Using 'existing' VPC '"+ s +"'\t" );
                 return s;
             }
         } // for
@@ -171,10 +182,20 @@ public final class CmdProcessorExisting
                 nonDefaultVPCIndex = ix;
             ix ++;
         } // for
-        if ( vpcs.size() <= 2 && bDefaultVPCFound && nonDefaultVPCIndex >= 0 ) {
+        if ( this.verbose ) System.out.println( HDR +"nonDefaultVPCIndex="+ nonDefaultVPCIndex +" bDefaultVPCFound="+ bDefaultVPCFound );
+
+        if ( vpcs.size() <= 2 && bDefaultVPCFound && nonDefaultVPCIndex >= 0 ) { // One Default-VPC and One Non-Default-VPC
             final LinkedHashMap<String,Object> nonDefaultVPC = vpcs.get( nonDefaultVPCIndex );
             final String s = (String) nonDefaultVPC.get( org.ASUX.AWSSDK.AWSSDK.VPC_ID );
             if ( this.verbose ) System.out.println( HDR +"Found a VPC whose Tag_Name indicates ASUX.org tools were used to create it: '"+ s +"' "+ nonDefaultVPC );
+            System.out.print( "Using 'existing' VPC '"+ s +"'\t" );
+            return s;
+        }
+        if ( vpcs.size() <= 1 && nonDefaultVPCIndex >= 0 ) { // The only VPC is a NON-Default VPC.
+            final LinkedHashMap<String,Object> nonDefaultVPC = vpcs.get( nonDefaultVPCIndex );
+            final String s = (String) nonDefaultVPC.get( org.ASUX.AWSSDK.AWSSDK.VPC_ID );
+            if ( this.verbose ) System.out.println( HDR +"Found a VPC whose Tag_Name indicates ASUX.org tools were used to create it: '"+ s +"' "+ nonDefaultVPC );
+            System.out.print( "Using 'existing' VPC '"+ s +"'\t" );
             return s;
         }
         // if none found, fall-thru.. ..
@@ -185,69 +206,11 @@ public final class CmdProcessorExisting
             final LinkedHashMap<String,Object> defaultVPC = vpcs.get(0);
             final String s = (String) defaultVPC.get( org.ASUX.AWSSDK.AWSSDK.VPC_ID );
             if ( this.verbose ) System.out.println( HDR +"Found a VPC whose Tag_Name indicates ASUX.org tools were used to create it: '"+ s +"' "+ defaultVPC );
+            System.out.print( "Using 'existing' VPC '"+ s +"'\t" );
             return s;
         }
 
         throw new Exception( "No VPCs found for _regionStr="+ _regionStr +" _VPCID="+ _VPCID +" =_MyOrgName"+ _MyOrgName +" _MyEnvironment="+ _MyEnvironment +" _MyDomainName="+ _MyDomainName );
-    }
-
-    //==============================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //==============================================================================
-
-
-    /**
-     *  <p>Runs the command to generate CFN-Template YAML via: //${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}</p>
-     *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
-     *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
-     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
-     *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
-     *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
-     */
-    public void genCFNShellScript( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
-    {   final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
-
-        final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
-        final YAMLTools yamltools = new YAMLTools( this.verbose, /* showStats */ false, this.cmdinvoker.dumperopt );
-
-        //-------------------------------------
-        // read the single YAML-configuration-file.. that's describing the entire-stack / fullstack
-        Node output = null;
-        final Node inputNode = yamltools.readYamlFile( "fullStackJob_Filename" );
-        if ( this.verbose ) System.out.println( HDR +" file contents= '" + NodeTools.Node2YAMLString( inputNode ) + ".yaml'");
-
-        //========================================================================
-        final String AWSRegionAsIs = yamltools.readStringFromYAML( inputNode, "AWS,AWSRegion" );
-        final String InitialCapitalStr = Character.toUpperCase( AWSRegionAsIs.charAt(0) ) + AWSRegionAsIs.substring(1).toLowerCase();
-        // Even after 'fixing' the case ---> Title-case, perhaps.. .. end-user put in a AWSLocation (example: Tokyo) instead of AWSRegion (example: ap-northeast-1) ??
-        final String macroStr = "${ASUX::AWS-"+InitialCapitalStr+"}";
-        final String AWSRegionLookupStr   = Macros.evalThoroughly( this.verbose, macroStr, _envParams.getAllPropsRef() );
-        final boolean bMacroEvalFailed =  macroStr.equals( AWSRegionLookupStr ); // if the Macros.evalThoroughly() actually worked..
-        final String AWSRegion = ( bMacroEvalFailed ) ? AWSRegionAsIs : AWSRegionLookupStr; // if the Macros.evalThoroughly() actually worked..
-        if (this.verbose) System.out.println( HDR +"macroStr="+ macroStr +"AWSRegionLookupStr="+ AWSRegionLookupStr +"bMacroEvalFailed="+ bMacroEvalFailed +"AWSRegion="+ AWSRegion );
-
-        globalProps.setProperty( "AWSRegion", AWSRegion );
-        if ( this.verbose ) System.out.println( HDR +"AWSRegion="+ AWSRegion );
-        final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, this.cmdinvoker.getMemoryAndContext().getAllPropsRef() );
-        boot.envParams = _envParams;
-        boot.configure( _cmdLA );   // this will set appropriate instance-variables in envParamsEC2
-
-        //========================================================================
-        // invoking org.ASUX.YAML.NodeImpl.CmdInvoker() is too generic.. especially, when I am clear as daylight that I want to invoke --read YAML-command.
-        // final org.ASUX.YAML.NodeImpl.CmdInvoker nodeImplCmdInvoker = org.ASUX.YAML.NodeImpl.CmdInvoker(
-        //             this.verbose, false,  _cmdInvoker.getMemoryAndContext(), (DumperOptions)_cmdInvoker.getLibraryOptionsObject() );
-        // final Object outputAsIs = nodeImplCmdInvoker.processCommand( cmdlineargs, inputNode );
-// above 3 lines  -versus-  below 2 lines
-        final ReadYamlEntry readcmd = yamltools.getReadcmd(); // new ReadYamlEntry( _cmdLA.verbose, /* showStats */ false, this.cmdinvoker.dumperopt );
-        final String existingVPCID  = yamltools.readStringFromYAML( inputNode, "AWS,VPC,VPCID" );
-
-        // final String MyOrgName      = (existingVPCID == null) ? yamltools.readStringFromYAML( inputNode, "AWS,MyOrgName" )     : getVPCTag( existingVPCID, "MyOrgName", _cmdLA, _envParams );
-        // final String MyEnvironment  = (existingVPCID == null) ? yamltools.readStringFromYAML( inputNode, "AWS,MyEnvironment" ) : getVPCTag( existingVPCID, "MyEnvironment", _cmdLA, _envParams );
-        // final String MyDomainName   = (existingVPCID == null) ? yamltools.readStringFromYAML( inputNode, "AWS,MyDomainName" )  : getVPCTag( existingVPCID, "MyDomainName", _cmdLA, _envParams );
-        // if (this.verbose) System.out.println( HDR + "MyOrgName=" + MyOrgName + " MyEnvironment=" + MyEnvironment + " AWSRegion=" + AWSRegion + " MyDomainName=" + MyDomainName +"." );
-
-        final String VPCIDwMacros   = Macros.evalThoroughly( this.verbose, "${ASUX::VPCID}", _envParams.getAllPropsRef() ); // set by BootCheckAndConfig!  === _envParams.MyVPCStackPrefix + "-VPCID"
     }
 
     //=================================================================================
@@ -255,23 +218,283 @@ public final class CmdProcessorExisting
     //=================================================================================
 
     /**
-     *  <p>generate CFN-YAML snippets for each and every subnet within the subnet specified by the user.</p>
-     *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
-     *  @param _fullStackJob_Filename a NotNull String - file name of the full-stack-job yaml file.
-     *  @param _subnet a NotNull SnakeYaml Node representing the entire YAML-tree rooted at _ONE_ single subnet-LHS/Key.
-     *  @param _PublicOrPrivate whether a public or private subnet EC2 instance
-     *  @param _boot a NotNull instance created within {@link #genCFNShellScript(CmdLineArgs, EnvironmentParameters)}
-     *  @param _yamltools a NotNull instance (created within {@link #genCFNShellScript(CmdLineArgs, EnvironmentParameters)})
-     *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
-     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
-     *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
-     *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
+     *  <p>if '_subnetID' === 'existing', then .. Code will search for Subnets ONLY if ALL the following are met :-</p>
+     *  <ul>
+     *  <li>MUST Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above<br>
+     *      + Tag/PublicOrPrivate must exist, and must have value 'Public' or 'Private'</li>
+     *  <li>Tag/Name: Subnet-(Public|Private)1-org-ASUX-${ASUX::MyEnvironment}-${ASUX::AWSLocation}-${ASUX::JobSetName}<br>
+     *      + Tag/PublicOrPrivate must exist, and must have value 'Public' or 'Private'</li>
+     *  <li>Tag/CreatedBy: matches that of the AWSProfile used for SDK calls.<br>
+     *      + Tag/PublicOrPrivate must exist, and must have value 'Public' or 'Private'</li>
+     *  <li>There is only one (Public|Private) subnet (that this AWSProfile has access to, in this region)</li>
+     *  </ul>
+     *  @param _regionStr NotNull string for the AWSRegion (Not the AWSLocation)
+     *  @param _VPCID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
+     *  @param _subnetID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
+     *  @param _PublicOrPrivate whether a public or private subnet EC2 instance (String value is case-sensitive.  Exact allowed values are: 'Public' 'Private')
+     *  @param _MyOrgName NotNull string like 'example.org' or 'MySubsidiary'
+     *  @param _MyEnvironment NotNull string lile Production, UAT, development, Dev, .. ..
+     *  @param _MyDomainName a NotNull string like 'subdomain.example.com'
+     *  @param _offline 'true' === this entire class and all it's methods will use "cached" output (a.k.a. files under {ASUXCFNHOME}/configu/inputs folder), instead of invoking AWS SDK calls.
+     *  @return a NotNull String (guaranteed), else exception is thrown
+     *  @throws Exception is _subnetID argument is neither  vpc-[0-9a-f]+   or   === 'existing' .. .. or, if No VPC could be found
      */
-    public void genServerCFN( final String _fullStackJob_Filename, final Node _subnet, final String _PublicOrPrivate,
-                                    final BootCheckAndConfig _boot, final YAMLTools _yamltools,
-                                    final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
-    {
+    public String getSubnetID( final String _regionStr, final String _VPCID, final String _subnetID, final String _PublicOrPrivate,
+                            final String _MyOrgName, final String _MyEnvironment, final String _MyDomainName,
+                            final boolean _offline )
+                            throws Exception
+    {   final String HDR = CLASSNAME + ": getSubnetID("+ _regionStr +","+ _VPCID +","+ _subnetID +","+ _PublicOrPrivate +","+ _MyOrgName +","+ _MyEnvironment +","+ _MyDomainName +","+ _offline +": ";
+        if ( _VPCID == null ) {
+            if ( this.verbose ) System.out.println( HDR +" _VPCID provided to this method is '"+ _VPCID +"'" );
+            return null;
+        }
+        // assertTrue( _subnetID != null );
+        assertTrue( _PublicOrPrivate != null );
+        if ( _subnetID == null ) {
+            if ( this.verbose ) System.out.println( HDR +" Subnet ID entered by user is '"+ _subnetID +"'" );
+            return null;
+        }
+
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
+
+        //-------------------
+        // (0) Whether user provided an ACTUAL VPC-ID
+        if (  awssdk.isValidAWSID( _subnetID, "subnet" ) ) {
+            if ( this.verbose ) System.out.println( HDR +"Assuming that "+ _subnetID +" is a valid Subnet-ID. So, no need to lookup anything within the region" );
+            return _subnetID;
+        } else if (  !  "existing".equals(_subnetID) ) {
+            throw new Exception( "Subnet-ID "+ _subnetID + " is invalid.  Its neither ==='existing' nor it is like vpc-"+ org.ASUX.AWSSDK.AWSSDK.AWSID_REGEXP_SUFFIX );
+        }
+        // if we are here, the _subnetID === 'existing'
+        // So.. let's go find a suitable VPC for the lazy user.
+
+        //-------------------
+
+        final ArrayList< LinkedHashMap<String,Object> > subnets = awssdk.getSubnets( _regionStr, _VPCID, _PublicOrPrivate );
+
+        // (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
+        if ( _MyOrgName != null && _MyDomainName != null ) {
+            for( LinkedHashMap<String,Object> subnet: subnets ) {
+                if ( this.verbose ) System.out.println( HDR +"Checking.. Subnet: "+ subnet );
+                if ( _MyOrgName.equals(subnet.get(EnvironmentParameters.MYORGNAME)) &&  _MyDomainName.equals(subnet.get(EnvironmentParameters.MYDOMAINNAME)) ) {
+                    final String id = (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.SUBNET_ID );
+                    if ( this.verbose ) System.out.println( HDR +"Found a Subnet that matched the OrgName and DomainName provided.  ID is '"+ id +"' "+ subnet );
+                    if ( _PublicOrPrivate.equals( (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.KV_PUBLICorPRIVATE ) ) ) {
+                        if ( this.verbose ) System.out.println( HDR +"Found a Subnet! For PublicOrPrivate="+ _PublicOrPrivate +". ID is '"+ id +"'." );
+                        System.out.print( "Using 'existing' Subnet '"+ id +"'\t" );
+                        return id;
+                    }
+                }
+            } // for
+        } // else if NONE found, fall-thru.. ..
+        //-------------------
+        // (2) Tag/Name: VPC-by-ASUX.org-${ASUX::JobSetName}
+        for( LinkedHashMap<String,Object> subnet: subnets ) {
+            final String tag_name = (String) subnet.get("Name");
+            if ( this.verbose ) System.out.println( HDR +"Checking.. Subnet: "+ tag_name +"  "+ subnet );
+            try {
+                final Pattern pattern = Pattern.compile( "^Subnet-(Public|Private)[0-9]+-org-ASUX-"+ _MyEnvironment +"-.+" );
+                final Matcher matcher = pattern.matcher( tag_name );
+                if ( matcher.find() ) {
+                    if ( this.verbose ) System.out.println( HDR +"I found the text "+ matcher.group() +" starting at index "+  matcher.start() +" and ending at index "+ matcher.end() );
+                    final String id = (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.SUBNET_ID );
+                    if ( this.verbose ) System.out.println( HDR +"Found a Subnet that has Tags that ASUX.org tools created.  ID is '"+ id +"'   "+ subnet );
+                    if ( _PublicOrPrivate.equals( (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.KV_PUBLICorPRIVATE ) ) ) {
+                        if ( this.verbose ) System.out.println( HDR +"Found a Subnet! For PublicOrPrivate="+ _PublicOrPrivate +". ID is '"+ id +"'.");
+                        System.out.print( "Using 'existing' Subnet '"+ id +"'\t" );
+                        return id;
+                    }
+                }
+            }catch(PatternSyntaxException e){
+                e.printStackTrace( System.err );
+                throw new Exception("Serious internal error - PatternSyntaxException within "+ HDR );
+            }
+        } // for
+        // else if NONE found, fall-thru.. ..
+        //-------------------
+        // (3) Tag/CreatedBy: matches that of the AWSProfile used for SDK calls.
+
+            // NOTE:  (3) is NOT IMPLEMENTED FOR NOW
+
+        //-------------------
+        // (4) There is only one NON-Default-VPC (that this AWSProfile has access to, in this region)
+        if ( subnets.size() == 1 ) {
+            final LinkedHashMap<String,Object> onlySubnet = subnets.get( 0 );
+            final String id = (String) onlySubnet.get( org.ASUX.AWSSDK.AWSSDK.SUBNET_ID );
+            if ( this.verbose ) System.out.println( HDR +"Found the ONLY existing Subnet (unknown whether Public or Private): '"+ id +"' "+ onlySubnet );
+            System.out.print( "Using 'existing' Subnet '"+ id +"'\t" );
+            return id;
+        }
+
+        throw new Exception( "No Subnets found for _regionStr="+ _regionStr +" _VPCID="+ _VPCID +" _subnetID="+ _subnetID +" _PublicOrPrivate="+ _PublicOrPrivate +" =_MyOrgName"+ _MyOrgName +" _MyEnvironment="+ _MyEnvironment +" _MyDomainName="+ _MyDomainName +" _offline="+ _offline );
     }
+
+    //==============================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //==============================================================================
+
+    /**
+     *  <p>if '_subnetID' === 'existing', then .. Code will search for Subnets ONLY if ALL the following are met :-</p>
+     *  <ul>
+     *  <li>Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above<br>
+     *      + matches the port-type specified</li>
+     *  <li>Tag/Name: SG-SSH-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSRegion}<br>
+     *      + matches the port-type specified</li>
+     *  <li>Tag/CreatedBy: matches that of the AWSProfile used for SDK calls.<br>
+     *      + matches the port-type specified</li>
+     *  <li>The very 1st existing SG<br>
+     *      + matches the port-type specified</li>
+     *  </ul>
+     *  @param _regionStr NotNull string for the AWSRegion (Not the AWSLocation)
+     *  @param _VPCID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
+     *  @param _SGID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
+     *  @param _portOfInterest whether "ssh", "rdp", .. (String value is case-sensitive)
+     *  @param _MyOrgName NotNull string like 'example.org' or 'MySubsidiary'
+     *  @param _MyEnvironment NotNull string lile Production, UAT, development, Dev, .. ..
+     *  @param _MyDomainName a NotNull string like 'subdomain.example.com'
+     *  @param _offline 'true' === this entire class and all it's methods will use "cached" output (a.k.a. files under {ASUXCFNHOME}/configu/inputs folder), instead of invoking AWS SDK calls.
+     *  @return a NotNull String (guaranteed), else exception is thrown
+     *  @throws Exception is _SGID argument is neither  vpc-[0-9a-f]+   or   === 'existing' .. .. or, if No VPC could be found
+     */
+    public String getSGID( final String _regionStr, final String _VPCID,
+                            final String _SGID, final String _portOfInterest,
+                            final String _MyOrgName, final String _MyEnvironment, final String _MyDomainName,
+                            final boolean _offline )
+                            throws Exception
+    {   final String HDR = CLASSNAME + ": getSGID("+ _regionStr +","+ _VPCID +","+ _SGID +","+ _portOfInterest +","+ _MyOrgName +","+ _MyEnvironment +","+ _MyDomainName +","+ _offline +": ";
+        assertTrue( _VPCID != null );
+        assertTrue( _portOfInterest != null );
+        // assertTrue( _SGID != null );
+        if ( _SGID == null ) {
+            if ( this.verbose ) System.out.println( HDR +" SecurityGroup ID entered by user is '"+ _SGID +"'" );
+            return null;
+        }
+
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
+
+        //-------------------
+        // (0) Whether user provided an ACTUAL VPC-ID
+        if (  _SGID != null  &&  awssdk.isValidAWSID( _SGID, "subnet" ) ) {
+            if ( this.verbose ) System.out.println( HDR +"Assuming that "+ _SGID +" is a valid SG-ID. So, no need to lookup anything within the region" );
+            return _SGID;
+        } else if (  !  "existing".equals(_SGID) ) {
+            throw new Exception( "SG-ID "+ _SGID + " is invalid.  Its neither ==='existing' nor it is like vpc-"+ org.ASUX.AWSSDK.AWSSDK.AWSID_REGEXP_SUFFIX );
+        }
+        // if we are here, the _SGID === 'existing'
+        // So.. let's go find a suitable VPC for the lazy user.
+
+        //-------------------
+        final ArrayList< LinkedHashMap<String,Object> > SGs = awssdk.getSGs( _regionStr, _VPCID, _portOfInterest );
+
+        // (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
+        if ( _MyOrgName != null && _MyDomainName != null ) {
+            for( LinkedHashMap<String,Object> sg: SGs ) {
+                if ( this.verbose ) System.out.println( HDR +"Checking.. security-group: "+ sg );
+                if ( _MyOrgName.equals(sg.get(EnvironmentParameters.MYORGNAME)) &&  _MyDomainName.equals(sg.get(EnvironmentParameters.MYDOMAINNAME)) ) {
+                    final String id = (String) sg.get( org.ASUX.AWSSDK.AWSSDK.SG_ID );
+                    if ( this.verbose ) System.out.println( HDR +"Found a SG that matched the OrgName and DomainName provided.  ID is '"+ id +"' "+ sg );
+                    if ( this.verbose ) System.out.println( HDR +"Found a Security-Group - Specifically for Port of Interest ="+ _portOfInterest +". ID is '"+ id +"'." );
+                    System.out.print( "Using 'existing' Security-Group '"+ id +"'\t" );
+                    return id;
+                }
+            } // for
+        } // else if NONE found, fall-thru.. ..
+        //-------------------
+        // (2) Tag/Name: VPC-by-ASUX.org-${ASUX::JobSetName}
+        for( LinkedHashMap<String,Object> sg: SGs ) {
+            final String tag_name = (String) sg.get("Name");
+            if ( this.verbose ) System.out.println( HDR +"Checking.. SecurityGroup: "+ tag_name +"  "+ sg );
+            try {
+                final Pattern pattern = Pattern.compile( "^SG-SSH-"+ _MyOrgName +"-"+ _MyEnvironment +"-"+ _regionStr ); // SG-SSH-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSRegion}
+                final Matcher matcher = pattern.matcher( tag_name );
+                if ( matcher.find() ) {
+                    if ( this.verbose ) System.out.println( HDR +"I found the text "+ matcher.group() +" starting at index "+  matcher.start() +" and ending at index "+ matcher.end() );
+                    final String id = (String) sg.get( org.ASUX.AWSSDK.AWSSDK.SG_ID );
+                    if ( this.verbose ) System.out.println( HDR +"Found a SG that has Tags that ASUX.org tools created.  ID is '"+ id +"'   "+ sg );
+                    if ( this.verbose ) System.out.println( HDR +"Found a Security-Group! For Port of Interest ="+ _portOfInterest +". ID is '"+ id +"'.");
+                    System.out.print( "Using 'existing' Security-Group '"+ id +"'\t" );
+                    return id;
+                }
+            }catch(PatternSyntaxException e){
+                e.printStackTrace( System.err );
+                throw new Exception("Serious internal error - PatternSyntaxException within "+ HDR );
+            }
+        } // for
+        // else if NONE found, fall-thru.. ..
+        //-------------------
+        // (3) Tag/CreatedBy: matches that of the AWSProfile used for SDK calls.
+
+            // NOTE:  (3) is NOT IMPLEMENTED FOR NOW
+
+        //-------------------
+        // (4) There is only one NON-Default-VPC (that this AWSProfile has access to, in this region)
+        if ( SGs.size() >= 1 ) { // !!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!! Unlike getSubnetID() and getVPCID(), this _IF_ condition uses >=
+            final LinkedHashMap<String,Object> anySG = SGs.get( 0 );
+            final String id = (String) anySG.get( org.ASUX.AWSSDK.AWSSDK.SG_ID );
+            if ( this.verbose ) System.out.println( HDR +"Found the 1st existing Security-Group: '"+ id +"' "+ anySG );
+            System.out.print( "Using 'existing' Security-Group '"+ id +"'\t" );
+            return id;
+        }
+
+        throw new Exception( "No Security-Group found for _regionStr="+ _regionStr +" _VPCID="+ _VPCID +" _SGID="+ _SGID +" _portOfInterest="+ _portOfInterest +" =_MyOrgName"+ _MyOrgName +" _MyEnvironment="+ _MyEnvironment +" _MyDomainName="+ _MyDomainName +" _offline="+ _offline );
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    /**
+     *  <p>Lookup the InternetGateways in the region, determine which are Not already associated with a VPC (or, the IGW is already associated with the _existingVPCID).</p>
+     *  @param _regionStr NotNull string for the AWSRegion (Not the AWSLocation)
+     *  @param _existingVPCID a NotNull VPC ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
+     *  @param _offline 'true' === this entire class and all it's methods will use "cached" output (a.k.a. files under {ASUXCFNHOME}/configu/inputs folder), instead of invoking AWS SDK calls.
+     *  @return a Null-able String, unless exception is thrown
+     *  @throws Exception is _SGID argument is neither  vpc-[0-9a-f]+   or   === 'existing' .. .. or, if No VPC could be found
+     */
+    public String getIGWID( final String _regionStr, final String _existingVPCID, final boolean _offline ) throws Exception
+    {   final String HDR = CLASSNAME + ": getIGWID("+ _regionStr +","+ _existingVPCID  +","+ _offline +"): ";
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
+
+        String IGWID = null;   // default, unless - inside the IF-below - we detect an existing IGW that we can re-use.
+        final ArrayList< Tuple<String,String> > existingIGWIDs  = awssdk.getIGWs( _regionStr, false /* _bUnassociated */ );
+        final ArrayList< Tuple<String,String> > existingUnassociatedIGWIDs  = awssdk.getIGWs( _regionStr, true /* _bUnassociated */ );
+
+        if ( _existingVPCID == null ) {
+            if ( existingUnassociatedIGWIDs.size() > 0 ) {
+                IGWID = existingUnassociatedIGWIDs.get(0).key;
+                if (this.verbose) System.out.println( HDR + "Will associate an existing IGW ith ID# " + IGWID +" for this _NEW_ VPC." );
+            }
+        } else {
+            IGWID = awssdk.getIGWForVPC( _regionStr, _existingVPCID );
+            if ( IGWID != null ) {
+                if (this.verbose) System.out.println( HDR + "All good! IGW ith ID# " + IGWID +" is _ALREADY_  _ASSOCIATED_ with this VPC "+ _existingVPCID +"." );
+            } else {
+                // looks like this _EXISTING_ VPC does _NOT_ an IGW attached to it!
+                if ( existingUnassociatedIGWIDs.size() > 0 ) {
+                    IGWID = existingUnassociatedIGWIDs.get(0).key; // taking the 1st available InternetGateway, to associate with this _EXISTING_ VPC is NOT a bad idea.
+                    System.err.println("!!!!!! ATTENTION !!!!!!! Manually __ATTACH__ the InternetGateway with ID# " + IGWID +" to existing VPC "+ _existingVPCID +".!!!!!" );
+                } else {
+                    // System.err.println("!!!!!! ATTENTION !!!!!!! Manually create a __NEW__ InternetGateway & associate it __MANUALLY__ with this existing VPC "+ _existingVPCID +"!!!!!" );
+                    if (this.verbose) System.out.println( HDR + "Will create a _NEW_ IGW in the CFN-template and auto-associate with the _NEW_ VPC." );
+                }
+            }
+        }
+        // So.. after the above code, if IGW ID is null, then .. we'll create a new IGW (within the @${ASUX::AWSCFNHOME}/bin/AWSCFN-fullstack-vpc-create.txt).
+        return IGWID;
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    // public Triple<String,String,String> getMustHaveValues( final YAMLTools yamltools, final boolean _offline )
+    // {   final String HDR = CLASSNAME + ": getMustHaveValues(): ";
+    //     final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
+    // }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
