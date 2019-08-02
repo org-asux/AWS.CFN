@@ -5,7 +5,7 @@ Parameters:
   MyVPCStackPrefix:
     Description: Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
     Type: String
-    Default: org-ASUX-Playground-Tokyo
+    Default: org-ASUX-Playground-Ohio
   MyPrivateSubnet1:
     Description: "What is the EXPORTED OUTPUT NAME of the Appropriate PUBLIC-vs-PRIVATE-SUBNET #1 - from the other VPC CFN-template"
     Type: String
@@ -95,9 +95,9 @@ Resources:
         Ref: MySSHKeyName
       Tags:
       - Key: LOCATION
-        Value: Tokyo
+        Value: Ohio
       - Key: AWSRegion
-        Value: ap-northeast-1
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
@@ -131,7 +131,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Jul 25 14:29:46 EDT 2019
+        Value: Fri Aug 02 18:52:54 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
       - Key: FQDN

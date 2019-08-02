@@ -5,7 +5,7 @@ Parameters:
   MyVPCStackPrefix:
     Description: Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
     Type: String
-    Default: org-ASUX-Playground-Tokyo
+    Default: org-ASUX-Playground-Ohio
   MyVPC:
     Description: "Make sure this VPC-ID-Ref matches EXACTLY with the EXPORT-OUTPUT of another Stack"
     Type: String
@@ -26,13 +26,13 @@ Resources:
         CidrIp: 0.0.0.0/0
       Tags:
       - Key: LOCATION
-        Value: Tokyo
+        Value: Ohio
       - Key: AWSRegion
-        Value: ap-northeast-1
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: SG-SSH-org-ASUX-Playground-Tokyo
+        Value: SG-SSH-org-ASUX-Playground-Ohio
       - Key: APPLNAME
         Value: SSH-into-LinuxEC2Instances
       - Key: CHRGCODE
@@ -62,7 +62,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Jul 25 14:29:41 EDT 2019
+        Value: Fri Aug 02 18:52:52 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
 Outputs:
@@ -70,4 +70,4 @@ Outputs:
     Description: Security Group for enabling SSH access to Linux EC2 instances for the ___UNKNOWN__ application(s) and EC2-instances within the Playground environment
     Value: !Ref 'SGSSHPlayground'
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-2layer-SG-SSH'
+      Name: 'org-ASUX-Playground-Ohio-2layer-SG-SSH'

@@ -5,9 +5,9 @@ Parameters:
   MyVPCStackPrefix:
     Description: Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
     Type: String
-    Default: org-ASUX-Playground-Tokyo
+    Default: org-ASUX-Playground-Ohio
 Resources:
-  orgASUXPlaygroundTokyoVPCID:
+  orgASUXPlaygroundOhioVPCID:
     Type: 'AWS::EC2::VPC'
     Properties:
       CidrBlock: 172.31.0.0/16
@@ -16,7 +16,9 @@ Resources:
       InstanceTenancy: default
       Tags:
       - Key: LOCATION
-        Value: ap-northeast-1
+        Value: Ohio
+      - Key: AWSRegion
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
@@ -47,26 +49,25 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:39 EDT 2019
+        Value: Fri Aug 02 18:52:52 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyInternetGateway:
-    Description: >-
-      REMEMBER: an IGW is associated with entire VPC.  Only NATs are associated with a single public-subnet.
+    Description: REMEMBER, an IGW is associated with entire VPC.  Only NATs are associated with a single public-subnet.
     Type: 'AWS::EC2::InternetGateway'
     Properties:
       Tags:
       - Key: LOCATION
-        Value: ap-northeast-1
+        Value: Ohio
+      - Key: AWSRegion
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: IGW-org-ASUX-Playground-Tokyo
+        Value: IGW-org-ASUX-Playground-Ohio
       - Key: APPLNAME
         Value: NOTRELEVANT_FOR_VPC
       - Key: CHRGCODE
@@ -93,12 +94,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:39 EDT 2019
+        Value: Fri Aug 02 18:52:52 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyVPCGatewayAttachment:
@@ -106,21 +105,23 @@ Resources:
     DependsOn:
     - MyInternetGateway
     Properties:
-      VpcId: !Ref 'orgASUXPlaygroundTokyoVPCID'
+      VpcId: !Ref 'orgASUXPlaygroundOhioVPCID'
       InternetGatewayId: !Ref 'MyInternetGateway'
   MyPublicRouteTable:
     Type: 'AWS::EC2::RouteTable'
     DependsOn:
     - MyVPCGatewayAttachment
     Properties:
-      VpcId: !Ref 'orgASUXPlaygroundTokyoVPCID'
+      VpcId: !Ref 'orgASUXPlaygroundOhioVPCID'
       Tags:
       - Key: LOCATION
-        Value: ap-northeast-1
+        Value: Ohio
+      - Key: AWSRegion
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: PublicRT-org-ASUX-Playground-Tokyo
+        Value: PublicRT-org-ASUX-Playground-Ohio
       - Key: APPLNAME
         Value: NOTRELEVANT_FOR_VPC
       - Key: CHRGCODE
@@ -147,12 +148,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:39 EDT 2019
+        Value: Fri Aug 02 18:52:52 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicRoute:
@@ -167,14 +166,16 @@ Resources:
     DependsOn:
     - MyVPCGatewayAttachment
     Properties:
-      VpcId: !Ref 'orgASUXPlaygroundTokyoVPCID'
+      VpcId: !Ref 'orgASUXPlaygroundOhioVPCID'
       Tags:
       - Key: LOCATION
-        Value: ap-northeast-1
+        Value: Ohio
+      - Key: AWSRegion
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: PrivateRT-AZ1-org-ASUX-Playground-Tokyo
+        Value: PrivateRT-AZ1-org-ASUX-Playground-Ohio
       - Key: APPLNAME
         Value: NOTRELEVANT_FOR_VPC
       - Key: CHRGCODE
@@ -201,12 +202,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:39 EDT 2019
+        Value: Fri Aug 02 18:52:52 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateRouteTableAZ2:
@@ -214,14 +213,16 @@ Resources:
     DependsOn:
     - MyVPCGatewayAttachment
     Properties:
-      VpcId: !Ref 'orgASUXPlaygroundTokyoVPCID'
+      VpcId: !Ref 'orgASUXPlaygroundOhioVPCID'
       Tags:
       - Key: LOCATION
-        Value: ap-northeast-1
+        Value: Ohio
+      - Key: AWSRegion
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: PrivateRT-AZ2-org-ASUX-Playground-Tokyo
+        Value: PrivateRT-AZ2-org-ASUX-Playground-Ohio
       - Key: APPLNAME
         Value: NOTRELEVANT_FOR_VPC
       - Key: CHRGCODE
@@ -248,12 +249,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:39 EDT 2019
+        Value: Fri Aug 02 18:52:52 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateRouteTableAZ3:
@@ -261,14 +260,16 @@ Resources:
     DependsOn:
     - MyVPCGatewayAttachment
     Properties:
-      VpcId: !Ref 'orgASUXPlaygroundTokyoVPCID'
+      VpcId: !Ref 'orgASUXPlaygroundOhioVPCID'
       Tags:
       - Key: LOCATION
-        Value: ap-northeast-1
+        Value: Ohio
+      - Key: AWSRegion
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: PrivateRT-AZ3-org-ASUX-Playground-Tokyo
+        Value: PrivateRT-AZ3-org-ASUX-Playground-Ohio
       - Key: APPLNAME
         Value: NOTRELEVANT_FOR_VPC
       - Key: CHRGCODE
@@ -295,25 +296,25 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:39 EDT 2019
+        Value: Fri Aug 02 18:52:52 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyDefaultNetworkAcl:
     Type: 'AWS::EC2::NetworkAcl'
     Properties:
-      VpcId: !Ref 'orgASUXPlaygroundTokyoVPCID'
+      VpcId: !Ref 'orgASUXPlaygroundOhioVPCID'
       Tags:
       - Key: LOCATION
-        Value: ap-northeast-1
+        Value: Ohio
+      - Key: AWSRegion
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: NACL-Public-org-ASUX-Playground-Tokyo
+        Value: NACL-Public-org-ASUX-Playground-Ohio
       - Key: APPLNAME
         Value: NOTRELEVANT_FOR_VPC
       - Key: CHRGCODE
@@ -340,25 +341,25 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:39 EDT 2019
+        Value: Fri Aug 02 18:52:52 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateNetworkAcl:
     Type: 'AWS::EC2::NetworkAcl'
     Properties:
-      VpcId: !Ref 'orgASUXPlaygroundTokyoVPCID'
+      VpcId: !Ref 'orgASUXPlaygroundOhioVPCID'
       Tags:
       - Key: LOCATION
-        Value: ap-northeast-1
+        Value: Ohio
+      - Key: AWSRegion
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: NACL-Private-org-ASUX-Playground-Tokyo
+        Value: NACL-Private-org-ASUX-Playground-Ohio
       - Key: APPLNAME
         Value: NOTRELEVANT_FOR_VPC
       - Key: CHRGCODE
@@ -385,12 +386,10 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Jul 24 13:11:39 EDT 2019
+        Value: Fri Aug 02 18:52:52 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   InboundHTTPNetworkAclEntryForMyDefaultNetworkAcl:
@@ -588,36 +587,36 @@ Resources:
 Outputs:
   VPCID:
     Description: VPC ID
-    Value: !Ref 'orgASUXPlaygroundTokyoVPCID'
+    Value: !Ref 'orgASUXPlaygroundOhioVPCID'
     Export:
       Name: !Sub '${MyVPCStackPrefix}-VPCID'
   PublicRouteTableID:
     Description: Export ID of the only Public Route Table associated with a VPC + IGW
     Value: !Ref 'MyPublicRouteTable'
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-PublicRouteTableID'
+      Name: 'org-ASUX-Playground-Ohio-PublicRouteTableID'
   DefaultNetworkAcl:
     Description: Export ID of the only Default-Network-ACL associated with a VPC + IGW
     Value: !Ref 'MyDefaultNetworkAcl'
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-DefaultNetworkAclID'
+      Name: 'org-ASUX-Playground-Ohio-DefaultNetworkAclID'
   PrivateNetworkAcl:
     Description: Export ID of the only Private-Network-ACL associated with a VPC's private subnets
     Value: !Ref 'MyPrivateNetworkAcl'
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-PrivateNetworkAclID'
+      Name: 'org-ASUX-Playground-Ohio-PrivateNetworkAclID'
   PrivateRouteTableIDAZ1:
-    Description: Export ID of the only _PRIVATE_ Route Table associated with a VPC's _PRIVATE_ subnet 'org-ASUX-Playground-Tokyo-2layer-Subnet-NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable1-ID'
+    Description: Export ID of the only _PRIVATE_ Route Table associated with a VPC's _PRIVATE_ subnet 'org-ASUX-Playground-Ohio-2layer-Subnet-NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable1-ID'
     Value: !Ref 'MyPrivateRouteTableAZ1'
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ1-ID'
+      Name: 'org-ASUX-Playground-Ohio-PrivateRouteTable-AZ1-ID'
   PrivateRouteTableIDAZ2:
-    Description: Export ID of the only _PRIVATE_ Route Table associated with a VPC's _PRIVATE_ subnet 'org-ASUX-Playground-Tokyo-2layer-Subnet-NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable2-ID'
+    Description: Export ID of the only _PRIVATE_ Route Table associated with a VPC's _PRIVATE_ subnet 'org-ASUX-Playground-Ohio-2layer-Subnet-NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable2-ID'
     Value: !Ref 'MyPrivateRouteTableAZ2'
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ2-ID'
+      Name: 'org-ASUX-Playground-Ohio-PrivateRouteTable-AZ2-ID'
   PrivateRouteTableIDAZ3:
-    Description: Export ID of the only _PRIVATE_ Route Table associated with a VPC's _PRIVATE_ subnet 'org-ASUX-Playground-Tokyo-2layer-Subnet-NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable3-ID'
+    Description: Export ID of the only _PRIVATE_ Route Table associated with a VPC's _PRIVATE_ subnet 'org-ASUX-Playground-Ohio-2layer-Subnet-NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable3-ID'
     Value: !Ref 'MyPrivateRouteTableAZ3'
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ3-ID'
+      Name: 'org-ASUX-Playground-Ohio-PrivateRouteTable-AZ3-ID'

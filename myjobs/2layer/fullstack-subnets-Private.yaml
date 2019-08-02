@@ -5,19 +5,19 @@ Parameters:
   MyVPCStackPrefix:
     Description: The prefix for almost ALL Exports by CFN-templates created by ASUX.org tools.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
     Type: String
-    Default: org-ASUX-Playground-Tokyo
+    Default: org-ASUX-Playground-Ohio
   MyVPCName:
     Description: Export ID of the VPC.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
     Type: String
-    Default: org-ASUX-Playground-Tokyo-VPCID
+    Default: org-ASUX-Playground-Ohio-VPCID
   EC2getsPublicIPByDefault:
     Description: Whether any EC2 instance created within this VPC automatically gets a PUBLIC-IP (accessible via internet)
     Type: String
     Default: 'false'
   MyPublicRouteTable:
-    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-2layer-PublicRouteTableID"
+    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Ohio-2layer-PublicRouteTableID"
     Type: String
-    Default: org-ASUX-Playground-Tokyo-PublicRouteTableID
+    Default: org-ASUX-Playground-Ohio-PublicRouteTableID
 Conditions:
   doesExistSubnet1: !Equals
   - ASUXorg_Tools_Work
@@ -38,18 +38,18 @@ Resources:
         Ref: MyVPCName
       CidrBlock: 172.31.48.0/20
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
-      AvailabilityZone: ap-northeast-1a
+      AvailabilityZone: us-east-2a
       Tags:
       - Name: PublicOrPrivate
         Value: Private
       - Key: LOCATION
-        Value: Tokyo
+        Value: Ohio
       - Key: AWSRegion
-        Value: ap-northeast-1
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: Subnet-Private1-org-ASUX-Playground-Tokyo-2layer
+        Value: Subnet-Private1-org-ASUX-Playground-Ohio-2layer
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -79,7 +79,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Fri Jul 26 15:53:22 EDT 2019
+        Value: Fri Aug 02 18:52:54 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetAZ2:
@@ -91,18 +91,18 @@ Resources:
         Ref: MyVPCName
       CidrBlock: 172.31.64.0/20
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
-      AvailabilityZone: ap-northeast-1c
+      AvailabilityZone: us-east-2b
       Tags:
       - Name: PublicOrPrivate
         Value: Private
       - Key: LOCATION
-        Value: Tokyo
+        Value: Ohio
       - Key: AWSRegion
-        Value: ap-northeast-1
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: Subnet-Private2-org-ASUX-Playground-Tokyo-2layer
+        Value: Subnet-Private2-org-ASUX-Playground-Ohio-2layer
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -132,7 +132,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Fri Jul 26 15:53:22 EDT 2019
+        Value: Fri Aug 02 18:52:54 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetAZ3:
@@ -144,18 +144,18 @@ Resources:
         Ref: MyVPCName
       CidrBlock: 172.31.80.0/20
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
-      AvailabilityZone: ap-northeast-1d
+      AvailabilityZone: us-east-2c
       Tags:
       - Name: PublicOrPrivate
         Value: Private
       - Key: LOCATION
-        Value: Tokyo
+        Value: Ohio
       - Key: AWSRegion
-        Value: ap-northeast-1
+        Value: us-east-2
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: Subnet-Private3-org-ASUX-Playground-Tokyo-2layer
+        Value: Subnet-Private3-org-ASUX-Playground-Ohio-2layer
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -185,7 +185,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Fri Jul 26 15:53:22 EDT 2019
+        Value: Fri Aug 02 18:52:54 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetRouteTableAssociationAZ1:
@@ -193,71 +193,71 @@ Resources:
     Condition: doesExistSubnet1
     Properties:
       SubnetId: !Ref 'MyPrivateSubnetAZ1'
-      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ1-ID'
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Ohio-PrivateRouteTable-AZ1-ID'
   MyPrivateSubnetRouteTableAssociationAZ2:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Condition: doesExistSubnet2
     Properties:
       SubnetId: !Ref 'MyPrivateSubnetAZ2'
-      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ2-ID'
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Ohio-PrivateRouteTable-AZ2-ID'
   MyPrivateSubnetRouteTableAssociationAZ3:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Condition: doesExistSubnet3
     Properties:
       SubnetId: !Ref 'MyPrivateSubnetAZ3'
-      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ3-ID'
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Ohio-PrivateRouteTable-AZ3-ID'
   PrivateRouteToNATGW1:
     Type: 'AWS::EC2::Route'
     Properties:
-      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ1-ID'
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Ohio-PrivateRouteTable-AZ1-ID'
       DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !ImportValue 'org-ASUX-Playground-Tokyo-NATGW-1-ID'
+      NatGatewayId: !ImportValue 'org-ASUX-Playground-Ohio-NATGW-1-ID'
   PrivateRouteToNATGW2:
     Type: 'AWS::EC2::Route'
     Properties:
-      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ2-ID'
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Ohio-PrivateRouteTable-AZ2-ID'
       DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !ImportValue 'org-ASUX-Playground-Tokyo-NATGW-2-ID'
+      NatGatewayId: !ImportValue 'org-ASUX-Playground-Ohio-NATGW-2-ID'
   PrivateRouteToNATGW3:
     Type: 'AWS::EC2::Route'
     Properties:
-      RouteTableId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateRouteTable-AZ3-ID'
+      RouteTableId: !ImportValue 'org-ASUX-Playground-Ohio-PrivateRouteTable-AZ3-ID'
       DestinationCidrBlock: 0.0.0.0/0
-      NatGatewayId: !ImportValue 'org-ASUX-Playground-Tokyo-NATGW-3-ID'
+      NatGatewayId: !ImportValue 'org-ASUX-Playground-Ohio-NATGW-3-ID'
   MyPrivateSubnetNetworkAclAssociation1:
     Type: 'AWS::EC2::SubnetNetworkAclAssociation'
     Condition: doesExistSubnet1
     Properties:
       SubnetId: !Ref 'MyPrivateSubnetAZ1'
-      NetworkAclId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateNetworkAclID'
+      NetworkAclId: !ImportValue 'org-ASUX-Playground-Ohio-PrivateNetworkAclID'
   MyPrivateSubnetNetworkAclAssociation2:
     Type: 'AWS::EC2::SubnetNetworkAclAssociation'
     Condition: doesExistSubnet2
     Properties:
       SubnetId: !Ref 'MyPrivateSubnetAZ2'
-      NetworkAclId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateNetworkAclID'
+      NetworkAclId: !ImportValue 'org-ASUX-Playground-Ohio-PrivateNetworkAclID'
   MyPrivateSubnetNetworkAclAssociation3:
     Type: 'AWS::EC2::SubnetNetworkAclAssociation'
     Condition: doesExistSubnet3
     Properties:
       SubnetId: !Ref 'MyPrivateSubnetAZ3'
-      NetworkAclId: !ImportValue 'org-ASUX-Playground-Tokyo-PrivateNetworkAclID'
+      NetworkAclId: !ImportValue 'org-ASUX-Playground-Ohio-PrivateNetworkAclID'
 Outputs:
   DefaultPrivateSubnet1:
     Description: The subnet no.1's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPrivateSubnetAZ1'
     Condition: doesExistSubnet1
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-2layer-Subnet-Private1-ID'
+      Name: 'org-ASUX-Playground-Ohio-2layer-Subnet-Private1-ID'
   DefaultPrivateSubnet2:
     Description: The subnet no.2's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPrivateSubnetAZ2'
     Condition: doesExistSubnet2
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-2layer-Subnet-Private2-ID'
+      Name: 'org-ASUX-Playground-Ohio-2layer-Subnet-Private2-ID'
   DefaultPrivateSubnet3:
     Description: The subnet no.3's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPrivateSubnetAZ3'
     Condition: doesExistSubnet3
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-2layer-Subnet-Private3-ID'
+      Name: 'org-ASUX-Playground-Ohio-2layer-Subnet-Private3-ID'
