@@ -208,8 +208,9 @@ public final class BootCheckAndConfig {
                             globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.get_awscfnhome()  +"/"+ this.envParams.getJOB_DEFAULTS() ) );
                             // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _cmdLA.jobSetName +"/"+ EnvironmentParameters.JOBSET_MASTER ) );
                             // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _cmdLA.jobSetName +"/jobset-" + this.envParams.cfnJobTYPEString + ".properties" ) );
-                            loadPropsIntoGlobal( "@"+ _cmdLA.jobSetName +"/"+ this.envParams.getJOBSET_MASTER(),                              globalProps, this.envParams.bInRecursionByFullStack );
-                            loadPropsIntoGlobal( "@"+ _cmdLA.jobSetName +"/jobset-" + this.envParams.getCfnJobTYPEString() + ".properties",   globalProps, this.envParams.bInRecursionByFullStack );
+                            final boolean isItOkIfFileIsMissing = this.envParams.bInRecursionByFullStack;
+                            loadPropsIntoGlobal( "@"+ _cmdLA.jobSetName +"/"+ this.envParams.getJOBSET_MASTER(),                              globalProps, isItOkIfFileIsMissing );
+                            loadPropsIntoGlobal( "@"+ _cmdLA.jobSetName +"/jobset-" + this.envParams.getCfnJobTYPEString() + ".properties",   globalProps, isItOkIfFileIsMissing );
                             break;
             case FULLSTACK: // get defaults from ~/.ASUX.org/.
                             // Note: We have 'fileCheck()' invocations for these 3 Tags-props-files in this.check() method.
@@ -221,6 +222,7 @@ public final class BootCheckAndConfig {
                             // loadPropsIntoGlobal( "@"+ EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ EnvironmentParameters.TAGS_ALONE_MASTER,       Tags, true /* _bMissingIsOk */ );
                             // loadPropsIntoGlobal( "@"+ EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ EnvironmentParameters.TAGS_DEPT_MASTER,        Tags, true /* _bMissingIsOk */ );
                             // loadPropsIntoGlobal( "@"+ EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ EnvironmentParameters.TAGS_ENTERPRISE_MASTER,  Tags, true /* _bMissingIsOk */ );
+                            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.get_awscfnhome()  +"/"+ this.envParams.getJOB_DEFAULTS() ) );
                             break;
             case UNDEFINED:
             default:        final String es = " Unimplemented command: " + _cmdLA.cmdName;
