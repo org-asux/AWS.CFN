@@ -33,10 +33,12 @@
 package org.ASUX.AWS.CFN;
 
 import org.ASUX.common.Macros;
+import org.ASUX.common.Inet;
 import org.ASUX.common.Tuple;
 import org.ASUX.yaml.YAML_Libraries;
 
 import org.ASUX.YAML.NodeImpl.ReadYamlEntry;
+import org.ASUX.AWSSDK.AWSSDK;
 import org.ASUX.YAML.NodeImpl.BatchCmdProcessor;
 import org.ASUX.YAML.NodeImpl.NodeTools;
 import org.ASUX.YAML.NodeImpl.GenericYAMLScanner;
@@ -104,12 +106,13 @@ public final class CmdProcessorFullStack
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
     public String genCFNShellScript( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
-    {
-        final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
+    {   final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
 
         final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
         final YAMLTools yamltools = new YAMLTools( this.verbose, /* showStats */ false, this.cmdinvoker.dumperopt );
+        final UserInput userInput = new UserInput( this.verbose, yamltools );
+        final CmdProcessorExisting existingInfrastructure = new CmdProcessorExisting( this.cmdinvoker );
 
         final File outputFldr = new File( _cmdLA.jobSetName );
         outputFldr.mkdir(); // create a folder in '.' called '{JobSetName}'
@@ -157,6 +160,7 @@ public final class CmdProcessorFullStack
 
         //========================================================================
         final String AWSRegionAsIs = yamltools.readStringFromYAML( inputNode, "AWS,AWSRegion" );
+        assertTrue( AWSRegionAsIs != null );
         final String InitialCapitalStr = Character.toUpperCase( AWSRegionAsIs.charAt(0) ) + AWSRegionAsIs.substring(1).toLowerCase();
         // Even after 'fixing' the case ---> Title-case, perhaps.. .. end-user put in a AWSLocation (example: Tokyo) instead of AWSRegion (example: ap-northeast-1) ??
         final String macroStr = "${ASUX::AWS-"+InitialCapitalStr+"}";
@@ -178,57 +182,49 @@ public final class CmdProcessorFullStack
         // final Object outputAsIs = nodeImplCmdInvoker.processCommand( cmdlineargs, inputNode );
 // above 3 lines  -versus-  below 2 lines
         final ReadYamlEntry readcmd = yamltools.getReadcmd(); // new ReadYamlEntry( _cmdLA.verbose, /* showStats */ false, this.cmdinvoker.dumperopt );
-        final String existingVPCID  = yamltools.readStringFromYAML( inputNode, "AWS,VPC,VPCID" );
 
-        globalProps.setProperty( "MyIGW", "" );                 // default, unless - inside the IF-below - we detect an existing IGW that we can re-use.
-        globalProps.setProperty( "IGWExistingOrNew", "new" );   // default, unless - inside the IF-below - we detect an existing IGW that we can re-use.
-        final ArrayList< Tuple<String,String> > existingIGWIDs  = awssdk.getIGWs( AWSRegion );
+        final String existingVPCID_asEnteredByUser  = yamltools.readStringFromYAML( inputNode, "AWS,VPC,VPCID" );
+        // the above value can be either the word 'existing' .. or, something like 'vpc-0123456789';  We need to handle both variations (so, note the existingInfrastructure.getVPCID() call below)
+        final String myOrgName_asEnteredByUser      = yamltools.readStringFromYAML( inputNode, "AWS,MyOrgName" );
+        final String myEnvironment_asEnteredByUser  = yamltools.readStringFromYAML( inputNode, "AWS,MyEnvironment" );
+        final String myDomainName_asEnteredByUser   = yamltools.readStringFromYAML( inputNode, "AWS,MyDomainName" );
 
-        if ( existingVPCID == null ) {
-            if ( existingIGWIDs.size() > 0 ) {
-                final String IGWID = existingIGWIDs.get(0).key;
-                globalProps.setProperty( "MyIGW", IGWID );
-                globalProps.setProperty( "IGWExistingOrNew", "existing" );
-                if (this.verbose) System.out.println( HDR + "Will associate an existing IGW ith ID# " + IGWID +" for this _NEW_ VPC." );
-            }
-        } else {
-            final String IGWID = awssdk.getIGWForVPC( AWSRegion, existingVPCID );
-            if ( IGWID != null ) {
-                globalProps.setProperty( "MyIGW", IGWID );
-                globalProps.setProperty( "IGWExistingOrNew", "existing" );
-                if (this.verbose) System.out.println( HDR + "All good! IGW ith ID# " + IGWID +" is _ALREADY_  _ASSOCIATED_ with this VPC "+ existingVPCID +"." );
-            } else {
-                // looks like this _EXISTING_ VPC does _NOT_ an IGW attached to it!
-                if ( existingIGWIDs.size() > 0 ) {
-                    final String anotherIGWID = existingIGWIDs.get(0).key; // taking the 1st available InternetGateway, to associate with this _EXISTING_ VPC is NOT a bad idea.
-                    globalProps.setProperty( "MyIGW", anotherIGWID );
-                    globalProps.setProperty( "IGWExistingOrNew", "existing" );
-                    if (this.verbose) System.out.println( HDR + "All good! " );
-                    System.err.println("!!!!!! ATTENTION !!!!!!! Manually __ATTACH__ the InternetGateway with ID# " + anotherIGWID +" to existing VPC "+ existingVPCID +".!!!!!" );
-                } else {
-                    System.err.println("!!!!!! ATTENTION !!!!!!! Manually create a __NEW__ InternetGateway & associate it __MANUALLY__ with this existing VPC "+ existingVPCID +"!!!!!" );
-                }
-            }
-        }
-        // if IGW ID is null, we'll create a new IGW (within the @${ASUX::AWSCFNHOME}/bin/AWSCFN-fullstack-vpc-create.txt).
+        final String existingVPCID = existingInfrastructure.getVPCID( AWSRegion, existingVPCID_asEnteredByUser, myOrgName_asEnteredByUser, myEnvironment_asEnteredByUser, myDomainName_asEnteredByUser, _cmdLA.isOffline() );
+        // Sanity-Checks the VPCID provided by user.. or, translates the word 'existing' into an actual usable VPCID.
 
-        final String MyOrgName      = (existingVPCID == null) ? yamltools.readStringFromYAML( inputNode, "AWS,MyOrgName" )     : getVPCTag( existingVPCID, "MyOrgName", _cmdLA, _envParams );
-        final String MyEnvironment  = (existingVPCID == null) ? yamltools.readStringFromYAML( inputNode, "AWS,MyEnvironment" ) : getVPCTag( existingVPCID, "MyEnvironment", _cmdLA, _envParams );
-        final String MyDomainName   = (existingVPCID == null) ? yamltools.readStringFromYAML( inputNode, "AWS,MyDomainName" )  : getVPCTag( existingVPCID, "MyDomainName", _cmdLA, _envParams );
+        //------------------------
+        // If user did NOT provide key inputs like MyOrgName and MyDomainName.. then see if user provided a VPC created by ASUX.org tools.
+        final String MyOrgName      = (existingVPCID == null) ? myOrgName_asEnteredByUser     : getVPCTag( existingVPCID, "MyOrgName", _cmdLA, _envParams );
+        if ( myOrgName_asEnteredByUser != null &&  !  myOrgName_asEnteredByUser.equals( MyOrgName ) )
+            System.err.println( "Hey! The value of '"+ myOrgName_asEnteredByUser +"' for MyOrgName does _NOT_ match the corresponding-Tag for the VPC ID # "+ existingVPCID );
+
+        final String MyEnvironment  = (existingVPCID == null) ? myEnvironment_asEnteredByUser : getVPCTag( existingVPCID, "MyEnvironment", _cmdLA, _envParams );
+        if ( myEnvironment_asEnteredByUser != null &&  !  myEnvironment_asEnteredByUser.equals( MyEnvironment ) )
+            System.err.println( "Hey! The value of '"+ myEnvironment_asEnteredByUser +"' for MyEnvironment does _NOT_ match the corresponding-Tag for the VPC ID # "+ existingVPCID );
+
+        final String MyDomainName   = (existingVPCID == null) ? myDomainName_asEnteredByUser  : getVPCTag( existingVPCID, "MyDomainName", _cmdLA, _envParams );
+        if ( myDomainName_asEnteredByUser != null &&  !  myDomainName_asEnteredByUser.equals( MyDomainName ) )
+            System.err.println( "Hey! The value of '"+ myDomainName_asEnteredByUser +"' for MyDomainName does _NOT_ match the corresponding-Tag for the VPC ID # "+ existingVPCID );
+
+        assertTrue( MyOrgName != null );
+        assertTrue( MyEnvironment != null );
+        assertTrue( MyDomainName != null );
         globalProps.setProperty( "MyOrgName", MyOrgName );
         globalProps.setProperty( "MyEnvironment", MyEnvironment );
         globalProps.setProperty( EnvironmentParameters.MYDOMAINNAME, MyDomainName );
+
         // !!!!!!!!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!!!!!
         // It is _VERY_ important that these 4 above GLOBAL properties be set - BEFORE creating 'boot' object, and invoking boot.configure()
         if (this.verbose) System.out.println( HDR + "MyOrgName=" + MyOrgName + " MyEnvironment=" + MyEnvironment + " AWSRegion=" + AWSRegion + " MyDomainName=" + MyDomainName +"." );
 
-        final String VPCIDwMacros   = Macros.evalThoroughly( this.verbose, "${ASUX::VPCID}", _envParams.getAllPropsRef() ); // set by BootCheckAndConfig!  === _envParams.MyVPCStackPrefix + "-VPCID"
-        // !!!! ATTENTION !!!! I'm totally going to PREVENT end-user from specifying MyVPCName
-        final String VPCID = Macros.evalThoroughly( this.verbose, VPCIDwMacros, _envParams.getAllPropsRef() );
-        // !!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!            Don't ask.  I'm forced to run Macros.evalThoroughly _TWICE_ in succession, to get it to eval completely.
-        globalProps.setProperty( "MyVPCName", VPCID.replaceAll("-", "") ); // Why?  CreateStack format error: Resource name org_ASUX_Playground_Tokyo_VPCID is non alphanumeric
-        if ( this.verbose ) System.out.println( HDR +"VPCID="+ VPCID );
+        //------------------------
+        // A good chance that.. we can re-use an existing IGW.  So, let's check with existing Infrastructure in the region.
+        final String IGWID = existingInfrastructure.getIGWID( AWSRegion, existingVPCID, _cmdLA.isOffline() );
+        globalProps.setProperty( "MyIGW", ( IGWID == null ) ? "" : IGWID );                 // default, unless - inside the IF-below - we detect an existing IGW that we can re-use.
+        globalProps.setProperty( "IGWExistingOrNew", ( IGWID == null ) ? "new" : "existing" );
+        // So.. after the above code, if IGW ID is null, then .. we'll create a new IGW (within the @${ASUX::AWSCFNHOME}/bin/AWSCFN-fullstack-vpc-create.txt).
 
+        //------------------------
         // redo
         boot.envParams = _envParams;
         boot.configure( _cmdLA );   // this will set appropriate instance-variables in envParamsEC2
@@ -250,6 +246,13 @@ public final class CmdProcessorFullStack
             // envParamsVPC.setFundamentalGlobalProps( .. .. );
             // envParamsVPC.setFundamentalPrefixes( .. .. );
 
+            final String VPCNameWithMacros   = Macros.evalThoroughly( this.verbose, "${ASUX::VPCID}", _envParams.getAllPropsRef() ); // set by BootCheckAndConfig  === _envParams.MyVPCStackPrefix + "-VPCID"
+            // !!!! ATTENTION !!!! I'm totally going to PREVENT end-user from specifying MyVPCName
+            final String VPCName = Macros.evalThoroughly( this.verbose, VPCNameWithMacros, _envParams.getAllPropsRef() );
+            // !!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!            Don't ask.  I'm forced to run Macros.evalThoroughly _TWICE_ in succession, to get it to eval completely.
+            globalProps.setProperty( "MyVPCName", VPCName.replaceAll("-", "") ); // Why?  CreateStack format error: Resource name org_ASUX_Playground_Tokyo_VPCID is non alphanumeric
+            if ( this.verbose ) System.out.println( HDR +"VPCName(${ASUX::VPCID})="+ VPCName );
+
             // 1st generate the YAML.
             this.cmdProcessor.genYAML( claVPC, envParamsVPC.getCfnJobTYPEString(), envParamsVPC );          // Note: the 2nd argument automtically has "fullstack-" prefix in it.
             // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
@@ -259,6 +262,9 @@ public final class CmdProcessorFullStack
         //----------------- SG --------------------
         if ( existingVPCID == null ) {
 // ASSUMPTION: SINCE VPC-ID is specified, (too early to tell if SUBNET-ID is ALSO specified), .. so, SG __BETTER__ be specified.
+// ??????? For each SG in jobSetName.yaml ...
+// ??????? For each SG in jobSetName.yaml ...
+// ??????? For each SG in jobSetName.yaml ...
 // ??????? For each SG in jobSetName.yaml ...
             final EnvironmentParameters envParamsSG = EnvironmentParameters.deepClone( _envParams );
             envParamsSG.bInRecursionByFullStack = true;
@@ -270,9 +276,14 @@ public final class CmdProcessorFullStack
             this.cmdProcessor.genYAML( claSGSSH, envParamsSG.getCfnJobTYPEString(), envParamsSG );           // Note: the 2nd argument automtically has "fullstack-" prefix in it.
             // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
             this.cmdProcessor.genCFNShellScript( claSGSSH, envParamsSG );
-        } else {
-            final String existingSSHSecurityGroup = yamltools.readStringFromYAML( inputNode, "AWS,VPC,SG-ssh,SG-ssh-ID" );
-            globalProps.setProperty( "ExistingSSHSecurityGroup", existingSSHSecurityGroup ); // Why?  We've a YAML Entry in ec2-cfn YAML as:- SubnetId: My${ASUX::ExistingSubnetID}
+        } else { // VPC exists.  VPC-ID is known.
+            final String existingSecurityGroup_asEnteredByUser = yamltools.readStringFromYAML( inputNode, "AWS,VPC,SG,SG-ID" );
+            final String SGPortType_asEnteredByUser = yamltools.readStringFromYAML( inputNode, "AWS,VPC,SG,sg-type" );
+            // the above value can be either the word 'existing' .. or, something like 'sg-0123456789';  We need to handle both variations (so, note the existingInfrastructure.getSGID() call in the next line)
+            final String existingSecurityGroup = existingInfrastructure.getSGID(
+                                        AWSRegion, existingVPCID, existingSecurityGroup_asEnteredByUser, SGPortType_asEnteredByUser,
+                                        MyOrgName, MyEnvironment, MyDomainName, _cmdLA.isOffline() );
+            globalProps.setProperty( "ExistingSSHSecurityGroup", existingSecurityGroup ); // Why?  We've a YAML Entry in ec2-cfn YAML as:- SubnetId: My${ASUX::ExistingSubnetID}
         }
 
         //--------------- subnets -------------------
@@ -285,43 +296,28 @@ public final class CmdProcessorFullStack
         final java.util.List<Node> subnetseqs = subnetSeqN.getValue();
         if ( subnetseqs.size() < 1 )
             throw new Exception( "Under 'subnet', a child-element labelled(LHS) 'SERVERS' must be provided" );
-        for ( Node subnet: subnetseqs ) {// loop over EACH subnet
 
-            final String existingSubnetID  = yamltools.readStringFromYAML( subnet, "SubnetID" );
+        for ( Node subnet: subnetseqs ) {// loop over EACH subnet
             if ( this.verbose ) System.out.println( HDR +" subnet YAML-tree =\n" + NodeTools.Node2YAMLString( subnet ) +"\n" );
 
-            //---------------------------------
-            String PublicOrPrivate = "public"; // by default - in case of existing Subnet ID
-            if ( existingSubnetID == null ) {
-                String strPublicSubnet    = "no";
-                String strPrivateSubnet   = "no";
-                try {
-                    strPublicSubnet    = yamltools.readStringFromYAML( subnet, "public" );
-                } catch( java.lang.AssertionError ae ) { /* do Nothing */ }
-                try {
-                    strPrivateSubnet   = yamltools.readStringFromYAML( subnet, "private" );
-                } catch( java.lang.AssertionError ae ) { /* do Nothing */ }
-                final boolean isPublicSubnet    = ( strPublicSubnet != null && strPublicSubnet.toLowerCase().equals("yes") );
-                final boolean isPrivateSubnet   = ( strPrivateSubnet != null && strPrivateSubnet.toLowerCase().equals("yes") );
+            final String PublicOrPrivate = userInput.getPublicOrPrivate( subnet );
+            globalProps.setProperty( "PublicOrPrivate", PublicOrPrivate );  // Override what's set in BootCheckAndConfig
 
-                //-------------------------------------
-                if ( isPublicSubnet && ! isPrivateSubnet )
-                    PublicOrPrivate = "Public"; // unless I am 100% sure, I'm _NOT_ making the subnet _PUBLIC_.
-                else
-                    PublicOrPrivate = "Private";
-                globalProps.setProperty( "PublicOrPrivate", PublicOrPrivate );  // Override what's set in BootCheckAndConfig
-        
+            final String existingSubnetID_asEnteredByUser  = yamltools.readStringFromYAML( subnet, "SubnetID" );
+            // the above value can be either the word 'existing' .. or, something like 'subnet-0123456789';  We need to handle both variations (so, note the existingInfrastructure.getSubnetID() call in the next line)
+            final String existingSubnetID = existingInfrastructure.getSubnetID(
+                                    AWSRegion, existingVPCID, existingSubnetID_asEnteredByUser, PublicOrPrivate,
+                                    MyOrgName, MyEnvironment, MyDomainName, _cmdLA.isOffline() );
+
+            //---------------------------------
+            if ( existingSubnetID == null ) {
                 final String VPCCIDRBlock = globalProps.getProperty( EnvironmentParameters.VPCCIDRBLOCK ); // "172.31.0.0/20"
-                final String CIDRBLOCK_Byte3_DeltaString = globalProps.getProperty( EnvironmentParameters.CIDRBLOCK_BYTE3_DELTA ); // example: 16
+                final String CIDRBLOCK_Byte3_DeltaString = globalProps.getProperty( Inet.CIDRBLOCK_BYTE3_DELTA ); // example: 16
                 final int CIDRBLOCK_Byte3_Delta = Integer.parseInt( CIDRBLOCK_Byte3_DeltaString );
-                // globalProps.setProperty( "CidrBlockAZ1", "172.31.0.0/20" );
-                // globalProps.setProperty( "CidrBlockAZ2", "172.31.16.0/20" );
-                // globalProps.setProperty( "CidrBlockAZ3", "172.31.32.0/20" );
-                // globalProps.setProperty( "CidrBlockAZ4", "172.31.48.0/20" );
                 int subix = 1;
                 final Inet inet = new Inet( this.verbose );
                 for ( String subnetMask: inet.genSubnetRangeWithMasks( VPCCIDRBlock, numOfAZs, CIDRBLOCK_Byte3_Delta) ) {
-                    globalProps.setProperty( "CidrBlockAZ" + subix, subnetMask );
+                    globalProps.setProperty( "CidrBlockAZ" + subix, subnetMask );    // globalProps.setProperty( "CidrBlockAZ1", "172.31.0.0/20" )
                     subix ++;
                 }
 
@@ -365,7 +361,7 @@ public final class CmdProcessorFullStack
      *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
      *  @param _fullStackJob_Filename a NotNull String - file name of the full-stack-job yaml file.
      *  @param _subnet a NotNull SnakeYaml Node representing the entire YAML-tree rooted at _ONE_ single subnet-LHS/Key.
-     *  @param _PublicOrPrivate whether a public or private subnet EC2 instance
+     *  @param _PublicOrPrivate whether a public or private subnet EC2 instance (String value is case-sensitive.  Exact allowed values are: 'Public' 'Private')
      *  @param _boot a NotNull instance created within {@link #genCFNShellScript(CmdLineArgs, EnvironmentParameters)}
      *  @param _yamltools a NotNull instance (created within {@link #genCFNShellScript(CmdLineArgs, EnvironmentParameters)})
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
@@ -589,21 +585,24 @@ public final class CmdProcessorFullStack
 
         if ( this.previouslyFoundExistingVPCID.equals( _existingVPCID) && (this.previouslyFoundMap.size() > 0)  )  {
             // do nothing.
+            if (this.verbose) System.out.println( HDR + "Speeding VPC-details lookup using CACHED-information for _existingVPCID='" + _existingVPCID +"'\n"+ this.previouslyFoundMap );
         } else {
             final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
             final ArrayList< LinkedHashMap<String,Object> > arrOfMaps = awssdk.getVPCs( _envParams.getAWSRegion(), /* _onlyNonDefaultVPC */ false );
             for ( LinkedHashMap<String,Object> map: arrOfMaps ) {
-                final String anExistingVPCID = (String) map.get( "ID" );
-                if (this.verbose) System.out.println( HDR + "Going to search Existing VPC with ID='" + anExistingVPCID +"' //\t"+ map );
+                final String anExistingVPCID = (String) map.get( AWSSDK.VPC_ID );
+                if (this.verbose) System.out.println( HDR + "Going to search Existing VPC with ID='" + anExistingVPCID +"'\n"+ map );
                 if ( _existingVPCID.equals( anExistingVPCID ) ) {
+                    if (this.verbose) System.out.println( HDR + "Found my VPC ID='" + anExistingVPCID +"'" );
                     this.previouslyFoundExistingVPCID = anExistingVPCID;
                     this.previouslyFoundMap = map;
                     break;
                 } // inner if
             } // for
-        } // eif-else
+        } // if-else
+
         final Object o = this.previouslyFoundMap.get( _tagKey );
-        if (this.verbose) System.out.println( HDR + "Lookup of Tag's value ='" + o +"'" );
+        if (this.verbose) System.out.println( HDR + "Lookup of ["+ _tagKey +"] Tag's value ='" + o +"'" );
         return (String) o;
     }
 
