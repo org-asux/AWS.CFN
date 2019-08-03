@@ -40,7 +40,7 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: ap-southeast-2a
       Tags:
-      - Name: PublicOrPrivate
+      - Key: PublicOrPrivate
         Value: Private
       - Key: LOCATION
         Value: Sydney
@@ -79,7 +79,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Fri Aug 02 18:44:52 EDT 2019
+        Value: Sat Aug 03 14:45:34 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetAZ2:
@@ -93,7 +93,7 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: ap-southeast-2b
       Tags:
-      - Name: PublicOrPrivate
+      - Key: PublicOrPrivate
         Value: Private
       - Key: LOCATION
         Value: Sydney
@@ -132,7 +132,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Fri Aug 02 18:44:52 EDT 2019
+        Value: Sat Aug 03 14:45:34 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetAZ3:
@@ -146,7 +146,7 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: ap-southeast-2c
       Tags:
-      - Name: PublicOrPrivate
+      - Key: PublicOrPrivate
         Value: Private
       - Key: LOCATION
         Value: Sydney
@@ -185,7 +185,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Fri Aug 02 18:44:52 EDT 2019
+        Value: Sat Aug 03 14:45:34 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetRouteTableAssociationAZ1:
