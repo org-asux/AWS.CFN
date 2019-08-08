@@ -126,11 +126,11 @@ public final class CmdProcessorEC2
      *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
      *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
-     *  @return a String (containing {ASUX::_} macros) that should be used to executed using BATCH-YAML-Processor within {@link CmdProcessor#genCFNShellScript}
+     *  @return a NotNull instance (containing {ASUX::_} macros that MUST be evaluated ASAP by the invoking method) 
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
-    public String genCFNShellScript( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
+    public CreateStackCmd genCFNShellScript( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
     {
         final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
 
@@ -140,7 +140,7 @@ public final class CmdProcessorEC2
 
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
 
-        String preStr = null;
+        // String preStr = null;
         // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, _awscfnhome +"/config/inputs/AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _envParams.getAllPropsRef() );
         // final Properties AMIIDCacheProps = org.ASUX.common.Utils.parseProperties( "@"+ AMIIDCachePropsFileName );
         // this.getAllPropsRef().put( "AMIIDCache", AWSRegionLocations );
@@ -176,16 +176,24 @@ public final class CmdProcessorEC2
         // globalProps.setProperty( "MySSHKeyName", MySSHKeyName );
         if (this.verbose) System.out.println( HDR + "DefaultSubnet1=" + DefaultSubnet1 + " MySSHSecurityGroup=" + MySSHSecurityGroup + " MySSHKeyName=" + MySSHKeyName );
 
-        final String params =
-                    " ParameterKey=My${ASUX::PublicOrPrivate}Subnet1,ParameterValue="+ DefaultSubnet1 +
-                    " ParameterKey=MySSHSecurityGroup,ParameterValue="+ MySSHSecurityGroup +
-                    " ParameterKey=MyIamInstanceProfiles,ParameterValue=${ASUX::"+ EnvironmentParameters.EC2IAMROLES +"}" +
-                    " ParameterKey=AWSAMIID,ParameterValue=${ASUX::AWSAMIID} "+
-                    " ParameterKey=EC2InstanceType,ParameterValue=${ASUX::EC2InstanceType} " +
-                    " ParameterKey=MySSHKeyName,ParameterValue=" + MySSHKeyName;
+        final CreateStackCmd stackCmd = new CreateStackCmd( this.verbose, _envParams.getAWSRegion(), outpfile );
+        stackCmd.setStackName( "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::"+EnvironmentParameters.MYEC2INSTANCENAME+"}"+ _cmdLA.itemNumber );
+        stackCmd.addParameter( "My${ASUX::PublicOrPrivate}Subnet1", DefaultSubnet1 );
+        stackCmd.addParameter( "MySSHSecurityGroup", MySSHSecurityGroup );
+        stackCmd.addParameter( "MyIamInstanceProfiles", EnvironmentParameters.EC2IAMROLES );
+        stackCmd.addParameter( "AWSAMIID", "${ASUX::AWSAMIID}" );
+        stackCmd.addParameter( "EC2InstanceType", "${ASUX::EC2InstanceType}" );
+        stackCmd.addParameter( "MySSHKeyName", MySSHKeyName );
+        // final String params =
+        //             " ParameterKey=My${ASUX::PublicOrPrivate}Subnet1,ParameterValue="+ DefaultSubnet1 +
+        //             " ParameterKey=MySSHSecurityGroup,ParameterValue="+ MySSHSecurityGroup +
+        //             " ParameterKey=MyIamInstanceProfiles,ParameterValue=${ASUX::"+ EnvironmentParameters.EC2IAMROLES +"}" +
+        //             " ParameterKey=AWSAMIID,ParameterValue=${ASUX::AWSAMIID} "+
+        //             " ParameterKey=EC2InstanceType,ParameterValue=${ASUX::EC2InstanceType} " +
+        //             " ParameterKey=MySSHKeyName,ParameterValue=" + MySSHKeyName;
 
-        preStr ="aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::"+EnvironmentParameters.MYEC2INSTANCENAME+"}"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} "+
-                "--profile ${AWSprofile} --parameters "+ params +" --template-body file://"+ outpfile;
+        // preStr ="aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::"+EnvironmentParameters.MYEC2INSTANCENAME+"}"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} "+
+        //         "--profile ${AWSprofile} --parameters "+ params +" --template-body file://"+ outpfile;
 
         final List keys = awssdk.listKeyPairEC2   ( _envParams.getAWSRegion(), MySSHKeyName );
         if ( keys.size() > 0 || _cmdLA.isOffline() ) {
@@ -209,7 +217,7 @@ public final class CmdProcessorEC2
         // REFERENCE: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-recordset.html
         // https://medium.com/boltops/a-simple-introduction-to-aws-cloudformation-part-2-d6d95ed30328
 
-        return preStr;
+        return stackCmd;
     }
 
     //=================================================================================
