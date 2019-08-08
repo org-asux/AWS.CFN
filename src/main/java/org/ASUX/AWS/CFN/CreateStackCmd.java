@@ -118,6 +118,7 @@ public final class CreateStackCmd
  *  <p>Use this to put the stack (represented by this instance) as a Nested-Stack within another.</p>
  *  <p>The invoking-code _must_ have "uploaded" the file represented by {@link #CFNTemplateFile} into S3 and must provide that URL-to-S3, as the only argument to this method.</p>
  *  @param _s3ObjectURL must be a valid URL to an object containing the CFN-Template for one specific stack
+ *  @param _dependsOn can be Null.  This will show up as "DependsOn:\n - ..." in the YAML generated.  Very important to help "SEQUENCE" the AWS components within a _STACKSET_ (Note: SET)
  *  @return returns the NotNull, with 1st elem as the YAML-Key and the 2nd as the YAML-as-MultiLine-String that can be embedded AS-IS (as a Nested-Stack) within another Cloudformation YAML.
  */
     public Tuple<String,String> getCFNYAMLString( final String _s3ObjectURL, final String _dependsOn ) {
