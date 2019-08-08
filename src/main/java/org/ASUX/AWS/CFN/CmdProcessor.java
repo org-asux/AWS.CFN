@@ -418,6 +418,7 @@ public final class CmdProcessor
         bufferYAML.append( "\nResources:\n\n" );
         String dependsOn = null;
         for ( CreateStackCmd stackCmd: this.createdStacks ) {
+            this.evalMacros( stackCmd, _envParams ); // just to be extra-safe.
             final String s3ObjectURL = "s3://"+ properBucketName +"/"+ stackCmd.getStackName();
             final String s3ObjectHTTPSURL = s3BucketHTTPSURL +"/"+ stackCmd.getStackName();
             // if (  !  _cmdLA.isOffline()  ) {
