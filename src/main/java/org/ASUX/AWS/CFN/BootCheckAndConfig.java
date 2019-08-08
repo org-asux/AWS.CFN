@@ -245,8 +245,8 @@ public final class BootCheckAndConfig {
         this.envParams.setFundamentalGlobalProps( AWSRegion, AWSLocation );
         globalProps.setProperty( "AWSLocation", AWSLocation );
 
-        final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-${ASUX::JobSetName}${ASUX::ItemNumber}", this.envParams.getAllPropsRef() );
         final String MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}", this.envParams.getAllPropsRef() );
+        final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-${ASUX::JobSetName}${ASUX::ItemNumber}", this.envParams.getAllPropsRef() );
         globalProps.setProperty( "MyStackNamePrefix", MyStackNamePrefix );
         globalProps.setProperty( EnvironmentParameters.MYVPCSTACKPREFIX, MyVPCStackPrefix );
         if (this.verbose) System.out.println( HDR + "MyStackNamePrefix=" + MyStackNamePrefix + " MyVPCStackPrefix=" + MyVPCStackPrefix );
