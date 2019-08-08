@@ -1,1 +1,1 @@
-aws cloudformation create-stack --stack-name org-ASUX-Playground-Sydney-subnets-Public-2layerExisting  --region ap-southeast-2 --profile ${AWSprofile} --template-body file:///Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layerExisting/fullstack-subnets-Public.yaml
+aws cloudformation create-stack --stack-name org-ASUX-Playground-Sydney-subnets-Public-2layerExisting --region ap-southeast-2 --parameters  --template-body file:///Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layerExisting/fullstack-subnets-Public.yaml --profile ${AWSprofile} 
