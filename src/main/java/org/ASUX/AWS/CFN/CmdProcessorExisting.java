@@ -107,7 +107,7 @@ public final class CmdProcessorExisting
      *  <li>(5) There is only one VPC that is a DEFAULT-VPC</li>
      *  </ul>
      *  @param _regionStr NotNull string for the AWSRegion (Not the AWSLocation)
-     *  @param _VPCID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
+     *  @param _VPCID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#REGEXP_AWSID_SUFFIX}.  This method checks against that rule.
      *  @param _MyOrgName NotNull string like 'example.org' or 'MySubsidiary'
      *  @param _MyEnvironment NotNull string lile Production, UAT, development, Dev, .. ..
      *  @param _MyDomainName a NotNull string like 'subdomain.example.com'
@@ -124,20 +124,23 @@ public final class CmdProcessorExisting
             if ( this.verbose ) System.out.println( HDR +" VPC ID entered by user is '"+ _VPCID +"'" );
             return null;
         }
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
-
+        
         //-------------------
         // (0) Whether user provided an ACTUAL VPC-ID
         if (  awssdk.isValidAWSID( _VPCID, "vpc" ) ) {
             if ( this.verbose ) System.out.println( HDR +"Assuming that "+ _VPCID +" is a valid AWS-ID. So, no need to lookup anything within the region" );
             return _VPCID;
         } else if (  !  "existing".equals(_VPCID) ) {
-            throw new Exception( "VPC ID "+ _VPCID + " is invalid.  Its neither ==='existing' nor it is like vpc-"+ org.ASUX.AWSSDK.AWSSDK.AWSID_REGEXP_SUFFIX );
+            throw new Exception( "VPC ID "+ _VPCID + " is invalid.  Its neither ==='existing' nor it is like vpc-"+ org.ASUX.AWSSDK.AWSSDK.REGEXP_AWSID_SUFFIX );
         }
         // if we are here, the _VPCID === 'existing'
         // So.. let's go find a suitable VPC for the lazy user.
+        
+        if ( "existing".equals(_VPCID) && _offline )
+            throw new Exception( "User-Error: With --offline cmd-line flag, _CANNOT_ provide 'existing' as the VPC ID, within the Job-definition YAML file." );
 
         //-------------------
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
 
         final ArrayList< LinkedHashMap<String,Object> > vpcs = awssdk.getVPCs( _regionStr, false /* _onlyNonDefaultVPC */);
 
@@ -229,8 +232,8 @@ public final class CmdProcessorExisting
      *  <li>There is only one (Public|Private) subnet (that this AWSProfile has access to, in this region)</li>
      *  </ul>
      *  @param _regionStr NotNull string for the AWSRegion (Not the AWSLocation)
-     *  @param _VPCID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
-     *  @param _subnetID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
+     *  @param _VPCID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#REGEXP_AWSID_SUFFIX}.  This method checks against that rule.
+     *  @param _subnetID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#REGEXP_AWSID_SUFFIX}.  This method checks against that rule.
      *  @param _PublicOrPrivate whether a public or private subnet EC2 instance (String value is case-sensitive.  Exact allowed values are: 'Public' 'Private')
      *  @param _MyOrgName NotNull string like 'example.org' or 'MySubsidiary'
      *  @param _MyEnvironment NotNull string lile Production, UAT, development, Dev, .. ..
@@ -255,20 +258,23 @@ public final class CmdProcessorExisting
             return null;
         }
 
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
-
+        
         //-------------------
         // (0) Whether user provided an ACTUAL VPC-ID
         if (  awssdk.isValidAWSID( _subnetID, "subnet" ) ) {
             if ( this.verbose ) System.out.println( HDR +"Assuming that "+ _subnetID +" is a valid Subnet-ID. So, no need to lookup anything within the region" );
             return _subnetID;
         } else if (  !  "existing".equals(_subnetID) ) {
-            throw new Exception( "Subnet-ID "+ _subnetID + " is invalid.  Its neither ==='existing' nor it is like vpc-"+ org.ASUX.AWSSDK.AWSSDK.AWSID_REGEXP_SUFFIX );
+            throw new Exception( "Subnet-ID "+ _subnetID + " is invalid.  Its neither ==='existing' nor it is like vpc-"+ org.ASUX.AWSSDK.AWSSDK.REGEXP_AWSID_SUFFIX );
         }
         // if we are here, the _subnetID === 'existing'
         // So.. let's go find a suitable VPC for the lazy user.
 
+        if ( "existing".equals(_subnetID) && _offline )
+            throw new Exception( "User-Error: With --offline cmd-line flag, _CANNOT_ provide 'existing' as the Subnet ID, within the Job-definition YAML file." );
+
         //-------------------
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
 
         final ArrayList< LinkedHashMap<String,Object> > subnets = awssdk.getSubnets( _regionStr, _VPCID, _PublicOrPrivate );
 
@@ -346,8 +352,8 @@ public final class CmdProcessorExisting
      *      + matches the port-type specified</li>
      *  </ul>
      *  @param _regionStr NotNull string for the AWSRegion (Not the AWSLocation)
-     *  @param _VPCID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
-     *  @param _SGID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
+     *  @param _VPCID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#REGEXP_AWSID_SUFFIX}.  This method checks against that rule.
+     *  @param _SGID either 'existing' or any ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#REGEXP_AWSID_SUFFIX}.  This method checks against that rule.
      *  @param _portOfInterest whether "ssh", "rdp", .. (String value is case-sensitive)
      *  @param _MyOrgName NotNull string like 'example.org' or 'MySubsidiary'
      *  @param _MyEnvironment NotNull string lile Production, UAT, development, Dev, .. ..
@@ -370,20 +376,23 @@ public final class CmdProcessorExisting
             return null;
         }
 
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
-
         //-------------------
         // (0) Whether user provided an ACTUAL VPC-ID
         if (  _SGID != null  &&  awssdk.isValidAWSID( _SGID, "subnet" ) ) {
             if ( this.verbose ) System.out.println( HDR +"Assuming that "+ _SGID +" is a valid SG-ID. So, no need to lookup anything within the region" );
             return _SGID;
         } else if (  !  "existing".equals(_SGID) ) {
-            throw new Exception( "SG-ID "+ _SGID + " is invalid.  Its neither ==='existing' nor it is like vpc-"+ org.ASUX.AWSSDK.AWSSDK.AWSID_REGEXP_SUFFIX );
+            throw new Exception( "SG-ID "+ _SGID + " is invalid.  Its neither ==='existing' nor it is like vpc-"+ org.ASUX.AWSSDK.AWSSDK.REGEXP_AWSID_SUFFIX );
         }
         // if we are here, the _SGID === 'existing'
         // So.. let's go find a suitable VPC for the lazy user.
 
-        //-------------------
+        if ( "existing".equals(_SGID) && _offline )
+            throw new Exception( "User-Error: With --offline cmd-line flag, _CANNOT_ provide 'existing' as the Security-Group ID, within the Job-definition YAML file." );
+
+            //-------------------
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
+
         final ArrayList< LinkedHashMap<String,Object> > SGs = awssdk.getSGs( _regionStr, _VPCID, _portOfInterest );
 
         // (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
@@ -446,13 +455,16 @@ public final class CmdProcessorExisting
     /**
      *  <p>Lookup the InternetGateways in the region, determine which are Not already associated with a VPC (or, the IGW is already associated with the _existingVPCID).</p>
      *  @param _regionStr NotNull string for the AWSRegion (Not the AWSLocation)
-     *  @param _existingVPCID a NotNull VPC ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#AWSID_REGEXP_SUFFIX}.  This method checks against that rule.
+     *  @param _existingVPCID a NotNull VPC ID in AWS (whether VPC, subnet, SG, EC2...) === prefix('vpc-', 'subnet-', ..) + a hexadecimal suffix {@link org.ASUX.AWSSDK.AWSSDK#REGEXP_AWSID_SUFFIX}.  This method checks against that rule.
      *  @param _offline 'true' === this entire class and all it's methods will use "cached" output (a.k.a. files under {ASUXCFNHOME}/configu/inputs folder), instead of invoking AWS SDK calls.
      *  @return a Null-able String, unless exception is thrown
      *  @throws Exception is _SGID argument is neither  vpc-[0-9a-f]+   or   === 'existing' .. .. or, if No VPC could be found
      */
     public String getIGWID( final String _regionStr, final String _existingVPCID, final boolean _offline ) throws Exception
     {   final String HDR = CLASSNAME + ": getIGWID("+ _regionStr +","+ _existingVPCID  +","+ _offline +"): ";
+        if ( _offline )
+            return null; // assume No IGW exists...
+
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
 
         String IGWID = null;   // default, unless - inside the IF-below - we detect an existing IGW that we can re-use.
