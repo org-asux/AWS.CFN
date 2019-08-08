@@ -25,7 +25,10 @@ endif
 ###------------------------------
 source ${ORGASUXFLDR}/test/testAll-common.csh-source
 
-###---------------------------------
+###-------------------------------------------------------------------
+### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+###-------------------------------------------------------------------
+
 set PROJECTNAME=CFN
 set PROJECTPATH="${ORGASUXFLDR}/AWS/${PROJECTNAME}"
 set PROJECTPATH=${AWSCFNFLDR}
@@ -33,10 +36,8 @@ set PROJECTPATH=${AWSCFNFLDR}
 # set TESTSRCFLDR=${PROJECTPATH}/test
 # chdir ${TESTSRCFLDR}
 # if ( "$VERBOSE" != "" ) pwd
-chdir ${AWSCFNFLDR}/myjobs
+chdir ${AWSCFNFLDR}/myjobs      ### <---------- <<------------ Must be in ./myjobs subfolder to run any tests.
 if ( "$VERBOSE" != "" ) pwd
-
-set JOBSET=simple
 
 set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/myjobs/${JOBSET}
 set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs${OFFLINE}
@@ -48,10 +49,15 @@ set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs${OFFLINE}
 set RUNTESTCMD="java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs"
 set RUNTESTCMD="asux aws.cfn"
 
-set DIVIDER='-----------------------------------------------------------------------------------------------------------'
+set DIVIDER=~/etc/.line
 
-###---------------------------------
+###-------------------------------------------------------------------
+### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+###-------------------------------------------------------------------
+
 set TESTNUM=0
+
+set JOBSET=simple
 
 ###------------------------------
 set CMD=vpc
@@ -60,7 +66,7 @@ eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
 diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
 diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-echo $DIVIDER
+cat $DIVIDER
 
 set CMD=subnets
 set PublicOrPrivate=Public
@@ -69,7 +75,7 @@ eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote 
 if ($status != 0) exit $status
 diff /tmp/${CMD}-${PublicOrPrivate}.yaml  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.yaml
 diff /tmp/${CMD}-${PublicOrPrivate}.sh  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.sh
-echo $DIVIDER
+cat $DIVIDER
 
 set CMD=subnets
 set PublicOrPrivate=Private
@@ -78,7 +84,7 @@ eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote 
 if ($status != 0) exit $status
 diff /tmp/${CMD}-${PublicOrPrivate}.yaml  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.yaml
 diff /tmp/${CMD}-${PublicOrPrivate}.sh  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.sh
-echo $DIVIDER
+cat $DIVIDER
 
 set CMD=sg-ssh
 echo ${CMD}
@@ -86,7 +92,7 @@ eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
 diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
 diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-echo $DIVIDER
+cat $DIVIDER
 
 # set CMD=sg-efs
 # echo ${CMD}
@@ -114,32 +120,104 @@ echo $DIVIDER
 # diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
 # echo $DIVIDER
 
-###@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+###-------------------------------------------------------------------
+### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+###-------------------------------------------------------------------
 
-set TEMPLATEFLDR=${AWSCFNFLDR}/myjobs/outputs${OFFLINE}
+set JOBSET=2layer
+echo -n "Proceed with ${JOBSET} ? .. (or press Cntl-C) >>";  set ANS=$<
 
-# ??????????????????????????????????????????????? I have to test fullstack ??????????????????????????????????
-# set CMD=fullstack
-# echo ${CMD}
-# eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
-# if ($status != 0) exit $status
-# echo ''
-# set CMD=vpc
-# diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-# diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-# echo ''
-# set CMD=subnets
-# diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-# diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-# echo ''
-# set CMD=sg-ssh
-# diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-# diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-# echo ''
-# set CMD=ec2plain
-# diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-# diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-# echo $DIVIDER
+#___ set TEMPLATEFLDR=${AWSCFNFLDR}/myjobs/outputs${OFFLINE}
+#___ diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+
+set CMD=fullstack
+echo ${CMD}
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
+if ($status != 0) exit $status
+echo ''
+
+set CMD=fullstack-vpc
+cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+git diff ${CMD}.yaml
+cat $DIVIDER
+git diff ${CMD}.sh
+
+set CMD=fullstack-subnets-Public
+cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+git diff ${CMD}.yaml
+cat $DIVIDER
+git diff ${CMD}.sh
+
+set CMD=fullstack-subnets-Private
+cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+git diff ${CMD}.yaml
+cat $DIVIDER
+git diff ${CMD}.sh
+
+set CMD=fullstack-sg-ssh
+cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+git diff ${CMD}.yaml
+cat $DIVIDER
+git diff ${CMD}.sh
+
+set CMD=fullstack-ec2plain-MyWebASUXLinux1
+cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+git diff ${CMD}.yaml
+cat $DIVIDER
+git diff ${CMD}.sh
+
+set CMD=fullstack-ec2plain-MyPrivASUXLinux2
+cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+git diff ${CMD}.yaml
+cat $DIVIDER
+git diff ${CMD}.sh
+
+###-------------------------------------------------------------------
+### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+###-------------------------------------------------------------------
+
+set JOBSET=2layerExisting
+echo -n "Proceed with ${JOBSET} ? .. (or press Cntl-C) >>";  set ANS=$<
+
+while ( "$ANS" != "yes" )
+        echo ".. .. .. .. .. Does Sydney already have the ASUX.org created VPC & SG-SSH ?  If not, run ${cwd}/${JOBSET}/fullstack-vpc-existing.sh    &    ${cwd}/${JOBSET}/fullstack-sg-ssh-existing.sh"
+        echo -n "       Enter 'yes' to proceed /or/ press Cntl-C to abort >>";  set ANS=$<
+end
+
+eval "$RUNTESTCMD ${VERBOSE} fullstack-gen ${JOBSET} --no-quote"
+if ($status != 0) EXITSCRIPT $status
+echo ''
+
+# set CMD=fullstack-vpc
+# set CMD=fullstack-sg-ssh
+
+set CMD=fullstack-subnets-Public
+cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+git diff ${CMD}.yaml
+cat $DIVIDER
+git diff ${CMD}.sh
+
+set CMD=fullstack-subnets-Private
+cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+git diff ${CMD}.yaml
+cat $DIVIDER
+git diff ${CMD}.sh
+
+set CMD=fullstack-ec2plain-MyWebASUXLinux1
+cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+git diff ${CMD}.yaml
+cat $DIVIDER
+git diff ${CMD}.sh
+
+set CMD=fullstack-ec2plain-MyPrivASUXLinux2
+cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+git diff ${CMD}.yaml
+cat $DIVIDER
+git diff ${CMD}.sh
+
+###-------------------------------------------------------------------
+### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+###-------------------------------------------------------------------
 
 ### Error situations
 echo
@@ -151,14 +229,16 @@ if ( "$ANS" == "Y" ||  "$ANS" == "y" ) then
         java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} --unknownCmd-gen ${JOBSET} --no-quote sdfasd asdf asdfa
 endif
 
-###---------------------------------
+###-------------------------------------------------------------------
+### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+###-------------------------------------------------------------------
+
 # 2
 # set OUTPFILE=${OUTPUTFLDR}/test-${TESTNUM}
 # echo $OUTPFILE
 # java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs ${VERBOSE} ??????  #_____ >&! ${OUTPFILE}
 # diff ${OUTPFILE} ${TEMPLATEFLDR}/test-${TESTNUM}
 # if ($status != 0) exit $status
-
 
 #EoInfo
 
