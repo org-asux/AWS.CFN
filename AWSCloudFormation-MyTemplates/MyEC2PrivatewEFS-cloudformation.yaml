@@ -217,6 +217,8 @@ Resources:
             - |
               yum install -y aws-cfn-bootstrap
             - |
+              yum install -y nfs-utils        ### For Data-encryption in-transit, use the Amazon EFS-mount helper, amazon-efs-utils, instead of the standard NFS client. 
+            - |
               # Install the files and packages from the metadata
             - '/opt/aws/bin/cfn-init -v '
             - '         --stack '
