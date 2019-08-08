@@ -33,6 +33,7 @@
 package org.ASUX.AWS.CFN;
 
 import org.ASUX.common.Macros;
+import org.ASUX.common.Tuple;
 
 import org.ASUX.yaml.YAML_Libraries;
 
@@ -79,7 +80,9 @@ public final class CmdProcessor
 
     //-----------------------------
     public boolean verbose;
+
     protected CmdInvoker cmdinvoker;
+    protected ArrayList<CreateStackCmd> createdStacks = new ArrayList<>();
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -228,22 +231,34 @@ public final class CmdProcessor
 
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
 
-        String preStr = null;
+        // String preStr = null;
         String scriptfile;
+        CreateStackCmd stackCmd = null;
 
         switch ( _cmdLA.getCmdName() ) {
-        case VPC:       preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-VPC  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey="+EnvironmentParameters.MYVPCSTACKPREFIX+",ParameterValue=${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"} --template-body file://"+ outpfile;
+        case VPC:       // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-VPC  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey="+EnvironmentParameters.MYVPCSTACKPREFIX+",ParameterValue=${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"} --template-body file://"+ outpfile;
+                        stackCmd = new CreateStackCmd( this.verbose, _envParams.getAWSRegion(), outpfile );
+                        stackCmd.setStackName( "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-VPC" );
+                        stackCmd.addParameter( EnvironmentParameters.MYVPCSTACKPREFIX, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}" );
+                        this.evalMacros( stackCmd, _envParams );
                         scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".sh";
                         break;
-        case SUBNET:    preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
+        case SUBNET:    // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
+                        stackCmd = new CreateStackCmd( this.verbose, _envParams.getAWSRegion(), outpfile );
+                        stackCmd.setStackName( "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + _cmdLA.itemNumber );
+                        this.evalMacros( stackCmd, _envParams );
                         scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate +".sh";
                         break;
-        case SGSSH:     preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
+        case SGSSH:     //preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
+                        stackCmd = new CreateStackCmd( this.verbose, _envParams.getAWSRegion(), outpfile );
+                        stackCmd.setStackName(  "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH" );
+                        stackCmd.addParameter( "MyVPC", "${ASUX::VPCID}" );
+                        this.evalMacros( stackCmd, _envParams );
                         scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".sh";
                         break;
         case EC2PLAIN:  
                         final CmdProcessorEC2 ec2Processor = new CmdProcessorEC2( this );
-                        preStr = ec2Processor.genCFNShellScript( _cmdLA, _envParams );
+                        stackCmd = ec2Processor.genCFNShellScript( _cmdLA, _envParams );
                         scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ globalProps.getProperty( EnvironmentParameters.MYEC2INSTANCENAME ) +".sh";
                         break;
         case FULLSTACK:
@@ -266,8 +281,12 @@ public final class CmdProcessor
             case VPC:
             case SGSSH:
             case SUBNET:
-                            final String postStr = Macros.evalThoroughly( this.verbose, preStr, _envParams.getAllPropsRef() );
+                            // final String postStr = Macros.evalThoroughly( this.verbose, preStr, _envParams.getAllPropsRef() );
+                            this.evalMacros( stackCmd, _envParams );
+                            final String postStr = stackCmd.toString();
                             if ( this.verbose ) System.out.println( postStr ); // dump the cmd to execute the CFN script to stdout.
+                            this.createdStacks.add( stackCmd );
+
                             org.ASUX.common.IOUtils.write2File( scriptfile, postStr );
                             org.ASUX.common.IOUtils.setFilePerms( this.verbose, scriptfile, true, true, true, true ); // rwx------ file-permissions
                             System.out.println( scriptfile );
@@ -313,6 +332,131 @@ public final class CmdProcessor
                             throw new Exception( es );
         } // switch
     }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    private void evalMacros( final CreateStackCmd _stackCmd, final EnvironmentParameters _envParams ) throws Exception
+    {   final String HDR = CLASSNAME + ": evalMacros(_stackCmd): ";
+
+        final String newStackName = Macros.evalThoroughly( this.verbose, _stackCmd.getStackName(), _envParams.getAllPropsRef() );
+        _stackCmd.setStackName( newStackName ); // dont bother to check whether or not.. .. newStackName === _stackCmd.getStackName()
+
+        final LinkedHashMap<String,String> params = _stackCmd.getParams();
+        final LinkedHashMap<String,String> newparams = new LinkedHashMap<>();
+        final ArrayList<String> keysThatChanged = new ArrayList<>();
+
+        for( String key: params.keySet() ) {
+            final String val = params.get( key );
+            final String keywom = Macros.evalThoroughly( this.verbose, key, _envParams.getAllPropsRef() ); // 'wom' === with out macros
+            final String valwom = Macros.evalThoroughly( this.verbose, val, _envParams.getAllPropsRef() ); // 'wom' === with out macros
+            if ( key.equals( keywom ) ) {
+                if ( val.equals( valwom ) ) {
+                    ; // do nothing.  Nothing changed for EITHER the key or the value (in 'params').
+                } else {
+                    newparams.put( key, valwom ); // update the value
+                }
+            } else {
+                if ( this.verbose ) System.out.println( HDR +"Running macros changed the OLD-Kay'"+ key +"' to '"+ keywom +"." );
+                keysThatChanged.add( key );
+                newparams.put( keywom, valwom ); // add the new pair
+            }
+        } // for-loop
+
+        // 1st remove the "changed" keys, then 'putAll' new keys-value pairs.
+        for( String key: keysThatChanged ) {
+            params.remove( key );
+        }
+
+        params.putAll( newparams );
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    /**
+     *  <p>This should be invoked as step #3, after invoking {@link #genYAML(CmdLineArgs, String, EnvironmentParameters)} and {@link #genCFNShellScript(CmdLineArgs, EnvironmentParameters)}.</p>
+     *  <p>This method will generate the Stack-Set YAML, so that all the various components are run as a single set of Nested Stacks (very convenient, rather than run each one-after-another, waiting for each to complete)</p>
+     *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
+     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
+     *  @throws Exception any errors while interacting with AWS-S3 or in writing to local file-system
+     */
+    public void createStackSetCFNTemplate( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws Exception
+    {   final String HDR = CLASSNAME + ": createStackSetCFNTemplate(): ";
+        if ( _cmdLA.s3bucketname == null || "".equals( _cmdLA.s3bucketname )  ) {
+            System.out.println( "Not generating StackSET." );
+            return;
+        }
+
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline()  );
+
+        final Tuple<String,String> tuple = awssdk.parseS3Bucketname( _cmdLA.s3bucketname ); // splits "bucketname@eu-west-1" into 'bucketname' & 'eu-west-1'
+        final String properBucketName = tuple.key; // if _cmdLA.s3bucketname was null, this will be null too.
+        final String correctRegionID = ( tuple.val == null || "".equals(tuple.val) )   ?   _envParams.getAWSRegion() : tuple.val;
+        if (  !  awssdk.isValidS3BucketName( properBucketName ) ) {
+            System.err.println( "\n\nERROR!!!!!! Invalid Bucketname provided on command line: "+ _cmdLA.s3bucketname );
+            return;
+        }
+        if (  !   awssdk.isValidAWSRegion( correctRegionID ) ) {
+            System.err.println( "\n\nERROR!!!!!! Invalid AWS Region: "+ tuple.val );
+            return;
+        }
+        final String s3BucketHTTPSURL = "https://"+ properBucketName +".s3."+ correctRegionID +".amazonaws.com";
+
+        final StringBuffer bufferYAML = new StringBuffer();
+        final StringBuffer bufferShellScript = new StringBuffer();
+        bufferYAML.append( "AWSTemplateFormatVersion: '2010-09-09'\n" );
+        bufferYAML.append( "Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '" );
+        bufferYAML.append( _cmdLA.jobSetName ).append( "' on " ).append( new Date() ).append( " within Working-folder '" ).append( EnvironmentParameters.get_cwd() ).append("'\n");
+        // Parameters:
+        //		AWSprofile:
+        //	 		Type: String
+        //			Description: Your AWS Profile under ~/.aws/config that refers to the CLI KeyPair
+
+        bufferYAML.append( "\nResources:\n\n" );
+        String dependsOn = null;
+        for ( CreateStackCmd stackCmd: this.createdStacks ) {
+            final String s3ObjectURL = "s3://"+ properBucketName +"/"+ stackCmd.getStackName();
+            final String s3ObjectHTTPSURL = s3BucketHTTPSURL +"/"+ stackCmd.getStackName();
+            if (  !  _cmdLA.isOffline()  ) {
+                if ( this.verbose ) System.out.println( HDR + "About to upload "+ stackCmd.getCFNTemplateFile() +" as S3-object at s3://"+ stackCmd.getStackName() +"/..." );
+                awssdk.S3put( correctRegionID, _cmdLA.s3bucketname,  stackCmd.getStackName() /* _S3ObjectName */,   stackCmd.getCFNTemplateFile() /* _filepathString */ );
+                if ( this.verbose ) System.out.println( HDR + "Completed upload to "+ s3ObjectURL );
+            }
+            final Tuple<String,String> tuple22 = stackCmd.getCFNYAMLString( s3ObjectHTTPSURL, dependsOn );
+            dependsOn = tuple22.key;
+            bufferYAML.append( tuple22.val ).append("\n");
+            bufferShellScript.append( "aws s3 cp --profile ${AWSprofile} " ).append( stackCmd.getCFNTemplateFile() ).append("   ").append( s3ObjectURL )
+                            .append( " --region " ).append( correctRegionID ).append( "\n" );
+        }
+
+        // Outputs:
+        //   StackRef:
+        //     Value: !Ref myStack
+        //   OutputFromNestedStack:
+        //     Value: !GetAtt myStack.Outputs.BucketName
+
+        final String yamlfile = _envParams.outputFolderPath +"/stackset.yaml";
+        org.ASUX.common.IOUtils.write2File( yamlfile, bufferYAML.toString() );
+        org.ASUX.common.IOUtils.setFilePerms( this.verbose, yamlfile, true, true, false, true ); // readable, writeable, executable, ownerOnly
+        System.out.println( yamlfile );
+
+        // final String MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, _envParams.getMyStackNamePrefix(), _envParams.getAllPropsRef() );
+        bufferShellScript.append( "aws cloudformation create-stack --profile ${AWSprofile} --stack-name " ).append( _envParams.getMyStackNamePrefix() )
+                        .append( " --region " ).append( _envParams.getAWSRegion() )
+                        .append( " --template-body file://")
+                        .append( yamlfile ).append( "\n" );
+
+        final String scriptfile = _envParams.outputFolderPath +"/stackset.sh";
+        org.ASUX.common.IOUtils.write2File( scriptfile, bufferShellScript.toString() );
+        org.ASUX.common.IOUtils.setFilePerms( this.verbose, scriptfile, true, true, true, true ); // rwx------ file-permissions
+        System.out.println( scriptfile );
+    }
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
