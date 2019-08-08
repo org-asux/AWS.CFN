@@ -1,0 +1,45 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '2layerExisting' on Thu Aug 08 15:54:26 EDT 2019 within Working-folder '/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs'
+
+Resources:
+
+   orgASUXPlaygroundSydneysubnetsPublic2layerExisting:     ### create-stack --stack-name org-ASUX-Playground-Sydney-subnets-Public-2layerExisting
+      Type: AWS::CloudFormation::Stack
+      Properties:
+         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Sydney-subnets-Public-2layerExisting
+
+   orgASUXPlaygroundSydney2layerExistingEC2MyWebASUXLinux1:     ### create-stack --stack-name org-ASUX-Playground-Sydney-2layerExisting-EC2-MyWebASUXLinux1
+      Type: AWS::CloudFormation::Stack
+      DependsOn:
+      - orgASUXPlaygroundSydneysubnetsPublic2layerExisting
+      Properties:
+         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Sydney-2layerExisting-EC2-MyWebASUXLinux1
+         Parameters:
+            MySSHSecurityGroup: org-ASUX-Playground-Sydney-2layerExisting-SG-SSH
+            MyIamInstanceProfiles: EC2-ReadWrite-to-S3
+            AWSAMIID: ami-0dc96254d5535925f
+            EC2InstanceType: t2.micro
+            MySSHKeyName: Sydney-org-ASUX-Playground-LinuxSSH.pem
+            MyPublicSubnet1: org-ASUX-Playground-Sydney-2layerExisting-Subnet-Public1-ID
+
+   orgASUXPlaygroundSydneysubnetsPrivate2layerExisting:     ### create-stack --stack-name org-ASUX-Playground-Sydney-subnets-Private-2layerExisting
+      Type: AWS::CloudFormation::Stack
+      DependsOn:
+      - orgASUXPlaygroundSydney2layerExistingEC2MyWebASUXLinux1
+      Properties:
+         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Sydney-subnets-Private-2layerExisting
+
+   orgASUXPlaygroundSydney2layerExistingEC2MyPrivASUXLinux2:     ### create-stack --stack-name org-ASUX-Playground-Sydney-2layerExisting-EC2-MyPrivASUXLinux2
+      Type: AWS::CloudFormation::Stack
+      DependsOn:
+      - orgASUXPlaygroundSydneysubnetsPrivate2layerExisting
+      Properties:
+         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Sydney-2layerExisting-EC2-MyPrivASUXLinux2
+         Parameters:
+            MySSHSecurityGroup: org-ASUX-Playground-Sydney-2layerExisting-SG-SSH
+            MyIamInstanceProfiles: EC2-ReadWrite-to-S3
+            AWSAMIID: ami-0dc96254d5535925f
+            EC2InstanceType: t2.micro
+            MySSHKeyName: Sydney-org-ASUX-Playground-LinuxSSH.pem
+            MyPrivateSubnet1: org-ASUX-Playground-Sydney-2layerExisting-Subnet-Private1-ID
+
