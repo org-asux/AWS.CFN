@@ -125,6 +125,8 @@ public final class CmdProcessorExisting
             return null;
         }
         
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
+
         //-------------------
         // (0) Whether user provided an ACTUAL VPC-ID
         if (  awssdk.isValidAWSID( _VPCID, "vpc" ) ) {
@@ -140,8 +142,6 @@ public final class CmdProcessorExisting
             throw new Exception( "User-Error: With --offline cmd-line flag, _CANNOT_ provide 'existing' as the VPC ID, within the Job-definition YAML file." );
 
         //-------------------
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
-
         final ArrayList< LinkedHashMap<String,Object> > vpcs = awssdk.getVPCs( _regionStr, false /* _onlyNonDefaultVPC */);
 
         // (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
@@ -258,7 +258,8 @@ public final class CmdProcessorExisting
             return null;
         }
 
-        
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
+
         //-------------------
         // (0) Whether user provided an ACTUAL VPC-ID
         if (  awssdk.isValidAWSID( _subnetID, "subnet" ) ) {
@@ -274,8 +275,6 @@ public final class CmdProcessorExisting
             throw new Exception( "User-Error: With --offline cmd-line flag, _CANNOT_ provide 'existing' as the Subnet ID, within the Job-definition YAML file." );
 
         //-------------------
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
-
         final ArrayList< LinkedHashMap<String,Object> > subnets = awssdk.getSubnets( _regionStr, _VPCID, _PublicOrPrivate );
 
         // (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
@@ -376,6 +375,8 @@ public final class CmdProcessorExisting
             return null;
         }
 
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
+
         //-------------------
         // (0) Whether user provided an ACTUAL VPC-ID
         if (  _SGID != null  &&  awssdk.isValidAWSID( _SGID, "subnet" ) ) {
@@ -390,9 +391,7 @@ public final class CmdProcessorExisting
         if ( "existing".equals(_SGID) && _offline )
             throw new Exception( "User-Error: With --offline cmd-line flag, _CANNOT_ provide 'existing' as the Security-Group ID, within the Job-definition YAML file." );
 
-            //-------------------
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
-
+        //-------------------
         final ArrayList< LinkedHashMap<String,Object> > SGs = awssdk.getSGs( _regionStr, _VPCID, _portOfInterest );
 
         // (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
