@@ -14,3 +14,4 @@ AWSCFN.templates-pieces/Conditions full-listing.yaml
 myjobs/2layer-ex-1private1public
 myjobs/2layerExisting.2ndTime
 2layerExisting-2ndTime
+myjobs/stackset-sample.yaml
