@@ -70,12 +70,14 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
     protected static final String FULLSTACKGEN = "fullstack-gen";
 
     protected static final String ITEMNUMBER = "itemNumber";
+    protected static final String S3BUCKETNAME = "s3bucketname";
 
     //------------------------------------
     // public boolean verbose;
     protected Enums.GenEnum cmdName = Enums.GenEnum.UNDEFINED;
 
     protected String jobSetName = "undefined-JobSetName";
+    protected String s3bucketname = "undefined-S3-BucketName";
     protected String itemNumber = "undefined-ItemNumber";
     protected String PublicOrPrivate = "NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable";
 
@@ -148,6 +150,14 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         opt.setArgs(1);
         opt.setOptionalArg(false);
         opt.setArgName("itemNumber");
+        this.options.addOption(opt);
+
+        //----------------------------------
+        opt = new Option("s3", S3BUCKETNAME, false, "Name of the S3 bucket into which individual Stack-CFN-Templates will be saved, so that a Stack-SET can be created. Example: bucketname@eu-west-1");
+        opt.setRequired(false);
+        opt.setArgs(1);
+        opt.setOptionalArg(false);
+        opt.setArgName("S3-Bucket-Name");
         this.options.addOption(opt);
 
 // System.out.println( HDR +"function completed." );
@@ -237,6 +247,11 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             if ( ! this.itemNumber.startsWith("-") )
             this.itemNumber = "-"+ this.itemNumber; // add a '-' hyphen prefix to the 'this.itemNumber'
         }
+
+        //-------------------------------------------
+        this.s3bucketname = _apacheCmdProcessor.getOptionValue( S3BUCKETNAME );
+        // if ( this.s3bucketname == null )
+        //     this.s3bucketname = "";
     }
 
 
