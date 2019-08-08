@@ -420,15 +420,18 @@ public final class CmdProcessor
         for ( CreateStackCmd stackCmd: this.createdStacks ) {
             final String s3ObjectURL = "s3://"+ properBucketName +"/"+ stackCmd.getStackName();
             final String s3ObjectHTTPSURL = s3BucketHTTPSURL +"/"+ stackCmd.getStackName();
-            if (  !  _cmdLA.isOffline()  ) {
-                if ( this.verbose ) System.out.println( HDR + "About to upload "+ stackCmd.getCFNTemplateFile() +" as S3-object at s3://"+ stackCmd.getStackName() +"/..." );
-                awssdk.S3put( correctRegionID, _cmdLA.s3bucketname,  stackCmd.getStackName() /* _S3ObjectName */,   stackCmd.getCFNTemplateFile() /* _filepathString */ );
-                if ( this.verbose ) System.out.println( HDR + "Completed upload to "+ s3ObjectURL );
-            }
+            // if (  !  _cmdLA.isOffline()  ) {
+            // !!!!!!!!!!! DO NOT UNCOMMENT THESE LINES !!!!!!!!!!!
+            // Unless you make arrangements to enhance awssdk.S3put() to take on '--acl' options via API.
+            //     if ( this.verbose ) System.out.println( HDR + "About to upload "+ stackCmd.getCFNTemplateFile() +" as S3-object at s3://"+ stackCmd.getStackName() +"/..." );
+            //     awssdk.S3put( correctRegionID, _cmdLA.s3bucketname,  stackCmd.getStackName() /* _S3ObjectName */,   stackCmd.getCFNTemplateFile() /* _filepathString */ );
+            //     if ( this.verbose ) System.out.println( HDR + "Completed upload to "+ s3ObjectURL );
+            // }
             final Tuple<String,String> tuple22 = stackCmd.getCFNYAMLString( s3ObjectHTTPSURL, dependsOn );
             dependsOn = tuple22.key;
             bufferYAML.append( tuple22.val ).append("\n");
-            bufferShellScript.append( "aws s3 cp --profile ${AWSprofile} " ).append( stackCmd.getCFNTemplateFile() ).append("   ").append( s3ObjectURL )
+            bufferShellScript.append( "aws s3 cp --profile ${AWSprofile} --acl public-read  " ) // make the S3 object automatically publicly readable.
+                            .append( stackCmd.getCFNTemplateFile() ).append("   ").append( s3ObjectURL )
                             .append( " --region " ).append( correctRegionID ).append( "\n" );
         }
 
