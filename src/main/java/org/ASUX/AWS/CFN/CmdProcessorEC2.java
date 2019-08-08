@@ -180,7 +180,7 @@ public final class CmdProcessorEC2
         stackCmd.setStackName( "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::"+EnvironmentParameters.MYEC2INSTANCENAME+"}"+ _cmdLA.itemNumber );
         stackCmd.addParameter( "My${ASUX::PublicOrPrivate}Subnet1", DefaultSubnet1 );
         stackCmd.addParameter( "MySSHSecurityGroup", MySSHSecurityGroup );
-        stackCmd.addParameter( "MyIamInstanceProfiles", EnvironmentParameters.EC2IAMROLES );
+        stackCmd.addParameter( "MyIamInstanceProfiles", "${ASUX::"+ EnvironmentParameters.EC2IAMROLES +"}" );
         stackCmd.addParameter( "AWSAMIID", "${ASUX::AWSAMIID}" );
         stackCmd.addParameter( "EC2InstanceType", "${ASUX::EC2InstanceType}" );
         stackCmd.addParameter( "MySSHKeyName", MySSHKeyName );
