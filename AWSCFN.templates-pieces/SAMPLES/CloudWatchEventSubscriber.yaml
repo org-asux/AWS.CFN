@@ -1,0 +1,15 @@
+
+  ### https://aws.amazon.com/blogs/aws/building-serverless-pipelines-with-amazon-cloudwatch-events/
+  CentralForwardingRule:
+    Type: AWS::Events::Rule
+      Properties:
+        Description: Rule for sending events to central account
+      EventPattern:
+        source:
+          - cwi.servicea
+      Targets:
+        - Arn: !Sub arn:aws:events:${CENTRAL_ACCOUNT_REGION}:${CENTRAL_ACCOUNT_ID}:event-bus/default
+          Id: CentralTarget Role
+          Arn: <IAM ROLE WITH ACCESS TO PUT CW EVENTS>
+
+#EOF
