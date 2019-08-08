@@ -39,6 +39,7 @@ import java.util.Properties;
 
 import java.io.File;
 import java.io.Serializable;
+import java.nio.file.FileSystems;
 
 import static org.junit.Assert.*;
 
@@ -222,22 +223,28 @@ public final class EnvironmentParameters implements Serializable {
         }
     }
 
+    // ==============================================================================
     public String get_orgasuxhome()         { return this.orgasuxhome; }
 
     public String get_awshome()             { return this.awshome; }
 
-    public String get_awssdkhome()             { return this.awshome + "/AWS-SDK"; }
+    public String get_awssdkhome()          { return this.awshome + "/AWS-SDK"; }
 
     public String get_awscfnhome()          { return this.awscfnhome; }
 
+    public static String get_cwd()                 { return FileSystems.getDefault().getPath( System.getProperty("user.dir") ).toString(); } // throws RunTimeExceptions only.
+
+    // ==============================================================================
     public String getAWSRegion()            { return this.AWSRegion; }
 
     public String getAWSLocation()          { return this.AWSLocation; }
 
+    // ==============================================================================
     public String getMyStackNamePrefix()    { return this.MyStackNamePrefix; }
 
     public String getMyVPCStackPrefix()     { return this.MyVPCStackPrefix; }
 
+    // ==============================================================================
     public boolean isExistingVPC()          { return this.bExistingVPC; }
     public boolean isExistingSubnet()       { return this.bExistingSubnet; }
 
