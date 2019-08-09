@@ -413,7 +413,7 @@ public final class CmdProcessorExisting
             final String tag_name = (String) sg.get("Name");
             if ( this.verbose ) System.out.println( HDR +"Checking.. SecurityGroup: "+ tag_name +"  "+ sg );
             try {
-                final Pattern pattern = Pattern.compile( "^SG-SSH-"+ _MyOrgName +"-"+ _MyEnvironment +"-"+ _regionStr ); // SG-SSH-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSRegion}
+                final Pattern pattern = Pattern.compile( "^SG-[a-zA-Z]+-"+ _MyOrgName +"-"+ _MyEnvironment +"-"+ _regionStr ); // SG-SSH-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSRegion}
                 final Matcher matcher = pattern.matcher( tag_name );
                 if ( matcher.find() ) {
                     if ( this.verbose ) System.out.println( HDR +"I found the text "+ matcher.group() +" starting at index "+  matcher.start() +" and ending at index "+ matcher.end() );
@@ -483,9 +483,9 @@ public final class CmdProcessorExisting
                 // looks like this _EXISTING_ VPC does _NOT_ an IGW attached to it!
                 if ( existingUnassociatedIGWIDs.size() > 0 ) {
                     IGWID = existingUnassociatedIGWIDs.get(0).key; // taking the 1st available InternetGateway, to associate with this _EXISTING_ VPC is NOT a bad idea.
-                    System.err.println("!!!!!! ATTENTION !!!!!!! Manually __ATTACH__ the InternetGateway with ID# " + IGWID +" to existing VPC "+ _existingVPCID +".!!!!!" );
+                    System.err.println("\n\t\t!!!!!! ATTENTION !!!!!!!!!\nManually __ATTACH__ the InternetGateway with ID# " + IGWID +" to existing VPC "+ _existingVPCID +" (Can't be automated by CloudFormation).!!!!!\n" );
                 } else {
-                    // System.err.println("!!!!!! ATTENTION !!!!!!! Manually create a __NEW__ InternetGateway & associate it __MANUALLY__ with this existing VPC "+ _existingVPCID +"!!!!!" );
+                    // System.err.println("\n\t\t!!!!!! ATTENTION !!!!!!!!!\nManually create a __NEW__ InternetGateway & associate it __MANUALLY__ with this existing VPC "+ _existingVPCID +"!!!!!\n" );
                     if (this.verbose) System.out.println( HDR + "Will create a _NEW_ IGW in the CFN-template and auto-associate with the _NEW_ VPC." );
                 }
             }
