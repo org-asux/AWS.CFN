@@ -109,7 +109,8 @@ public final class CmdProcessorEC2
 
         final String MyDomainName       = globalProps.getProperty( EnvironmentParameters.MYDOMAINNAME );
         if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName );
-        final String Rt53HostedZoneId   = awssdk.getHostedZoneId( _envParams.getAWSRegion(), MyDomainName, "Public".equals(_cmdLA.PublicOrPrivate) );
+        final String Rt53HostedZoneId   = awssdk.getRt53HostedZoneId(  _envParams.getAWSRegion(),   MyDomainName,
+                                            "Public".equals(_cmdLA.PublicOrPrivate) /* _needPublicHostedZone */ );
         if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName + " Rt53HostedZoneId " + Rt53HostedZoneId  );
         globalProps.setProperty( EnvironmentParameters.MYRT53HOSTEDZONEID, Rt53HostedZoneId ); // will define ${ASUX::MyRt53HostedZoneId}
 
