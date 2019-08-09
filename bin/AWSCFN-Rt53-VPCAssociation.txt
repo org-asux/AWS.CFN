@@ -1,0 +1,20 @@
+### This is the file 'AWSCFN-Rt53-VPCAssociation.txt'
+
+### HOW TO USE THIS?
+### Step 1: Before 'include' this file.. within JAVA-code set the property 'Rt53VPCAssocGenScript' 1st !!!
+### Step 2: include ?@${ASUX::AWSCFNHOME}/bin/AWSCFN-Rt53-VPCAssociation.txt
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+useAsInput !TopElemResources
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Route53PrivateZone-VPCAssoc.yaml
+yaml --macro ''
+saveTo !TopElemResources
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+#EoF
