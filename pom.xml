@@ -12,7 +12,7 @@
 
     <inceptionYear>2019</inceptionYear>
     <description>Command line tools to generate AWS Cloudformation templates in YAML, that areSnakeYAML compatible org.yaml.snakeyaml.nodes.Node data-structures.  This project does NOT interact with AWS, and any use of AWS is limited to fetching the list of regions and the list of AZs within each region</description>
-	<url>https://github.com/org-asux/org.ASUX.AWS.CFN</url>
+	<url>https://ASUX.org</url>
 
 	<parent>
 		<groupId>org.asux</groupId>
