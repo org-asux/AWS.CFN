@@ -129,7 +129,7 @@ public final class CmdProcessorExisting
 
         //-------------------
         // (0) Whether user provided an ACTUAL VPC-ID
-        if (  awssdk.isValidAWSID( _VPCID, "vpc" ) ) {
+        if (  awssdk.matchesAWSIDPattern( _VPCID, "vpc" ) ) {
             if ( this.verbose ) System.out.println( HDR +"Assuming that "+ _VPCID +" is a valid AWS-ID. So, no need to lookup anything within the region" );
             return _VPCID;
         } else if (  !  "existing".equals(_VPCID) ) {
@@ -262,7 +262,7 @@ public final class CmdProcessorExisting
 
         //-------------------
         // (0) Whether user provided an ACTUAL VPC-ID
-        if (  awssdk.isValidAWSID( _subnetID, "subnet" ) ) {
+        if (  awssdk.matchesAWSIDPattern( _subnetID, "subnet" ) ) {
             if ( this.verbose ) System.out.println( HDR +"Assuming that "+ _subnetID +" is a valid Subnet-ID. So, no need to lookup anything within the region" );
             return _subnetID;
         } else if (  !  "existing".equals(_subnetID) ) {
@@ -379,7 +379,7 @@ public final class CmdProcessorExisting
 
         //-------------------
         // (0) Whether user provided an ACTUAL VPC-ID
-        if (  _SGID != null  &&  awssdk.isValidAWSID( _SGID, "subnet" ) ) {
+        if (  _SGID != null  &&  awssdk.matchesAWSIDPattern( _SGID, "subnet" ) ) {
             if ( this.verbose ) System.out.println( HDR +"Assuming that "+ _SGID +" is a valid SG-ID. So, no need to lookup anything within the region" );
             return _SGID;
         } else if (  !  "existing".equals(_SGID) ) {
