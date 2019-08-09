@@ -168,7 +168,7 @@ public final class CmdProcessorFullStack
         final boolean bMacroEvalFailed =  macroStr.equals( AWSRegionLookupStr ); // if the Macros.evalThoroughly() actually worked..
         final String AWSRegion = ( bMacroEvalFailed ) ? AWSRegionAsIs : AWSRegionLookupStr; // if the Macros.evalThoroughly() actually worked..
         if (this.verbose) System.out.println( HDR +"macroStr="+ macroStr +"AWSRegionLookupStr="+ AWSRegionLookupStr +"bMacroEvalFailed="+ bMacroEvalFailed +"AWSRegion="+ AWSRegion );
-        if (  !   awssdk.isValidAWSRegion( AWSRegion ) ) {
+        if (  !   awssdk.matchesAWSRegionPattern( AWSRegion ) ) {
             final String msg = "Invalid AWS-Region: "+ AWSRegion +" provided inside the YAML File: "+ fullStackJob_Filename;
             System.err.println( HDR +"\n\nERROR!!!!!! "+ msg +"\n" );
             throw new Exception( msg  );
