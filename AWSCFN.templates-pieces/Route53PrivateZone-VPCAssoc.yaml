@@ -1,7 +1,7 @@
   MyRt53PrivateZoneWithVPCAssociation:
 
     Description: >-
-      .. !!!!!!!!!! NOT SURE - what happens if HostedZone ALREADY EXISTS !!!!!!!!!
+      .. !!!!!!!!!! WILL NOT WORK - if HostedZone ALREADY EXISTS !!!!!!!!!
 
     Type: AWS::Route53::HostedZone
     ### https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-route53-hostedzone.html
