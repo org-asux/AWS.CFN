@@ -258,6 +258,14 @@ public final class CmdProcessorFullStack
             globalProps.setProperty( "MyVPCName", VPCName.replaceAll("-", "") ); // Why?  CreateStack format error: Resource name org_ASUX_Playground_Tokyo_VPCID is non alphanumeric
             if ( this.verbose ) System.out.println( HDR +"VPCName(${ASUX::VPCID})="+ VPCName );
 
+            final String Rt53HZID = awssdk.getRt53HostedZoneId( AWSRegion, MyDomainName, false /* _needPublicHostedZone */ );
+            if ( Rt53HZID == null ) {
+                // since it's a new VPC + since Rt53 PRIVATE-HostedZone does _NOT_ exist.. .. let's create a NEW  Rt53PrivateZone + associate it with the VPC
+                globalProps.setProperty( "Rt53VPCAssocGenScript", "AWSCFN-Rt53-VPCAssociation.txt" ); // This will cause 'bin/AWSCFN-fullstack-vpc-Create.ASUX-batch.txt' to include 'bin/AWSCFN-Rt53-VPCAssociation.txt'
+            } else {
+                System.err.println( "\n\t\t!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!\nCloudFormation does _Not_ allow associating a new VPC to an __EXISTING__ Rt53-HostedDomain("+ MyDomainName +" = "+ Rt53HZID +").   So.. do it yourself manually!!\n" );
+            }
+
             // 1st generate the YAML.
             this.cmdProcessor.genYAML( claVPC, envParamsVPC.getCfnJobTYPEString(), envParamsVPC );          // Note: the 2nd argument automtically has "fullstack-" prefix in it.
             // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
@@ -265,31 +273,52 @@ public final class CmdProcessorFullStack
         }
 
         //----------------- SG --------------------
-        if ( existingVPCID == null ) {
-// ASSUMPTION: SINCE VPC-ID is specified, (too early to tell if SUBNET-ID is ALSO specified), .. so, SG __BETTER__ be specified.
-// ??????? For each SG in jobSetName.yaml ...
-// ??????? For each SG in jobSetName.yaml ...
-// ??????? For each SG in jobSetName.yaml ...
-// ??????? For each SG in jobSetName.yaml ...
-            final EnvironmentParameters envParamsSG = EnvironmentParameters.deepClone( _envParams );
-            envParamsSG.bInRecursionByFullStack = true;
-            envParamsSG.setCmd( Enums.GenEnum.SGSSH );
-            final CmdLineArgs claSGSSH   = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsSG.getCmdEnum(), null, null );
-            boot.envParams = envParamsSG;
-            boot.configure( claSGSSH ); // this will set appropriate instance-variables in envParamsEC2
-            // 1st generate the YAML.
-            this.cmdProcessor.genYAML( claSGSSH, envParamsSG.getCfnJobTYPEString(), envParamsSG );           // Note: the 2nd argument automtically has "fullstack-" prefix in it.
-            // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
-            this.cmdProcessor.genCFNShellScript( claSGSSH, envParamsSG );
-        } else { // VPC exists.  VPC-ID is known.
-            final String existingSecurityGroup_asEnteredByUser = yamltools.readStringFromYAML( inputNode, "AWS,VPC,SG,SG-ID" );
-            final String SGPortType_asEnteredByUser = yamltools.readStringFromYAML( inputNode, "AWS,VPC,SG,sg-type" );
+        // let's determine if SG-ID is specified by user.
+        readcmd.searchYamlForPattern( inputNode, "AWS,VPC,SG", "," );
+        final SequenceNode SGs = readcmd.getOutput(); // we know readcmd always returns a LIST (because we could have one or more matches for ANY arbitratry YAML-Path-Expression.)
+        final java.util.List<Node> SGseqs = SGs.getValue();
+        int ix = 0;
+        for ( Node SG: SGseqs ) {// loop over EACH SecurityGroup that is listed by user
+            if ( this.verbose ) System.out.println( HDR +" SecurityGroup YAML-tree =\n" + NodeTools.Node2YAMLString( SG ) +"\n" );
+
+            if ( SG instanceof SequenceNode ) {
+                final SequenceNode innerSeqN = (SequenceNode) SG;
+                final java.util.List<Node> innerSGseqs = innerSeqN.getValue();
+                SG = innerSGseqs.get(0);
+                if ( this.verbose ) System.out.println( HDR +" SecurityGroup YAML-tree =\n" + NodeTools.Node2YAMLString( SG ) +"\n" );
+            } // readCmd() can do that.. it will return an array, whose elements _CAN_ be single-element-ARRAYS.  You can ONLY know for sure, based on the context/YAML you're expecting.
+
+            final String existingSecurityGroupID_asEnteredByUser = yamltools.readStringFromYAML( SG, "SG-ID" );
             // the above value can be either the word 'existing' .. or, something like 'sg-0123456789';  We need to handle both variations (so, note the existingInfrastructure.getSGID() call in the next line)
-            final String existingSecurityGroup = existingInfrastructure.getSGID(
-                                        AWSRegion, existingVPCID, existingSecurityGroup_asEnteredByUser, SGPortType_asEnteredByUser,
-                                        MyOrgName, MyEnvironment, MyDomainName, _cmdLA.isOffline() );
-            globalProps.setProperty( "ExistingSSHSecurityGroup", existingSecurityGroup ); // Why?  We've a YAML Entry in ec2-cfn YAML as:- SubnetId: My${ASUX::ExistingSubnetID}
-        }
+            final String SGPortType_asEnteredByUser = yamltools.readStringFromYAML( SG, "SG-type" );
+            if ( SGPortType_asEnteredByUser == null )
+                throw new Exception( "'SG-type' is _REQUIRED_ inside __EACH__ 'SG' entry within the Job-definition YAML-file.  It is missing in:\n"+ NodeTools.Node2YAMLString( SGs ) );
+
+            String existingSecurityGroup = null;
+            if ( existingVPCID != null ) {
+                existingSecurityGroup = existingInfrastructure.getSGID(
+                                            AWSRegion, existingVPCID, existingSecurityGroupID_asEnteredByUser, SGPortType_asEnteredByUser,
+                                            MyOrgName, MyEnvironment, MyDomainName, _cmdLA.isOffline() );
+                globalProps.setProperty( "ExistingSSHSecurityGroup", existingSecurityGroup ); // Why?  We've a YAML Entry in 'EC2-ResourceProperties-ExistingSubnet.yaml' as:- SubnetId: My${ASUX::ExistingSubnetID}
+            } // if
+// !!!!!!!!!!!!!!!!!! If the user specified MULTIPLE SGs .. this code (especially 'EC2-ResourceProperties-ExistingSubnet.yaml') is NOT ready to assign multiple SGs to the EC2 instance.
+
+            //------------
+            if ( existingSecurityGroup == null ) { // So, new SG needs to be created
+                final EnvironmentParameters envParamsSG = EnvironmentParameters.deepClone( _envParams );
+                envParamsSG.bInRecursionByFullStack = true;
+                envParamsSG.setCmd( Enums.GenEnum.SG );
+                final CmdLineArgs claSG   = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsSG.getCmdEnum(), SGPortType_asEnteredByUser+"-"+ix, null );
+                boot.envParams = envParamsSG;
+                boot.configure( claSG ); // this will set appropriate instance-variables in envParamsEC2
+                // 1st generate the YAML.
+                this.cmdProcessor.genYAML( claSG, envParamsSG.getCfnJobTYPEString(), envParamsSG );           // Note: the 2nd argument automtically has "fullstack-" prefix in it.
+                // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
+                this.cmdProcessor.genCFNShellScript( claSG, envParamsSG );
+            } // if existingSecurityGroup == null
+
+            ix ++;
+        } // for-loop
 
         //--------------- subnets -------------------
         final ArrayList<String> AZs = awssdk.getAZs( AWSRegion );
