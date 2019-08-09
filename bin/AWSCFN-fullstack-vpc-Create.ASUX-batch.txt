@@ -136,10 +136,8 @@ setProperty WhichNACLRef=MyPrivateNetworkAcl	### The RHS of the '=' refers to th
 include @${ASUX::AWSCFNHOME}/bin/AWSCFN-NACL-subnet-Private.txt
 
 //--------------------------------------------------
-#____	useAsInput !TopElemResources
-#____	yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Route53PrivateZone-VPCAssoc.yaml
-#____	yaml --macro ''
-#____	saveTo !TopElemResources
+print include ?@${ASUX::AWSCFNHOME}/bin/${ASUX::Rt53VPCAssocGenScript} \n
+include ?@${ASUX::AWSCFNHOME}/bin/${ASUX::Rt53VPCAssocGenScript}   ### Typically, 'Rt53VPCAssocGenScript' === 'AWSCFN-Rt53-VPCAssociation.txt'
 
 //--------------------------------------------------
 useAsInput !YAMLROOT
