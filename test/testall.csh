@@ -39,10 +39,7 @@ set PROJECTPATH=${AWSCFNFLDR}
 chdir ${AWSCFNFLDR}/myjobs      ### <---------- <<------------ Must be in ./myjobs subfolder to run any tests.
 if ( "$VERBOSE" != "" ) pwd
 
-set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/myjobs/${JOBSET}
-set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs${OFFLINE}
 #____   set OUTPUTFLDR=/tmp/test-output-AWSCFN${OFFLINE}
-
 #____   \rm -rf ${OUTPUTFLDR}
 #____   mkdir -p ${OUTPUTFLDR}
 
@@ -58,6 +55,9 @@ set DIVIDER=~/etc/.line
 set TESTNUM=0
 
 set JOBSET=simple
+
+set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/myjobs/${JOBSET}
+set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs${OFFLINE}
 
 ###------------------------------
 set CMD=vpc
@@ -127,9 +127,10 @@ echo $DIVIDER
 set JOBSET=2layer
 echo -n "Proceed with ${JOBSET} ? .. (or press Cntl-C) >>";  set ANS=$<
 
-#___ set TEMPLATEFLDR=${AWSCFNFLDR}/myjobs/outputs${OFFLINE}
-#___ diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
+set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/myjobs/${JOBSET}
+set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs${OFFLINE}
 
+###--------------
 set CMD=fullstack
 echo ${CMD}
 eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
@@ -179,6 +180,10 @@ git diff ${CMD}.sh
 set JOBSET=2layerExisting
 echo -n "Proceed with ${JOBSET} ? .. (or press Cntl-C) >>";  set ANS=$<
 
+set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/myjobs/${JOBSET}
+set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs${OFFLINE}
+
+###--------------
 while ( "$ANS" != "yes" )
         echo ".. .. .. .. .. Does Sydney already have the ASUX.org created VPC & SG-SSH ?  If not, run ${cwd}/${JOBSET}/fullstack-vpc-existing.sh    &    ${cwd}/${JOBSET}/fullstack-sg-ssh-existing.sh"
         echo -n "       Enter 'yes' to proceed /or/ press Cntl-C to abort >>";  set ANS=$<
