@@ -5,6 +5,10 @@ AWS:
   MyDomainName: playground.asux.org
 
   VPC:
+    SG:
+    - SG-type: ssh
+      #___ SG-ID: sg-01234567890ab  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH must be specified.
+
     subnet:
       public: yes   ### Attention: The public subnet must _ALWAYS_ _PRECEDE_ the _PRIVATE_ subnet(s) creation.
 
