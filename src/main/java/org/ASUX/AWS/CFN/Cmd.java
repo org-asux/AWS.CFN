@@ -97,7 +97,7 @@ public class Cmd {
             switch ( cmdlineargs.getCmdName() ) {
                 case VPC:
                 case SUBNET:
-                case SGSSH:
+                case SG:
                 case SGEFS:
                 case EC2PLAIN:
                 case FULLSTACK:
@@ -124,7 +124,7 @@ public class Cmd {
             switch ( cmdlineargs.getCmdName() ) {
                 case VPC:
                 case SUBNET:
-                case SGSSH:
+                case SG:
                 case SGEFS:
                 case EC2PLAIN:
                 case FULLSTACK:

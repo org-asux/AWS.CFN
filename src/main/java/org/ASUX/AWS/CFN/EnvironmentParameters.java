@@ -271,7 +271,7 @@ public final class EnvironmentParameters implements Serializable {
             case SUBNET:
             case EC2PLAIN:
             case VPC:
-            case SGSSH:
+            case SG:
                         if ( this.bInRecursionByFullStack )
                             return FULLSTACKJOB_DEFAULTS;
                         else
@@ -294,7 +294,7 @@ public final class EnvironmentParameters implements Serializable {
             case SUBNET:
             case EC2PLAIN:
             case VPC:
-            case SGSSH:         return JOBSET_MASTER;
+            case SG:         return JOBSET_MASTER;
             case VPNCLIENT:
             case SGEFS:
             case UNDEFINED:

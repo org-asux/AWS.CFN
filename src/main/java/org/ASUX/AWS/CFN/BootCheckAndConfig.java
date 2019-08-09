@@ -78,7 +78,7 @@ public final class BootCheckAndConfig {
     //  *  @param _cmdName  a value of type {@link Enums.GenEnum} - it should come from {@link CmdLineArgs#getCmdName()}
     //  *  @param _jobSetName a NotNull value that describes the 'job' and should represent a __SUBFOLDER__ within the current-working folder.
     //  *  @param _itemNumber a NotNull value that describes the 'clone-ID' of the _jobSetName (if you repeatedly create CFN based on _jobSetName)
-    //  * @param _jobTYPE a string representing the context (example: vpn, sg-ssh, ec2plain).. which is then used to load the appropriate Config-file for User's SPECs.
+    //  * @param _jobTYPE a string representing the context (example: vpn, sg, ec2plain).. which is then used to load the appropriate Config-file for User's SPECs.
     /**
      *  Checks for critical environment variables and for critical cmdline parameters like AWSRegion. Then loads all Propertyfiles for the job.
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
@@ -145,7 +145,7 @@ public final class BootCheckAndConfig {
             case SUBNET:
             case EC2PLAIN:
             case VPC:
-            case SGSSH:
+            case SG:
                             fileCheck( this.envParams.get_awscfnhome(), this.envParams.getJOB_DEFAULTS(), false /* _bMissingIsOk */ );
                             fileCheck( _cmdLA.jobSetName, this.envParams.getJOBSET_MASTER(), this.envParams.bInRecursionByFullStack );
                             // fileCheck( _cmdLA.jobSetName, "jobset-" + this.envParams.cfnJobTYPEString + ".properties" ); // we can't do this for all cfnJob-TYPEs
@@ -167,7 +167,7 @@ public final class BootCheckAndConfig {
     //  *  @param _cmdName  a value of type {@link Enums.GenEnum} - it should come from {@link CmdLineArgs#getCmdName()}
     //  *  @param _jobSetName a NotNull value that describes the 'job' and should represent a __SUBFOLDER__ within the current-working folder.
     //  *  @param _itemNumber a NotNull value that describes the 'clone-ID' of the _jobSetName (if you repeatedly create CFN based on _jobSetName)
-    // * @param _jobTYPE a string representing the context (example: vpn, sg-ssh, ec2plain).. which is then used to load the appropriate Config-file for User's SPECs.
+    // * @param _jobTYPE a string representing the context (example: vpn, sg, ec2plain).. which is then used to load the appropriate Config-file for User's SPECs.
     /**
      *  Checks for critical environment variables and for critical cmdline parameters like AWSRegion. Then loads all Propertyfiles for the job.
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
@@ -203,7 +203,7 @@ public final class BootCheckAndConfig {
         switch ( _cmdLA.cmdName ) {
             case EC2PLAIN:
             case VPC:
-            case SGSSH:
+            case SG:
             case SUBNET:
                             globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.get_awscfnhome()  +"/"+ this.envParams.getJOB_DEFAULTS() ) );
                             // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _cmdLA.jobSetName +"/"+ EnvironmentParameters.JOBSET_MASTER ) );
@@ -277,7 +277,7 @@ public final class BootCheckAndConfig {
         switch (_cmdName) {
             case VPC: // cfnJobTYPEString="vpc"; break;
             case SUBNET: // cfnJobTYPEString="subnets"; break;
-            case SGSSH: // cfnJobTYPEString="sg-ssh"; break;
+            case SG: // cfnJobTYPEString="sg"; break;
             case SGEFS: // cfnJobTYPEString="sg-efs"; break;
             case EC2PLAIN: // cfnJobTYPEString="ec2plain"; break;
             case VPNCLIENT: // cfnJobTYPEString="vpnclient"; break;

@@ -62,8 +62,8 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
     protected static final String VPCGEN = "vpc-gen";
     protected static final String SUBNETSGEN = "subnets-gen";
-    protected static final String SGSSHGEN = "sg-ssh-gen";
-    protected static final String SGEFSGEN = "sg-efs-gen";
+    protected static final String SGGEN = "sg-gen";
+    // protected static final String SGEFSGEN = "sg-efs-gen";
     protected static final String EC2PLAINGEN = "ec2plain-gen";
 
     // protected static final String VPNCLIENTGEN = "vpnclient-gen";
@@ -123,8 +123,8 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         final Option vpcgen       = CmdLineArgsCommon.genOption( "vpc", VPCGEN, "create a new VPC", 1, "jobname" );
         final Option subnetsgen   = CmdLineArgsCommon.genOption( "s", SUBNETSGEN, "create private or public subnets within a VPC", 2, "jobname" );
             subnetsgen.setArgName("JobSetName> <public|private"); // overwrite what was set within genOption()
-        final Option sgsshgen = CmdLineArgsCommon.genOption( "gs", SGSSHGEN, "create a SecurityGroup just to allow SSH access to a AMZN2-Linux EC2-instance", 1, "jobname" );
-        final Option sgefsgen     = CmdLineArgsCommon.genOption( "ge", SGEFSGEN, "create a SecurityGroup just to MOUNT an EFS onto a AMZN2-Linux EC2-instance", 1, "jobname" );
+        final Option sggen = CmdLineArgsCommon.genOption( "gs", SGGEN, "create a SecurityGroup just to allow specific protocol-access to a AMZN2-Linux EC2-instance", 1, "jobname" );
+        // final Option sgefsgen     = CmdLineArgsCommon.genOption( "ge", SGEFSGEN, "create a SecurityGroup just to MOUNT an EFS onto a AMZN2-Linux EC2-instance", 1, "jobname" );
         final Option ec2plaingen  = CmdLineArgsCommon.genOption( "e", EC2PLAINGEN, "create a new plain EC2-instance of AMZN2-Linux", 2, "jobname" );
             ec2plaingen.setArgName("JobSetName> <public|private"); // overwrite what was set within genOption()
 
@@ -133,8 +133,8 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
         grp.addOption(vpcgen);
         grp.addOption(subnetsgen);
-        grp.addOption(sgsshgen);
-        grp.addOption(sgefsgen);
+        grp.addOption(sggen);
+        // grp.addOption(sgefsgen);
         grp.addOption(ec2plaingen);
 
         // grp.addOption(vpnclientgen);
@@ -209,14 +209,14 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             this.cmdName = Enums.GenEnum.SUBNET;
             new ReusableCode().setInstanceVariables( SUBNETSGEN, _apacheCmdProcessor.getOptionValues( SUBNETSGEN ), this );
         }
-        if ( _apacheCmdProcessor.hasOption( SGSSHGEN ) ) {
-            this.cmdName = Enums.GenEnum.SGSSH;
-            this.jobSetName = _apacheCmdProcessor.getOptionValue( SGSSHGEN );
+        if ( _apacheCmdProcessor.hasOption( SGGEN ) ) {
+            this.cmdName = Enums.GenEnum.SG;
+            this.jobSetName = _apacheCmdProcessor.getOptionValue( SGGEN );
         }
-        if ( _apacheCmdProcessor.hasOption( SGEFSGEN ) ) {
-            this.cmdName = Enums.GenEnum.SGEFS;
-            this.jobSetName = _apacheCmdProcessor.getOptionValue( SGEFSGEN );
-        }
+        // if ( _apacheCmdProcessor.hasOption( SGEFSGEN ) ) {
+        //     this.cmdName = Enums.GenEnum.SGEFS;
+        //     this.jobSetName = _apacheCmdProcessor.getOptionValue( SGEFSGEN );
+        // }
         if ( _apacheCmdProcessor.hasOption( EC2PLAINGEN ) ) {
             this.cmdName = Enums.GenEnum.EC2PLAIN;
             new ReusableCode().setInstanceVariables( EC2PLAINGEN, _apacheCmdProcessor.getOptionValues( EC2PLAINGEN ), this );
