@@ -79,7 +79,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Aug 08 13:12:52 EDT 2019
+        Value: Sat Aug 10 17:30:46 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetAZ2:
@@ -132,7 +132,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Aug 08 13:12:52 EDT 2019
+        Value: Sat Aug 10 17:30:46 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetAZ3:
@@ -185,7 +185,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Aug 08 13:12:52 EDT 2019
+        Value: Sat Aug 10 17:30:46 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway1:
@@ -239,7 +239,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Aug 08 13:12:52 EDT 2019
+        Value: Sat Aug 10 17:30:46 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway2:
@@ -293,7 +293,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Aug 08 13:12:52 EDT 2019
+        Value: Sat Aug 10 17:30:46 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway3:
@@ -347,7 +347,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Thu Aug 08 13:12:52 EDT 2019
+        Value: Sat Aug 10 17:30:46 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetRouteTableAssociationAZ1:
