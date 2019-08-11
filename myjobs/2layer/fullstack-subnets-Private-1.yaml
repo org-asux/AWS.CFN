@@ -15,7 +15,7 @@ Parameters:
     Type: String
     Default: 'false'
   MyPublicRouteTable:
-    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Ohio-2layer-PublicRouteTableID"
+    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Ohio-2layer1-PublicRouteTableID"
     Type: String
     Default: org-ASUX-Playground-Ohio-PublicRouteTableID
 Conditions:
@@ -49,7 +49,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: Subnet-Private1-org-ASUX-Playground-Ohio-2layer
+        Value: Subnet-Private1-org-ASUX-Playground-Ohio-2layer1
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -79,7 +79,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sat Aug 10 17:30:47 EDT 2019
+        Value: Sat Aug 10 18:11:00 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetAZ2:
@@ -102,7 +102,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: Subnet-Private2-org-ASUX-Playground-Ohio-2layer
+        Value: Subnet-Private2-org-ASUX-Playground-Ohio-2layer1
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -132,7 +132,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sat Aug 10 17:30:47 EDT 2019
+        Value: Sat Aug 10 18:11:00 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetAZ3:
@@ -155,7 +155,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: Subnet-Private3-org-ASUX-Playground-Ohio-2layer
+        Value: Subnet-Private3-org-ASUX-Playground-Ohio-2layer1
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -185,7 +185,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sat Aug 10 17:30:47 EDT 2019
+        Value: Sat Aug 10 18:11:00 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPrivateSubnetRouteTableAssociationAZ1:
@@ -248,16 +248,16 @@ Outputs:
     Value: !Ref 'MyPrivateSubnetAZ1'
     Condition: doesExistSubnet1
     Export:
-      Name: 'org-ASUX-Playground-Ohio-2layer-Subnet-Private1-ID'
+      Name: 'org-ASUX-Playground-Ohio-2layer1-Subnet-Private1-ID'
   DefaultPrivateSubnet2:
     Description: The subnet no.2's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPrivateSubnetAZ2'
     Condition: doesExistSubnet2
     Export:
-      Name: 'org-ASUX-Playground-Ohio-2layer-Subnet-Private2-ID'
+      Name: 'org-ASUX-Playground-Ohio-2layer1-Subnet-Private2-ID'
   DefaultPrivateSubnet3:
     Description: The subnet no.3's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPrivateSubnetAZ3'
     Condition: doesExistSubnet3
     Export:
-      Name: 'org-ASUX-Playground-Ohio-2layer-Subnet-Private3-ID'
+      Name: 'org-ASUX-Playground-Ohio-2layer1-Subnet-Private3-ID'
