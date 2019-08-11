@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '2layer' on Thu Aug 08 15:48:19 EDT 2019 within Working-folder '/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs'
+Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '2layer' on Sat Aug 10 18:11:01 EDT 2019 within Working-folder '/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs'
 
 Resources:
 
@@ -10,26 +10,26 @@ Resources:
          Parameters:
             MyVPCStackPrefix: org-ASUX-Playground-Ohio
 
-   orgASUXPlaygroundOhio2layerSGSSH:     ### create-stack --stack-name org-ASUX-Playground-Ohio-2layer-SG-SSH
+   orgASUXPlaygroundOhio2layerssh0SG:     ### create-stack --stack-name org-ASUX-Playground-Ohio-2layer-ssh-0-SG
       Type: AWS::CloudFormation::Stack
       DependsOn:
       - orgASUXPlaygroundOhioVPC
       Properties:
-         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-2layer-SG-SSH
+         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-2layer-ssh-0-SG
          Parameters:
             MyVPC: org-ASUX-Playground-Ohio-VPCID
 
-   orgASUXPlaygroundOhiosubnetsPublic2layer:     ### create-stack --stack-name org-ASUX-Playground-Ohio-subnets-Public-2layer
+   orgASUXPlaygroundOhioPublic2layer0subnet:     ### create-stack --stack-name org-ASUX-Playground-Ohio-Public-2layer-0-subnet
       Type: AWS::CloudFormation::Stack
       DependsOn:
-      - orgASUXPlaygroundOhio2layerSGSSH
+      - orgASUXPlaygroundOhio2layerssh0SG
       Properties:
-         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-subnets-Public-2layer
+         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-Public-2layer-0-subnet
 
    orgASUXPlaygroundOhio2layerEC2MyWebASUXLinux1:     ### create-stack --stack-name org-ASUX-Playground-Ohio-2layer-EC2-MyWebASUXLinux1
       Type: AWS::CloudFormation::Stack
       DependsOn:
-      - orgASUXPlaygroundOhiosubnetsPublic2layer
+      - orgASUXPlaygroundOhioPublic2layer0subnet
       Properties:
          TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-2layer-EC2-MyWebASUXLinux1
          Parameters:
@@ -40,17 +40,17 @@ Resources:
             MySSHKeyName: Ohio-org-ASUX-Playground-LinuxSSH.pem
             MyPublicSubnet1: org-ASUX-Playground-Ohio-2layer-Subnet-Public1-ID
 
-   orgASUXPlaygroundOhiosubnetsPrivate2layer:     ### create-stack --stack-name org-ASUX-Playground-Ohio-subnets-Private-2layer
+   orgASUXPlaygroundOhioPrivate2layer1subnet:     ### create-stack --stack-name org-ASUX-Playground-Ohio-Private-2layer-1-subnet
       Type: AWS::CloudFormation::Stack
       DependsOn:
       - orgASUXPlaygroundOhio2layerEC2MyWebASUXLinux1
       Properties:
-         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-subnets-Private-2layer
+         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-Private-2layer-1-subnet
 
    orgASUXPlaygroundOhio2layerEC2MyPrivASUXLinux2:     ### create-stack --stack-name org-ASUX-Playground-Ohio-2layer-EC2-MyPrivASUXLinux2
       Type: AWS::CloudFormation::Stack
       DependsOn:
-      - orgASUXPlaygroundOhiosubnetsPrivate2layer
+      - orgASUXPlaygroundOhioPrivate2layer1subnet
       Properties:
          TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-2layer-EC2-MyPrivASUXLinux2
          Parameters:
