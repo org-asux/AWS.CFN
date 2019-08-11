@@ -15,7 +15,7 @@ Parameters:
     Type: String
     Default: 'false'
   MyPublicRouteTable:
-    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Ohio-2layer-PublicRouteTableID"
+    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Ohio-2layer0-PublicRouteTableID"
     Type: String
     Default: org-ASUX-Playground-Ohio-PublicRouteTableID
 Conditions:
@@ -49,7 +49,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: Subnet-Public1-org-ASUX-Playground-Ohio-2layer
+        Value: Subnet-Public1-org-ASUX-Playground-Ohio-2layer0
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -79,7 +79,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sat Aug 10 17:30:46 EDT 2019
+        Value: Sat Aug 10 18:10:59 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetAZ2:
@@ -102,7 +102,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: Subnet-Public2-org-ASUX-Playground-Ohio-2layer
+        Value: Subnet-Public2-org-ASUX-Playground-Ohio-2layer0
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -132,7 +132,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sat Aug 10 17:30:46 EDT 2019
+        Value: Sat Aug 10 18:10:59 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetAZ3:
@@ -155,7 +155,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: Subnet-Public3-org-ASUX-Playground-Ohio-2layer
+        Value: Subnet-Public3-org-ASUX-Playground-Ohio-2layer0
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -185,11 +185,11 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sat Aug 10 17:30:46 EDT 2019
+        Value: Sat Aug 10 18:10:59 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway1:
-    Description: NOTE, NAT-GW (NAT-Gateway) No.1 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Ohio-2layer-Subnet-Public1-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
+    Description: NOTE, NAT-GW (NAT-Gateway) No.1 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Ohio-2layer0-Subnet-Public1-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: vpc
@@ -209,7 +209,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: NATGW-1-org-ASUX-Playground-Ohio-2layer
+        Value: NATGW-1-org-ASUX-Playground-Ohio-2layer0
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -239,11 +239,11 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sat Aug 10 17:30:46 EDT 2019
+        Value: Sat Aug 10 18:10:59 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway2:
-    Description: NOTE, NAT-GW (NAT-Gateway) No.2 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Ohio-2layer-Subnet-Public2-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
+    Description: NOTE, NAT-GW (NAT-Gateway) No.2 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Ohio-2layer0-Subnet-Public2-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: vpc
@@ -263,7 +263,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: NATGW-2-org-ASUX-Playground-Ohio-2layer
+        Value: NATGW-2-org-ASUX-Playground-Ohio-2layer0
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -293,11 +293,11 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sat Aug 10 17:30:46 EDT 2019
+        Value: Sat Aug 10 18:10:59 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway3:
-    Description: NOTE, NAT-GW (NAT-Gateway) No.3 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Ohio-2layer-Subnet-Public3-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
+    Description: NOTE, NAT-GW (NAT-Gateway) No.3 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Ohio-2layer0-Subnet-Public3-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: vpc
@@ -317,7 +317,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: NATGW-3-org-ASUX-Playground-Ohio-2layer
+        Value: NATGW-3-org-ASUX-Playground-Ohio-2layer0
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -347,7 +347,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sat Aug 10 17:30:46 EDT 2019
+        Value: Sat Aug 10 18:10:59 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetRouteTableAssociationAZ1:
@@ -395,33 +395,33 @@ Outputs:
     Value: !Ref 'MyPublicSubnetAZ1'
     Condition: doesExistSubnet1
     Export:
-      Name: 'org-ASUX-Playground-Ohio-2layer-Subnet-Public1-ID'
+      Name: 'org-ASUX-Playground-Ohio-2layer0-Subnet-Public1-ID'
   DefaultPublicSubnet2:
     Description: The subnet no.2's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPublicSubnetAZ2'
     Condition: doesExistSubnet2
     Export:
-      Name: 'org-ASUX-Playground-Ohio-2layer-Subnet-Public2-ID'
+      Name: 'org-ASUX-Playground-Ohio-2layer0-Subnet-Public2-ID'
   DefaultPublicSubnet3:
     Description: The subnet no.3's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPublicSubnetAZ3'
     Condition: doesExistSubnet3
     Export:
-      Name: 'org-ASUX-Playground-Ohio-2layer-Subnet-Public3-ID'
+      Name: 'org-ASUX-Playground-Ohio-2layer0-Subnet-Public3-ID'
   NATGW1:
-    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Ohio-2layer-Subnet-Public1-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
+    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Ohio-2layer0-Subnet-Public1-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
     Value: !Ref 'MyNATGW1'
     Condition: doesExistSubnet1
     Export:
       Name: !Sub '${MyVPCStackPrefix}-NATGW-1-ID'
   NATGW2:
-    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Ohio-2layer-Subnet-Public2-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
+    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Ohio-2layer0-Subnet-Public2-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
     Value: !Ref 'MyNATGW2'
     Condition: doesExistSubnet2
     Export:
       Name: !Sub '${MyVPCStackPrefix}-NATGW-2-ID'
   NATGW3:
-    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Ohio-2layer-Subnet-Public3-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
+    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Ohio-2layer0-Subnet-Public3-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
     Value: !Ref 'MyNATGW3'
     Condition: doesExistSubnet3
     Export:
