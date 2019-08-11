@@ -246,13 +246,13 @@ public final class CmdProcessor
                         break;
         case SUBNET:    // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + itemSuffix +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
                         stackCmd = new CreateStackCmd( this.verbose, _envParams.getAWSRegion(), outpfile );
-                        stackCmd.setStackName( "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + itemSuffix );
+                        stackCmd.setStackName( "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + itemSuffix +"-subnet" );
                         this.evalMacros( stackCmd, _envParams );
                         scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + itemSuffix +".sh";
                         break;
-        case SG:     //preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH"+ itemSuffix +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
+        case SG:        // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH"+ itemSuffix +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
                         stackCmd = new CreateStackCmd( this.verbose, _envParams.getAWSRegion(), outpfile );
-                        stackCmd.setStackName(  "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG" );
+                        stackCmd.setStackName(  "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName + itemSuffix +"-SG" );
                         stackCmd.addParameter( "MyVPC", "${ASUX::VPCID}" );
                         this.evalMacros( stackCmd, _envParams );
                         scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() + itemSuffix +".sh";
