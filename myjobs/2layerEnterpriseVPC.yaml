@@ -8,8 +8,9 @@ AWS:
   VPC:
     VPCID: vpc-0f99bc8bd45b7b074    ### This means NO vpc.yaml will be created.
 
-    SG-ssh:
-      SG-ssh-ID: sg-059720e48dfe892ca  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH must be specified.
+    SG:
+      SG-type: ssh
+      SG-ID: sg-059720e48dfe892ca  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH must be specified.
 
     subnet:
       SubnetID: subnet-05f8377b65c182e13 ### Public subnet #1
