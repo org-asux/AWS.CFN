@@ -331,6 +331,7 @@ public final class CmdProcessorFullStack
         if ( subnetseqs.size() < 1 )
             throw new Exception( "Under 'subnet', a child-element labelled(LHS) 'SERVERS' must be provided" );
 
+        ix = 0;
         for ( Node subnet: subnetseqs ) {// loop over EACH subnet
             if ( this.verbose ) System.out.println( HDR +" subnet YAML-tree =\n" + NodeTools.Node2YAMLString( subnet ) +"\n" );
 
@@ -359,7 +360,7 @@ public final class CmdProcessorFullStack
                 final EnvironmentParameters envParamsSubnet = EnvironmentParameters.deepClone( _envParams );
                 envParamsSubnet.bInRecursionByFullStack = true;
                 envParamsSubnet.setCmd( Enums.GenEnum.SUBNET );
-                final CmdLineArgs claSubnet  = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsSubnet.getCmdEnum(), null, PublicOrPrivate );
+                final CmdLineArgs claSubnet  = CmdLineArgs.deepCloneWithChanges( _cmdLA, envParamsSubnet.getCmdEnum(), ""+ix, PublicOrPrivate );
                 boot.envParams = envParamsSubnet;
                 boot.configure( claSubnet );     // this will set appropriate instance-variables in envParamsEC2
                 // 1st generate the YAML.
@@ -380,6 +381,7 @@ public final class CmdProcessorFullStack
                 genServerCFN( fullStackJob_Filename, subnet, "Public" /* assume publicly accessible server */, boot, yamltools, _cmdLA, envParamsServersInExistingSubnet );
             }
 
+            ix ++;
         } // for each SUBNET
 
         //-------------------------------------
