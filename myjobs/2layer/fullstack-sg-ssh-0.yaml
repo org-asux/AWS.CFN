@@ -62,7 +62,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Fri Aug 09 13:45:47 EDT 2019
+        Value: Sat Aug 10 18:10:58 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
 Outputs:
