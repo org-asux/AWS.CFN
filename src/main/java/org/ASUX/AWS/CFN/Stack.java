@@ -39,25 +39,27 @@ import static org.junit.Assert.*;
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 /**
- * This class exists to represent the "aws cloudformation create-stack .. --parameters .." command in a structured manner, so that the same command can be re-represented as a NESTED-Stack.
+ *  <p>This class represents a single 'stack' associated with a single CloudFormation(CFN)-Template file.<p>
+ *  <p>A Stack - per AWS definition - is a combination of a CFN-Template file, AWSRegion and Parameter-values.</p>
+ *  <p>This class can also be seen as representing the CLI-command "aws cloudformation create-stack .. --parameters .."  in a structured manner, so that the same command can be re-represented as a NESTED-Stack.</p>
  */
-public final class CreateStackCmd
+public final class Stack
 {
-    public static final String CLASSNAME = CreateStackCmd.class.getName();
+    public static final String CLASSNAME = Stack.class.getName();
 
     public boolean verbose;
 
+    private String stackName;
     private final String AWSRegion;
     private final String CFNTemplateFile;
 
-    private String stackName;
     private final LinkedHashMap<String,String> parameters = new LinkedHashMap<>();
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
-    public CreateStackCmd( final boolean _verbose, final String _awsregion, final String _cfntemplatefile ) {
+    public Stack( final boolean _verbose, final String _awsregion, final String _cfntemplatefile ) {
         this.verbose = _verbose;
         this.AWSRegion = _awsregion;
         this.CFNTemplateFile = _cfntemplatefile;
@@ -115,7 +117,7 @@ public final class CreateStackCmd
     }
 
 /**
- *  <p>Use this to put the stack (represented by this instance) as a Nested-Stack within another.</p>
+ *  <p>A utility method that allows you to incorporate the CFN-Template (represented by this instance) as a Nested-Stack within another.</p>
  *  <p>The invoking-code _must_ have "uploaded" the file represented by {@link #CFNTemplateFile} into S3 and must provide that URL-to-S3, as the only argument to this method.</p>
  *  @param _s3ObjectURL must be a valid URL to an object containing the CFN-Template for one specific stack
  *  @param _dependsOn can be Null.  This will show up as "DependsOn:\n - ..." in the YAML generated.  Very important to help "SEQUENCE" the AWS components within a _STACKSET_ (Note: SET)
