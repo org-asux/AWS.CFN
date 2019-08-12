@@ -47,11 +47,11 @@ import static org.junit.Assert.*;
 /**
  * 
  */
-public final class EnvironmentParameters implements Serializable {
+public final class Environment implements Serializable {
 
     private static final long serialVersionUID = 439L;
 
-    public static final String CLASSNAME = EnvironmentParameters.class.getName();
+    public static final String CLASSNAME = Environment.class.getName();
 
     public static final String ORGASUXHOME  = "ORGASUXHOME";
     public static final String AWSHOME      = "AWSHOME";
@@ -90,11 +90,11 @@ public final class EnvironmentParameters implements Serializable {
     public static final String EC2IAMROLES = "MyIAM-roles";
 
     // ------ private ------
-    private static final String JOB_DEFAULTS = "/config/DEFAULTS/job-DEFAULTS.properties"; // under AWSCFNHOME
-    private static final String FULLSTACKJOB_DEFAULTS = "/config/DEFAULTS/FullStackJob-DEFAULTS.properties"; // under AWSCFNHOME
-    private static final String JOBSET_MASTER = "jobset-Master.properties"; // under '.' folder
+    public static final String JOB_DEFAULTS = "/config/DEFAULTS/job-DEFAULTS.properties"; // under AWSCFNHOME
+    public static final String FULLSTACKJOB_DEFAULTS = "/config/DEFAULTS/FullStackJob-DEFAULTS.properties"; // under AWSCFNHOME
+    public static final String JOBSET_MASTER = "jobset-Master.properties"; // under '.' folder
 
-    private static final String prefixFULLSTACK = "fullstack";
+    public static final String PREFIXFULLSTACK = "fullstack";
 
     // =================================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -103,29 +103,22 @@ public final class EnvironmentParameters implements Serializable {
     // The following .. once they are set by BootCheckAndConfig.config(), they are untouched.
     public boolean verbose;
 
+    public UserInputEnhanced enhancedUserInput = null;
+
+    // ---------------- PRIVATE ----------------
     private String orgasuxhome = "UNDEFINED";
     private String awshome = "UNDEFINED";
     private String awscfnhome = "UNDEFINED";
 
-    private String AWSRegion = "UNDEFINED";
-    private String AWSLocation = "UNDEFINED";
-    private String MyStackNamePrefix = "UNDEFINED";
-    private String MyVPCStackPrefix = "UNDEFINED";
+    private Stack stack = null;         // ONLY for vpc-gen, subnet-gen, sg-gen, this is EXPECTED to be Not-Null.
 
-    private Enums.GenEnum cfnJobTypEnum = Enums.GenEnum.UNDEFINED;
-    private String cfnJobTYPEString = "UNDEFINED";
-
-    private boolean bExistingVPC = false;
-    private boolean bExistingSubnet = false;
-    private String  existingVPCID = null;
-    private String  existingSubnetID = null;
-
-    // ---------------- PRIVATE ----------------
-    private transient LinkedHashMap<String, Properties> allPropsRef; // this could have been 'final' too, but for the fact that this.deepClone() needs to reset it.
+    private StackSet stackSet = null;   // ONLY for fullstack-gen command, this is expected to be Not-Null
 
     // --------- following are redefined by fullstack-gen -----------
     public boolean bInRecursionByFullStack = false;
-    public String outputFolderPath = "/tmp";
+
+    private transient LinkedHashMap<String, Properties> allPropsRef; // this could have been 'final' too, but for the fact that this.deepClone() needs to reset it.
+    // The above instance-variables is transient, only due to the 'deepClone()' method.. as this is a REFERENCE to an object whose lifecycle is managed elsewhere.
 
     // =================================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -133,16 +126,16 @@ public final class EnvironmentParameters implements Serializable {
 
     /**
      * The only constructor
-     * 
-     * @param _verbose  Whether you want deluge of debug-output onto System.out.
-     * @param _allProps a (NotNull) reference provided by CmdInvoker().memoryAndContext.getAllPropsRef().. or other source
+     *  @param _verbose  Whether you want deluge of debug-output onto System.out.
+     *  @param _stack Nullable.  ONLY for vpc-gen, subnet-gen, sg-gen, this is EXPECTED to be Not-Null.
+     *  @param _stackSet  Nullable. ONLY for fullstack-gen command, this is expected to be Not-Null.
+     *  @param _allProps a (NotNull) reference provided by CmdInvoker().memoryAndContext.getAllPropsRef().. or other source
      */
-    public EnvironmentParameters( final boolean _verbose, final LinkedHashMap<String, Properties> _allProps ) {
+    public Environment( final boolean _verbose, final LinkedHashMap<String, Properties> _allProps ) {
         this.verbose = _verbose;
         this.allPropsRef = _allProps;
-        // this.cfnJobTypEnum = _cfnJobTypEnum;
-        // this.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString(
-        // this.cfnJobTypEnum );
+        this.stack = _stack;
+        this.stackSet = _stackSet;
     }
 
     // ==============================================================================
@@ -155,40 +148,15 @@ public final class EnvironmentParameters implements Serializable {
         this.awscfnhome = _awscfnhome;
     }
 
-    public void setFundamentalGlobalProps( final String _AWSRegion, final String _AWSLocation ) {
-        this.AWSRegion = _AWSRegion;
-        this.AWSLocation = _AWSLocation;
-    }
-
-    public void setFundamentalPrefixes( final String _MyStackNamePrefix, final String _MyVPCStackPrefix ) {
-        this.MyStackNamePrefix = _MyStackNamePrefix;
-        this.MyVPCStackPrefix = _MyVPCStackPrefix;
-    }
-
     // ==============================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // ==============================================================================
 
-    public void setCmd( final Enums.GenEnum _cfnJobTypEnum ) throws Exception {
-        this.cfnJobTypEnum = _cfnJobTypEnum;
-        this.cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( this.cfnJobTypEnum );
-    }
+    public Stack getStack()                     { return this.stack; }
+    public Stack getStackSet()                  { return this.stackSet; }
 
-    /**
-     * Use this method to set the flags whether user has specified an existing VPC (+ optionally an existing subnet also).  Based on these flags, the appropriate '-gen.ASUX.batch.txt' scripts are executed.
-     * @param _existingVPCID a Nullable string. A non-null value represents the AWS VPC-ID of an existing VPC.
-     * @param _existingSubnetID a Nullable string. A non-null value represents the AWS SUBNET-ID of an existing Subnet (whether public or private).
-     */
-    public void setExisting( final String _existingVPCID, final String _existingSubnetID ) {
-        this.bExistingVPC = _existingVPCID != null;
-        this.bExistingSubnet = _existingSubnetID != null;
-        this.existingVPCID = _existingVPCID;
-        this.existingSubnetID = _existingSubnetID;
-    }
-
-    // ==============================================================================
-    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    // ==============================================================================
+    public void setStack( final Stack _s )      { this.stack = _s; }
+    public void setStackSet( final StackSet _s) { this.stackSet = _s; }
 
     // ==============================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -204,25 +172,6 @@ public final class EnvironmentParameters implements Serializable {
         return this.allPropsRef;
     }
 
-    // =================================================================================
-    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    // =================================================================================
-
-    public Enums.GenEnum getCmdEnum() {
-        return this.cfnJobTypEnum;
-    }
-
-    public String getCfnJobTYPEString() {
-        if (this.bInRecursionByFullStack) {
-            if ( this.bExistingSubnet )
-                return this.prefixFULLSTACK +"-"+ this.cfnJobTYPEString + "ExistingSubnet";
-            else
-            return this.prefixFULLSTACK +"-"+ this.cfnJobTYPEString;
-        } else {
-            return this.cfnJobTYPEString;
-        }
-    }
-
     // ==============================================================================
     public String get_orgasuxhome()         { return this.orgasuxhome; }
 
@@ -234,40 +183,16 @@ public final class EnvironmentParameters implements Serializable {
 
     public static String get_cwd()                 { return FileSystems.getDefault().getPath( System.getProperty("user.dir") ).toString(); } // throws RunTimeExceptions only.
 
-    // ==============================================================================
-    public String getAWSRegion()            { return this.AWSRegion; }
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
 
-    public String getAWSLocation()          { return this.AWSLocation; }
-
-    // ==============================================================================
-    public String getMyStackNamePrefix()    { return this.MyStackNamePrefix; }
-
-    public String getMyVPCStackPrefix()     { return this.MyVPCStackPrefix; }
-
-    // ==============================================================================
-    public boolean isExistingVPC()          { return this.bExistingVPC; }
-    public boolean isExistingSubnet()       { return this.bExistingSubnet; }
-
-    /**
-     * @return can be Null. Depending on whether user has specified an existing VPC (in the full-stack job's YAML)
-     */
-    public String getExistingVPCID()        { return this.existingVPCID; }
-
-    /**
-     * @return can be Null. Depending on whether user has specified an existing subnet (in the full-stack job's YAML).
-     */
-    public String getExistingSubnetID()     { return this.existingSubnetID; }
-
-    // ==============================================================================
-    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    // ==============================================================================
-
-    public String getJOB_DEFAULTS()
+    public String getJOB_DEFAULTS_FILEPATH()
                 throws Exception
     {   final String HDR = CLASSNAME + ": getJOB_DEFAULTS(): ";
         switch (this.cfnJobTypEnum) {
             case FULLSTACK:
-                            return FULLSTACKJOB_DEFAULTS; // prefixFULLSTACK +"/"+ JOB_DEFAULTS;
+                            return FULLSTACKJOB_DEFAULTS; // PREFIXFULLSTACK +"/"+ JOB_DEFAULTS;
             case SUBNET:
             case EC2PLAIN:
             case VPC:
@@ -286,7 +211,7 @@ public final class EnvironmentParameters implements Serializable {
     }
 
     // =================================================================================
-    public String getJOBSET_MASTER()
+    public String getJOBSET_MASTER_FILEPATH()
                 throws Exception
     {   final String HDR = CLASSNAME + ": getJOBSET_MASTER(): ";
         switch ( this.cfnJobTypEnum ) {
@@ -308,19 +233,15 @@ public final class EnvironmentParameters implements Serializable {
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // ==============================================================================
 
-    // ==============================================================================
-    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    // ==============================================================================
-
     /**
      * This deepClone function is VERY MUCH necessary, as No cloning-code can handle 'transient' variables in this class.
      * 
      * @param _orig what you want to deep-clone
      * @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
      */
-    public static EnvironmentParameters deepClone( EnvironmentParameters _orig ) {
+    public static Environment deepClone( Environment _orig ) {
         try {
-            final EnvironmentParameters newobj = org.ASUX.common.Utils.deepClone(_orig);
+            final Environment newobj = org.ASUX.common.Utils.deepClone(_orig);
             newobj.deepCloneFix(_orig);
             return newobj;
         } catch (Exception e) {
@@ -334,7 +255,7 @@ public final class EnvironmentParameters implements Serializable {
      * 
      * @param _orig the original NON-Null object
      */
-    protected void deepCloneFix( final EnvironmentParameters _orig ) {
+    protected void deepCloneFix( final Environment _orig ) {
         // because this class has at least one TRANSIENT class-variable.. ..
         // we need to 'restore' that object's transient variable to a 'replica'
         this.allPropsRef = _orig.allPropsRef;
