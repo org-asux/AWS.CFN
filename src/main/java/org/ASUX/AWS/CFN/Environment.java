@@ -127,15 +127,11 @@ public final class Environment implements Serializable {
     /**
      * The only constructor
      *  @param _verbose  Whether you want deluge of debug-output onto System.out.
-     *  @param _stack Nullable.  ONLY for vpc-gen, subnet-gen, sg-gen, this is EXPECTED to be Not-Null.
-     *  @param _stackSet  Nullable. ONLY for fullstack-gen command, this is expected to be Not-Null.
      *  @param _allProps a (NotNull) reference provided by CmdInvoker().memoryAndContext.getAllPropsRef().. or other source
      */
     public Environment( final boolean _verbose, final LinkedHashMap<String, Properties> _allProps ) {
         this.verbose = _verbose;
         this.allPropsRef = _allProps;
-        this.stack = _stack;
-        this.stackSet = _stackSet;
     }
 
     // ==============================================================================
@@ -153,7 +149,7 @@ public final class Environment implements Serializable {
     // ==============================================================================
 
     public Stack getStack()                     { return this.stack; }
-    public Stack getStackSet()                  { return this.stackSet; }
+    public StackSet getStackSet()               { return this.stackSet; }
 
     public void setStack( final Stack _s )      { this.stack = _s; }
     public void setStackSet( final StackSet _s) { this.stackSet = _s; }
@@ -181,7 +177,23 @@ public final class Environment implements Serializable {
 
     public String get_awscfnhome()          { return this.awscfnhome; }
 
-    public static String get_cwd()                 { return FileSystems.getDefault().getPath( System.getProperty("user.dir") ).toString(); } // throws RunTimeExceptions only.
+    public static String get_cwd()          { return FileSystems.getDefault().getPath( System.getProperty("user.dir") ).toString(); } // throws RunTimeExceptions only.
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    public String getCfnJobTYPEString() {
+        final String retstr = this.enhancedUserInput.getCmdAsString();
+        if (this.bInRecursionByFullStack) {
+            if ( this.enhancedUserInput.bExistingSubnet )
+                return Environment.PREFIXFULLSTACK +"-"+ retstr + "ExistingSubnet";
+            else
+                return Environment.PREFIXFULLSTACK +"-"+ retstr;
+        } else {
+            return retstr;
+        }
+    }
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -190,7 +202,7 @@ public final class Environment implements Serializable {
     public String getJOB_DEFAULTS_FILEPATH()
                 throws Exception
     {   final String HDR = CLASSNAME + ": getJOB_DEFAULTS(): ";
-        switch (this.cfnJobTypEnum) {
+        switch ( this.enhancedUserInput.getCmd() ) {
             case FULLSTACK:
                             return FULLSTACKJOB_DEFAULTS; // PREFIXFULLSTACK +"/"+ JOB_DEFAULTS;
             case SUBNET:
@@ -204,7 +216,7 @@ public final class Environment implements Serializable {
             case VPNCLIENT:
             case SGEFS:
             case UNDEFINED:
-            default:        final String es = HDR +" Unimplemented command: " + this.cfnJobTypEnum;
+            default:        final String es = HDR +" Unimplemented command: " + this.enhancedUserInput.getCmd();
                             System.err.println( es );
                             throw new Exception( es );
         } // switch
@@ -214,7 +226,7 @@ public final class Environment implements Serializable {
     public String getJOBSET_MASTER_FILEPATH()
                 throws Exception
     {   final String HDR = CLASSNAME + ": getJOBSET_MASTER(): ";
-        switch ( this.cfnJobTypEnum ) {
+        switch ( this.enhancedUserInput.getCmd() ) {
             case FULLSTACK:     return JOBSET_MASTER;
             case SUBNET:
             case EC2PLAIN:
@@ -223,7 +235,7 @@ public final class Environment implements Serializable {
             case VPNCLIENT:
             case SGEFS:
             case UNDEFINED:
-            default:        final String es = HDR +" Unimplemented command: " + this.cfnJobTypEnum;
+            default:        final String es = HDR +" Unimplemented command: " + this.enhancedUserInput.getCmd();
                             System.err.println( es );
                             throw new Exception( es );
         } // switch
