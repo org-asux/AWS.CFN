@@ -148,24 +148,24 @@ public class CmdInvoker extends org.ASUX.YAML.NodeImpl.CmdInvoker {
         }
 
         //---------------------------
-        final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, this.memoryAndContext.getAllPropsRef() );
+        final Environment env = new Environment( this.verbose, this.memoryAndContext.getAllPropsRef() );
+        final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, env );
         boot.check( cmdLA ); // cmdLA.getCmdName(), cmdLA.getJobSetName(), cmdLA.getItemNumber() );
         boot.configure( cmdLA ); // cmdLA.getCmdName(), cmdLA.getJobSetName(), cmdLA.getItemNumber() );
         // This boot.configure() will invoke the following:-
-        // envParamsVPC.setHomeFolders( .. .. .. );
-        // envParamsVPC.setFundamentalGlobalProps( .. .. );
-        // envParamsVPC.setFundamentalPrefixes( .. .. );
+        // myEnvVPC.setHomeFolders( .. .. .. );
+        // myEnvVPC.setFundamentalGlobalProps( .. .. );
+        // myEnvVPC.setFundamentalPrefixes( .. .. );
 
         CmdProcessor processor = new CmdProcessor( this );
         if ( cmdLA.verbose ) new org.ASUX.common.Debug(cmdLA.verbose).printAllProps( HDR +" FULL DUMP of this.propsSetRef = ", this.memoryAndContext.getAllPropsRef() );
 
         //-------------------------------------
         // 1st generate the YAML.
-        processor.genYAML( cmdLA, boot.envParams.getCfnJobTYPEString(), boot.envParams );
+        processor.genYAML( cmdLA, boot.myEnv.getCfnJobTYPEString(), boot.myEnv );
 
         // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
-        processor.genCFNShellScript( cmdLA, boot.envParams );
-        processor.createStackSetCFNTemplate( cmdLA, boot.envParams );
+        processor.genCFNShellScript( cmdLA, boot.myEnv );
 
         //-------------------------------------
         // super.class (org.ASUX.yaml.CmdInvoker) requires that this method return something.
