@@ -96,25 +96,25 @@ public final class CmdProcessorEC2
      *  <p>Runs the command to generate CFN-Template YAML via: //${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}</p>
      *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
-     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
+     *  @param _myEnv a NotNull object (created by {@link BootCheckAndConfig#configure})
      *  @return a String (containing {ASUX::_} macros) that should be used to executed using BATCH-YAML-Processor within {@link CmdProcessor#genCFNShellScript}
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
-    public String genYAMLBatchFile( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
+    public String genYAMLBatchFile( final CmdLineArgs _cmdLA, final Environment _myEnv ) throws IOException, Exception
     {
         final String HDR = CLASSNAME + ": genYAML(): ";
-        final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
 
-        final String MyDomainName       = globalProps.getProperty( EnvironmentParameters.MYDOMAINNAME );
+        final String MyDomainName       = globalProps.getProperty( Environment.MYDOMAINNAME );
         if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName );
-        final String Rt53HostedZoneId   = awssdk.getRt53HostedZoneId(  _envParams.getAWSRegion(),   MyDomainName,
+        final String Rt53HostedZoneId   = awssdk.getRt53HostedZoneId(  _myEnv.enhancedUserInput.getAWSRegion(),   MyDomainName,
                                             "Public".equals(_cmdLA.PublicOrPrivate) /* _needPublicHostedZone */ );
         if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName + " Rt53HostedZoneId " + Rt53HostedZoneId  );
-        globalProps.setProperty( EnvironmentParameters.MYRT53HOSTEDZONEID, Rt53HostedZoneId ); // will define ${ASUX::MyRt53HostedZoneId}
+        globalProps.setProperty( Environment.MYRT53HOSTEDZONEID, Rt53HostedZoneId ); // will define ${ASUX::MyRt53HostedZoneId}
 
-        final String batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+ _envParams.getCfnJobTYPEString() +"-Create.ASUX-batch.txt";
+        final String batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+ _myEnv.getCfnJobTYPEString() +"-Create.ASUX-batch.txt";
         return batchFilePath;
     }
 
@@ -126,50 +126,51 @@ public final class CmdProcessorEC2
      *  <p>Runs the command to generate CFN-Template YAML via: //${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}</p>
      *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
-     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
-     *  @return a NotNull instance (containing {ASUX::_} macros that MUST be evaluated ASAP by the invoking method) 
+     *  @param _myEnv a NotNull object (created by {@link BootCheckAndConfig#configure})
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
-    public CreateStackCmd genCFNShellScript( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
+    public void genCFNShellScript( final CmdLineArgs _cmdLA, final Environment _myEnv ) throws IOException, Exception
     {
         final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
+        final String AWSRegion = _myEnv.enhancedUserInput.getAWSRegion();
+        final String AWSLocation = _myEnv.enhancedUserInput.getAWSLocation();
 
-        final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
-        final String MyStackNamePrefix = globalProps.getProperty( EnvironmentParameters.MYSTACKNAMEPREFIX );
-        final String outpfile = CmdProcessor.getOutputFilePath( _cmdLA, _envParams, globalProps );  // _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".yaml";
+        final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        final String MyStackNamePrefix = globalProps.getProperty( Environment.MYSTACKNAMEPREFIX );
+        final String outpfile = CmdProcessor.getOutputFilePath( _cmdLA, _myEnv );  // _myEnv.enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +".yaml";
 
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
 
         // String preStr = null;
-        // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, _awscfnhome +"/config/inputs/AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _envParams.getAllPropsRef() );
+        // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, _awscfnhome +"/config/inputs/AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _myEnv.getAllPropsRef() );
         // final Properties AMIIDCacheProps = org.ASUX.common.Utils.parseProperties( "@"+ AMIIDCachePropsFileName );
         // this.getAllPropsRef().put( "AMIIDCache", AWSRegionLocations );
-        // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, "AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _envParams.getAllPropsRef() );
-        final String AMIIDCachePropsFileName = "AMZNLinux2_AMI_ID-"+ _envParams.getAWSLocation() +".txt";
+        // final String AMIIDCachePropsFileName = Macros.evalThoroughly( this.verbose, "AMZNLinux2_AMI_ID-${ASUX::AWSLocation}.txt", _myEnv.getAllPropsRef() );
+        final String AMIIDCachePropsFileName = "AMZNLinux2_AMI_ID-"+ AWSLocation +".txt";
         try {
-            // BootCheckAndConfig.fileCheck( _envParams.get_awssdkhome() +"/etc/offline-downloads", AMIIDCachePropsFileName, _envParams.bInRecursionByFullStack );
-            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _envParams.get_awssdkhome() +"/etc/offline-downloads/"+ AMIIDCachePropsFileName ) );
+            // BootCheckAndConfig.fileCheck( _myEnv.get_awssdkhome() +"/etc/offline-downloads", AMIIDCachePropsFileName, _myEnv.bInRecursionByFullStack );
+            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _myEnv.get_awssdkhome() +"/etc/offline-downloads/"+ AMIIDCachePropsFileName ) );
             // Will contain a SINGLE row like:-     AWSAMIID=ami-084040f99a74ce8c3
         } catch (Exception e) {
             if ( e.getMessage().startsWith("ERROR! File missing/unreadable/empty") ) {
-                final String EC2AMI_AMZN2Linux_LookupKey = Macros.evalThoroughly( this.verbose, "${ASUX::EC2AMI_AMZN2Linux_LookupKey}", _envParams.getAllPropsRef() );
+                final String EC2AMI_AMZN2Linux_LookupKey = Macros.evalThoroughly( this.verbose, "${ASUX::EC2AMI_AMZN2Linux_LookupKey}", _myEnv.getAllPropsRef() );
                 // The ABOVE 'EC2AMI_AMZN2Linux_LookupKey' is typically defined in AWSCFNHOME/config/DEFAULTS/job-DEFAULTS.propertied
-                System.out.println( HDR +"Need your _MANUAL_HELP_ in Querying AWS to figure out .. what the AMI-ID for "+ EC2AMI_AMZN2Linux_LookupKey +" is, in the Location "+ _envParams.getAWSLocation() +"." );
-                System.out.println( HDR +"aws ssm get-parameters --names '/aws/service/ami-amazon-linux-latest/"+ EC2AMI_AMZN2Linux_LookupKey +"' --region "+ _envParams.getAWSRegion() +" --profile ${AWSprofile} --output json" );
-                System.out.println( HDR +"aws ssm get-parameters --names '/aws/service/ami-amazon-linux-latest/"+ EC2AMI_AMZN2Linux_LookupKey +"' --region "+ _envParams.getAWSRegion() +" --profile ${AWSprofile} --output json > /tmp/o.json" );
-                System.out.println( HDR +"asux yaml batch 'useAsInput @/tmp/o.json ; yaml --read Parameters,0,Value --delimiter ,' --no-quote -i /dev/null -o '"+ _envParams.get_awssdkhome() +"/etc/offline-downloads/"+ AMIIDCachePropsFileName +"'" );
+                System.out.println( HDR +"Need your _MANUAL_HELP_ in Querying AWS to figure out .. what the AMI-ID for "+ EC2AMI_AMZN2Linux_LookupKey +" is, in the Location "+ AWSLocation +"." );
+                System.out.println( HDR +"aws ssm get-parameters --names '/aws/service/ami-amazon-linux-latest/"+ EC2AMI_AMZN2Linux_LookupKey +"' --region "+ AWSRegion +" --profile ${AWSprofile} --output json" );
+                System.out.println( HDR +"aws ssm get-parameters --names '/aws/service/ami-amazon-linux-latest/"+ EC2AMI_AMZN2Linux_LookupKey +"' --region "+ AWSRegion +" --profile ${AWSprofile} --output json > /tmp/o.json" );
+                System.out.println( HDR +"asux yaml batch 'useAsInput @/tmp/o.json ; yaml --read Parameters,0,Value --delimiter ,' --no-quote -i /dev/null -o '"+ _myEnv.get_awssdkhome() +"/etc/offline-downloads/"+ AMIIDCachePropsFileName +"'" );
                 System.exit(111);
-                return null;
+                return;
 
             } else
                 throw e;
         } // try-catch
 
-        final String DefaultSubnet1wMacro = MyStackNamePrefix + "-Subnet-${ASUX::PublicOrPrivate}1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", _envParams.getAllPropsRef()  );
-        final String DefaultSubnet1 = Macros.evalThoroughly( this.verbose, DefaultSubnet1wMacro, _envParams.getAllPropsRef() );
+        final String DefaultSubnet1wMacro = MyStackNamePrefix + "-Subnet-${ASUX::PublicOrPrivate}1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", _myEnv.getAllPropsRef()  );
+        final String DefaultSubnet1 = Macros.evalThoroughly( this.verbose, DefaultSubnet1wMacro, _myEnv.getAllPropsRef() );
         final String MySSHSecurityGroup = MyStackNamePrefix + "-SG-SSH"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-SG-SSH", this.getAllPropsRef()  );
-        final String MySSHKeyName = Macros.evalThoroughly( this.verbose, "${ASUX::AWSLocation}-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-LinuxSSH.pem", _envParams.getAllPropsRef() );
+        final String MySSHKeyName = Macros.evalThoroughly( this.verbose, "${ASUX::AWSLocation}-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-LinuxSSH.pem", _myEnv.getAllPropsRef() );
         // final String MyIamInstanceProfiles = Macros.evalThoroughly( this.verbose, "${ASUX::?????????????????}-"+HDR, this.getAllPropsRef() );
         // 'MyIamInstanceProfiles' must be set within one of the JOB files (like Job-Master.properties or Job-ec2plain.properties)
         // globalProps.setProperty( "DefaultSubnet1", DefaultSubnet1 );
@@ -177,32 +178,31 @@ public final class CmdProcessorEC2
         // globalProps.setProperty( "MySSHKeyName", MySSHKeyName );
         if (this.verbose) System.out.println( HDR + "DefaultSubnet1=" + DefaultSubnet1 + " MySSHSecurityGroup=" + MySSHSecurityGroup + " MySSHKeyName=" + MySSHKeyName );
 
-        final CreateStackCmd stackCmd = new CreateStackCmd( this.verbose, _envParams.getAWSRegion(), outpfile );
-        stackCmd.setStackName( "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::"+EnvironmentParameters.MYEC2INSTANCENAME+"}"+ _cmdLA.itemNumber );
-        stackCmd.addParameter( "My${ASUX::PublicOrPrivate}Subnet1", DefaultSubnet1 );
-        stackCmd.addParameter( "MySSHSecurityGroup", MySSHSecurityGroup );
-        stackCmd.addParameter( "MyIamInstanceProfiles", "${ASUX::"+ EnvironmentParameters.EC2IAMROLES +"}" );
-        stackCmd.addParameter( "AWSAMIID", "${ASUX::AWSAMIID}" );
-        stackCmd.addParameter( "EC2InstanceType", "${ASUX::EC2InstanceType}" );
-        stackCmd.addParameter( "MySSHKeyName", MySSHKeyName );
+        _myEnv.getStack().setStackName( Stack.genEC2StackName(_cmdLA) );
+        _myEnv.getStack().addParameter( "My${ASUX::PublicOrPrivate}Subnet1", DefaultSubnet1 );
+        _myEnv.getStack().addParameter( "MySSHSecurityGroup", MySSHSecurityGroup );
+        _myEnv.getStack().addParameter( "MyIamInstanceProfiles", "${ASUX::"+ Environment.EC2IAMROLES +"}" );
+        _myEnv.getStack().addParameter( "AWSAMIID", "${ASUX::AWSAMIID}" );
+        _myEnv.getStack().addParameter( "EC2InstanceType", "${ASUX::EC2InstanceType}" );
+        _myEnv.getStack().addParameter( "MySSHKeyName", MySSHKeyName );
         // final String params =
         //             " ParameterKey=My${ASUX::PublicOrPrivate}Subnet1,ParameterValue="+ DefaultSubnet1 +
         //             " ParameterKey=MySSHSecurityGroup,ParameterValue="+ MySSHSecurityGroup +
-        //             " ParameterKey=MyIamInstanceProfiles,ParameterValue=${ASUX::"+ EnvironmentParameters.EC2IAMROLES +"}" +
+        //             " ParameterKey=MyIamInstanceProfiles,ParameterValue=${ASUX::"+ Environment.EC2IAMROLES +"}" +
         //             " ParameterKey=AWSAMIID,ParameterValue=${ASUX::AWSAMIID} "+
         //             " ParameterKey=EC2InstanceType,ParameterValue=${ASUX::EC2InstanceType} " +
         //             " ParameterKey=MySSHKeyName,ParameterValue=" + MySSHKeyName;
 
-        // preStr ="aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::"+EnvironmentParameters.MYEC2INSTANCENAME+"}"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} "+
+        // preStr ="aws cloudformation create-stack --stack-name ${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::"+Environment.MYEC2INSTANCENAME+"}"+ _cmdLA.itemNumber +"  --region ${ASUX::AWSRegion} "+
         //         "--profile ${AWSprofile} --parameters "+ params +" --template-body file://"+ outpfile;
 
-        final List keys = awssdk.listKeyPairEC2   ( _envParams.getAWSRegion(), MySSHKeyName );
+        final List keys = awssdk.listKeyPairEC2   ( AWSRegion, MySSHKeyName );
         if ( keys.size() > 0 || _cmdLA.isOffline() ) {
             if (this.verbose) System.out.println( HDR + "The key exists with the name: "+ MySSHKeyName );
         } else {
             if (this.verbose) System.out.println( HDR + "Will CREATE NEW SSH-login KeyPair with name: "+ MySSHKeyName );
-            awssdk.deleteKeyPairEC2 ( _envParams.getAWSRegion(), MySSHKeyName ); // just to be sure - and no other reason, that the create should succeed.
-            final String keyPairMaterial = awssdk.createKeyPairEC2 ( _envParams.getAWSRegion(), MySSHKeyName );
+            awssdk.deleteKeyPairEC2 ( AWSRegion, MySSHKeyName ); // just to be sure - and no other reason, that the create should succeed.
+            final String keyPairMaterial = awssdk.createKeyPairEC2 ( AWSRegion, MySSHKeyName );
             // "aws ec2 delete-key-pair --region ${AWSRegion} --profile \${AWSprofile} --key-name ${MySSHKeyName} "
             // "aws ec2 create-key-pair --region ${AWSRegion} --profile \${AWSprofile} --key-name ${MySSHKeyName} > ~/.aws/${MySSHKeyName}"
             final String homedir = System.getProperty("user.home");
@@ -218,7 +218,7 @@ public final class CmdProcessorEC2
         // REFERENCE: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-route53-recordset.html
         // https://medium.com/boltops/a-simple-introduction-to-aws-cloudformation-part-2-d6d95ed30328
 
-        return stackCmd;
+        return;
     }
 
     //=================================================================================
