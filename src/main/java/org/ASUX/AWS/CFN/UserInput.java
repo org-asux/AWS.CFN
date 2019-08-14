@@ -46,29 +46,81 @@ import org.yaml.snakeyaml.DumperOptions; // https://bitbucket.org/asomov/snakeya
 
 import static org.junit.Assert.*;
 
+import java.io.Serializable;
+
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 /**
  * This enum class is a bit extensive, only because the ENNUMERATED VALUEs are strings.
  * For variations - see https://stackoverflow.com/questions/3978654/best-way-to-create-enum-of-strings
  */
-public final class UserInput
+public class UserInput implements Serializable
 {
+    private static final long serialVersionUID = 439L;
+
     public static final String CLASSNAME = UserInput.class.getName();
 
     public boolean verbose;
 
-    protected final YAMLTools yamltools;
-    // protected CmdInvoker cmdinvoker;
-    // protected CmdProcessor cmdProcessor;
+    private String AWSRegion = "UNDEFINED";
+    private String AWSLocation = "UNDEFINED";
+
+    private Enums.GenEnum cfnJobTypEnum = Enums.GenEnum.UNDEFINED;
+    private String cfnJobTYPEString = "UNDEFINED";
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
-    public UserInput( final boolean _verbose, final YAMLTools _yamltools ) {
+    public UserInput( final boolean _verbose, final String _AWSRegion, final String _AWSLocation ) {
         this.verbose = _verbose;
-        this.yamltools = _yamltools;
+        this.AWSRegion = _AWSRegion;
+        this.AWSLocation = _AWSLocation;
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    public UserInput( final UserInput _copy ) {
+        this.verbose = _copy.verbose;
+
+        this.AWSRegion = _copy.AWSRegion;
+        this.AWSLocation = _copy.AWSLocation;
+
+        this.cfnJobTypEnum = _copy.cfnJobTypEnum;
+        this.cfnJobTYPEString = _copy.cfnJobTYPEString;
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    public String getAWSRegion()            { return this.AWSRegion; }
+    
+    public String getAWSLocation()          { return this.AWSLocation; }
+
+    // =================================================================================
+    // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    // =================================================================================
+
+    public Enums.GenEnum getCmd() {
+        return this.cfnJobTypEnum;
+    }
+
+    public String getCmdAsString()     {return this.cfnJobTYPEString; }
+
+    // ==============================================================================
+
+    /**
+     * To prevent inconsistent values for this.cfnJobTypEnum and this.cfnJobTYPEString instance-variables (which are accessible as {@link #getCmd()} and {@link #getCmdAsString()})
+     * @param _cfnJobTypEnum a value of type {@link Enums.GenEnum} - it should come from {@link CmdLineArgs#getCmdName()}
+     * @param _cmdAsString NotNull String equivalent of _cfnJobTypEnum
+     * @throws Exception None for this class, but subclasses may.
+     */
+    public void setCmd( final Enums.GenEnum _cfnJobTypEnum, final String _cmdAsString ) throws Exception {
+        this.cfnJobTypEnum = _cfnJobTypEnum;
+        this.cfnJobTYPEString = _cmdAsString; // was:- Boot Check And Config.get CFNJob Type As String( this.cfnJobTypEnum );
     }
 
     //=================================================================================
@@ -76,45 +128,31 @@ public final class UserInput
     //=================================================================================
 
     /**
-     *  Will look for the YAML-Path '/AWS/VPC/Subnet/Public' or '/AWS/VPC/Subnet/Public' -- within Job.yaml file
-     *  @param _subnet NotNull YAML rooted at the YAML-Path /AWS/VPC/Subnet -- within Job.yaml file
-     *  @return NotNull, either "Public" or "Private".  No other value possible.
-     *  @throws Exception if any issues reading/parsing the YAML file 
+     * This deepClone function is VERY MUCH necessary, as No cloning-code can handle 'transient' variables in this class.
+     * 
+     * @param _orig what you want to deep-clone
+     * @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
      */
-    public String getPublicOrPrivate( final Node _subnet ) throws Exception
-    {   final String HDR = CLASSNAME + ": getPublicOrPrivate(_subnet): ";
-
-        String strPublicSubnet    = "no";
-        String strPrivateSubnet   = "no";
-
-        //-------------------------------------
+    public static UserInput deepClone( UserInput _orig ) {
         try {
-            strPublicSubnet    = yamltools.readStringFromYAML( _subnet, "public" );
-        } catch( java.lang.AssertionError ae ) { /* do Nothing */ }
-
-        try {
-            strPrivateSubnet   = yamltools.readStringFromYAML( _subnet, "private" );
-        } catch( java.lang.AssertionError ae ) { /* do Nothing */ }
-
-        final boolean isPublicSubnet    = ( strPublicSubnet != null && strPublicSubnet.toLowerCase().equals("yes") );
-        final boolean isPrivateSubnet   = ( strPrivateSubnet != null && strPrivateSubnet.toLowerCase().equals("yes") );
-
-        //-------------------------------------
-        String PublicOrPrivate = "NeitherPublicNorPrivate"; // by default - in case of existing Subnet ID
-
-        if ( isPublicSubnet && ! isPrivateSubnet )
-            PublicOrPrivate = "Public"; // unless I am 100% sure, I'm _NOT_ making the subnet _PUBLIC_.
-        else
-            PublicOrPrivate = "Private";
-
-        if ( this.verbose ) System.out.println( HDR +" PublicOrPrivate="+ PublicOrPrivate +" strPublicSubnet="+ strPublicSubnet +" strPrivateSubnet="+ strPrivateSubnet +" isPublicSubnet="+ isPublicSubnet +" isPrivateSubnet="+ isPrivateSubnet );
-        //-------------------------------------
-        return PublicOrPrivate;
+            final UserInput newobj = org.ASUX.common.Utils.deepClone(_orig);
+            newobj.deepCloneFix(_orig);
+            return newobj;
+        } catch (Exception e) {
+            e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping this on the user.
+            return null;
+        }
     }
 
-    //=================================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //=================================================================================
+    /**
+     * In order to allow deepClone() to work seamlessly up and down the class-hierarchy.. I should allow subclasses to EXTEND (Not semantically override) this method.
+     * 
+     * @param _orig the original NON-Null object
+     */
+    protected void deepCloneFix( final UserInput _orig ) {
+        // Luckily, this class does _NOT_ have _ANY_ TRANSIENT class-variable.. ..
+        // Otherwise, this is the place, that we  'restore' that object's transient variable to a 'replica'
+    }
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
