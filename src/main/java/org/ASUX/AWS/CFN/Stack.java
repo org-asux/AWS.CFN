@@ -33,25 +33,35 @@
 package org.ASUX.AWS.CFN;
 
 import org.ASUX.common.Tuple;
+
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.Properties;
 
 import static org.junit.Assert.*;
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 /**
- *  <p>This class represents a single 'stack' associated with a single CloudFormation(CFN)-Template file.<p>
+ *  <p>This class represents a single 'stack' associated with a single CloudFormation(CFN)-Template file.</p>
  *  <p>A Stack - per AWS definition - is a combination of a CFN-Template file, AWSRegion and Parameter-values.</p>
  *  <p>This class can also be seen as representing the CLI-command "aws cloudformation create-stack .. --parameters .."  in a structured manner, so that the same command can be re-represented as a NESTED-Stack.</p>
  */
-public final class Stack
+public final class Stack implements Serializable
 {
+    private static final long serialVersionUID = 467L;
+
     public static final String CLASSNAME = Stack.class.getName();
 
     public boolean verbose;
 
+    public final String AWSRegion;
+    public final String AWSLocation;
+
+    // ----------- PRIVATE ----------
     private String stackName;
-    private final String AWSRegion;
-    private final String CFNTemplateFile;
+    // private String stackFileName;
+    private String CFNTemplateFile;
 
     private final LinkedHashMap<String,String> parameters = new LinkedHashMap<>();
 
@@ -59,12 +69,13 @@ public final class Stack
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
-    public Stack( final boolean _verbose, final String _awsregion, final String _cfntemplatefile ) {
+    public Stack( final boolean _verbose, final String _awsregion, final String _awslocation ) {
         this.verbose = _verbose;
         this.AWSRegion = _awsregion;
-        this.CFNTemplateFile = _cfntemplatefile;
+        this.AWSLocation = _awslocation;
         assertTrue( this.AWSRegion != null );
-        assertTrue( this.CFNTemplateFile != null );
+        assertTrue( this.AWSLocation != null );
+        // this.CFNTemplateFile = _cfntemplatefile; // , final String _cfntemplatefile
     }
 
     //=================================================================================
@@ -82,10 +93,29 @@ public final class Stack
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
-    public String getStackName()                    { return this.stackName; }
-    public void   setStackName( final String _sn )  { this.stackName = _sn;  }
+    public String getStackName()                        { return this.stackName; }
+    public void   setStackName( final String _sn )      { this.stackName = _sn;  }
 
-    public String getCFNTemplateFile()              { return this.CFNTemplateFile; }
+    // public String getStackFileName()                        { return this.stackFileName; }
+    // public void   setStackFileName( final String _sn )      { this.stackFileName = _sn;  }
+
+    /** 
+     *  <p>In contrast with getStackName(), which can return a string containing '-', '_', etc.. (pretty much any Java-String that can be a valid file-name)..<br>
+     *      this method will return a String __DEVOID__ of '-', '_', '.', .. (leaving only AlphaNumerics, per the AWS-CFN-YAML Resource-Naming specifications)</p>
+     * @return a NotNull Alphanumeric String
+     */
+    public String getStackId()                          { return this.getStackName().replaceAll("-","").replaceAll("_","").replaceAll("\\.",""); }
+
+    public String getCFNTemplateFile()                  { return this.CFNTemplateFile; }
+    public void   setCFNTemplateFile( final String _cf )  { this.CFNTemplateFile = _cf; }
+
+    public String toString() {
+        return this.getStackName() +", "+ this.AWSRegion +", "+ this.getParamsAsString() +", "+ this.getCFNTemplateFile() ;
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
 
     /**
      *  @return get back the content passed in via multiple invocations of {@link #addParameter(String, String)}, as a HashMap of pairs-of-Strings.
@@ -97,39 +127,67 @@ public final class Stack
      *  @return a String of the form " ParameterKey=Key1,ParameterValue=Val1 ParameterKey=Key2,ParameterValue=Val2 ParameterKey=Key3,ParameterValue=Val3".  Note the leading blank, but no trailing blank.
      */
     public String getParamsAsString()       {
+        return Stack.getParamsAsString( this.parameters );
+    }
+
+    /**
+     *  A string to use As-Is as the parameters within the "aws cloudformation create-stack .. --parameters .." command.
+     *  @param _parameters a NotNull instance (expected to be Stack().parameters instance-variable or StackSet().parameters instance-variable)
+     *  @return a String of the form " ParameterKey=Key1,ParameterValue=Val1 ParameterKey=Key2,ParameterValue=Val2 ParameterKey=Key3,ParameterValue=Val3".  Note the leading blank, but no trailing blank.
+     */
+    public static String getParamsAsString( final LinkedHashMap<String,String> _parameters ) {
         final StringBuffer buf = new StringBuffer();
-        for( String key: this.parameters.keySet() ) {
-            final String val = this.parameters.get( key );
+        for( String key: _parameters.keySet() ) {
+            final String val = _parameters.get( key );
             buf.append( " ParameterKey=" ).append( key ).append( ",ParameterValue=" ).append( val );
         }
         return buf.toString();
     }
+
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
-    public String toString() {
-        return "aws cloudformation create-stack --stack-name "+ this.stackName
-            +" --region "+ this.AWSRegion
-            +" --parameters "+this.getParamsAsString()
-            +" --template-body file://"+ this.getCFNTemplateFile()
+    public String genCLICmd( final String _folderPath ) {
+        return Stack.genCLICmd( this.getStackName(), this.AWSRegion, this.getParamsAsString(), this.getCFNTemplateFile(), _folderPath );
+    }
+
+    /**
+     *  Reusable code for use by this class and by {@link StackSet}.
+     *  @param _stackName since this implementation of toString(), can be null
+     *  @param _AWSRegion since this implementation of toString(), can be null
+     *  @param _params since this implementation of toString(), can be null
+     *  @param _cfnfile since this implementation of toString(), can be null
+     *  @param _folderPath the folder in which the CFN-Template-File is location (the file represented by {@link #getCFNTemplateFile()}
+     *  @return a NotNull String
+     */
+    public static String genCLICmd( final String _stackName, final String _AWSRegion, final String _params, final String _cfnfile, final String _folderPath ) {
+        return "aws cloudformation create-stack --stack-name "+ _stackName
+            +" --region "+ _AWSRegion
+            +" --parameters "+ _params
+            +" --template-body file://"+ _folderPath +"/"+_cfnfile
             +" --profile ${AWSprofile} ";
     }
 
-/**
- *  <p>A utility method that allows you to incorporate the CFN-Template (represented by this instance) as a Nested-Stack within another.</p>
- *  <p>The invoking-code _must_ have "uploaded" the file represented by {@link #CFNTemplateFile} into S3 and must provide that URL-to-S3, as the only argument to this method.</p>
- *  @param _s3ObjectURL must be a valid URL to an object containing the CFN-Template for one specific stack
- *  @param _dependsOn can be Null.  This will show up as "DependsOn:\n - ..." in the YAML generated.  Very important to help "SEQUENCE" the AWS components within a _STACKSET_ (Note: SET)
- *  @return returns the NotNull, with 1st elem as the YAML-Key and the 2nd as the YAML-as-MultiLine-String that can be embedded AS-IS (as a Nested-Stack) within another Cloudformation YAML.
- */
-    public Tuple<String,String> getCFNYAMLString( final String _s3ObjectURL, final String _dependsOn ) {
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    /**
+     *  <p>A utility method that allows you to incorporate the CFN-Template (represented by this instance) as a Nested-Stack within another.</p>
+     *  <p>The invoking-code _must_ have "uploaded" the file represented by {@link #CFNTemplateFile} into S3 and must provide that URL-to-S3, as the only argument to this method.</p>
+     *  @param _s3ObjectURL must be a valid URL to an object containing the CFN-Template for one specific stack
+     *  @param _dependsOn can be Null.  This will show up as "DependsOn:\n - ..." in the YAML generated.  Very important to help "SEQUENCE" the AWS components within a _STACKSET_ (Note: SET)
+     *  @return returns the NotNull, with 1st elem as the YAML-Key and the 2nd as the YAML-as-MultiLine-String that can be embedded AS-IS (as a Nested-Stack) within another Cloudformation YAML.
+     */
+    public Tuple<String,String> getCFNYAMLString( final String _s3ObjectURL, final String _dependsOn )
+    {   final String HDR = CLASSNAME + ": getCFNYAMLString(_s3ObjectURL,"+ _dependsOn +"): ";
+
+        if ( this.verbose ) System.out.println( HDR + "this="+ this.toString() );
         final StringBuffer buf = new StringBuffer();
-        final String sn = this.getStackName().replaceAll("-","").replaceAll("_","").replaceAll("\\.",""); // Resource-Names within a CFN Template can ONLY be AlphaNumeric
-        // System.out.println("\n!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! replaceAllHyphens = '"+ this.getStackName().replaceAll("-","") +"'\n" );
-        // System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! replaceAllAll = '"+ sn +"'\n" );
+        // Note: Resource-Names within a CFN Template can ONLY be AlphaNumeric
         // Note since this YAML is embedded inside another YAML, there at least 1 tab-char at the beginning of _EACH_ line.
-        buf.append( "   " ).append( sn ).append( ":     ### create-stack --stack-name ").append( this.getStackName() ).append( "\n" );
+        buf.append( "   " ).append( this.getStackId() ).append( ":     ### create-stack --stack-name ").append( this.getStackName() ).append( "\n" );
         buf.append( "      Type: AWS::CloudFormation::Stack\n" );
         if ( _dependsOn != null ) {
             buf.append( "      DependsOn:\n");
@@ -141,7 +199,6 @@ public final class Stack
                 // #   - ARN1          ### Maximum 5 ARNs\n
         if ( this.parameters.size() > 0 ) {
             buf.append( "         Parameters:\n" );
-            // buf.append( "            MyVPCStackPrefix: org-ASUX-Playground-Ohio\n" );
             for( String key: this.parameters.keySet() ) {
                 final String val = this.parameters.get( key );
                 buf.append( "            " ).append( key ).append( ": " ).append( val ).append( "\n" );
@@ -152,7 +209,117 @@ public final class Stack
                 // #     Value: ___
                 // # TimeoutInMinutes: '3'   ### When CloudFormation detects that the nested-stack has reached the CREATE_COMPLETE state, it marks the nested-stack resource as CREATE_COMPLETE in the parent-stack and resumes creating the parent-stack.
 
-        return new Tuple<String,String>( sn, buf.toString() );
+        return new Tuple<String,String>( this.getStackId(), buf.toString() );
     }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    /**
+     *  <p>Supporting method to the 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
+     *  <p>This specific method is actually invoked by {@link #genSubnetStackName(CmdLineArgs)} and {@link #genSGStackName(CmdLineArgs)}, to help appropriately incorporate the value of the &lt;itemNumber&gt; cmdline arguments for 'subnet-gen' amd 'sg-gen' commands</p>
+     *  @param _cmdLA a NotNull instance
+     *  @return NotNull String
+     */
+    private static final String getItemNumberSuffix( final CmdLineArgs _cmdLA ) {
+        final String itemSuffix = ( _cmdLA.itemNumber == null || "".equals(_cmdLA.itemNumber.trim()) ) ? "" : "-"+ _cmdLA.itemNumber;
+        return itemSuffix;
+    }
+    //=================================================================================
+
+    /**
+     *  <p>One of the set of 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
+     *  <p>{@link #genVPCStackName(CmdLineArgs)}, {@link #genSubnetStackName(CmdLineArgs)}, {@link #genSGStackName(CmdLineArgs)} and {@link #genEC2StackName(CmdLineArgs)}</p>
+     *  @param _cmdLA a NotNull instance
+     *  @return NotNull String
+     */
+    public static final String genVPCStackName( final CmdLineArgs _cmdLA ) {
+        return "${ASUX::"+ Environment.MYVPCSTACKPREFIX +"}-VPC";
+    }
+
+    //=================================================================================
+
+    /**
+     *  <p>One of the set of 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
+     *  <p>{@link #genVPCStackName(CmdLineArgs)}, {@link #genSubnetStackName(CmdLineArgs)}, {@link #genSGStackName(CmdLineArgs)} and {@link #genEC2StackName(CmdLineArgs)}</p>
+     *  @param _cmdLA a NotNull instance
+     *  @return NotNull String
+     */
+    public static final String genSubnetStackName( final CmdLineArgs _cmdLA ) {
+        return "${ASUX::"+ Environment.MYVPCSTACKPREFIX +"}-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + getItemNumberSuffix(_cmdLA) +"-subnet";
+    }
+
+    //=================================================================================
+
+    /**
+     *  <p>One of the set of 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
+     *  <p>{@link #genVPCStackName(CmdLineArgs)}, {@link #genSubnetStackName(CmdLineArgs)}, {@link #genSGStackName(CmdLineArgs)} and {@link #genEC2StackName(CmdLineArgs)}</p>
+     *  @param _cmdLA a NotNull instance
+     *  @return NotNull String
+     */
+    public static final String genSGStackName( final CmdLineArgs _cmdLA ) {
+        return "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName + getItemNumberSuffix(_cmdLA) +"-SG";
+    }
+
+    //=================================================================================
+
+    /**
+     *  <p>One of the set of 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
+     *  <p>{@link #genVPCStackName(CmdLineArgs)}, {@link #genSubnetStackName(CmdLineArgs)}, {@link #genSGStackName(CmdLineArgs)} and {@link #genEC2StackName(CmdLineArgs)}</p>
+     *  @param _cmdLA a NotNull instance
+     *  @return NotNull String
+     */
+    public static final String genEC2StackName( final CmdLineArgs _cmdLA ) {
+        return "${ASUX::"+ Environment.MYVPCSTACKPREFIX +"}-"+ _cmdLA.jobSetName +"-EC2-${ASUX::"+ Environment.MYEC2INSTANCENAME +"}"+ _cmdLA.itemNumber;
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    /**
+     *  <p>Yet-another utility-function - to help STANDARDIZE the naming of FILE-NAMES for CFN-Stacks</p>
+     *  @param _cmd see {@link Enums.GenEnum}
+     *  @param _cmdLA a NotNull instance
+     *  @param _myEnv a NotNull instance
+     *  @return a NotNull String representing JUST the file-name ONLY.  !!ATTENTION!! Prepend it with a Folder-path, to exactly place the file in the right location in the file-system.
+     *  @throws Exception for unimplemented commands (code-safety checks)
+     */
+    public static final String genStackCFNFileName( final Enums.GenEnum _cmd, final CmdLineArgs _cmdLA, final Environment _myEnv ) throws Exception
+    {   final String HDR = CLASSNAME + ": getStackCFNFileName(_cmdLA,_myEnv): ";
+        final String itemSuffix = ( _cmdLA.itemNumber == null || "".equals(_cmdLA.itemNumber.trim()) ) ? "" : "-"+ _cmdLA.itemNumber;
+
+        switch ( _cmd ) {
+            case SUBNET:    return _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + itemSuffix +".yaml";
+
+            case EC2PLAIN:
+                            final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+                            return _myEnv.getCfnJobTYPEString() +"-"+ globalProps.getProperty( Environment.MYEC2INSTANCENAME ) +".yaml";
+            case VPC:
+            case SG:
+                            return _myEnv.getCfnJobTYPEString() + itemSuffix +".yaml";
+            case FULLSTACK:
+                            return null;
+            case VPNCLIENT:
+            case SGEFS:
+            case UNDEFINED:
+            default:        final String es = HDR +" Unimplemented command: " + _cmd;
+                            System.err.println( es );
+                            throw new Exception( es );
+        } // switch
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
 
 };
