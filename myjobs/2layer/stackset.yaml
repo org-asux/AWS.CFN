@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '2layer' on Sat Aug 10 18:11:01 EDT 2019 within Working-folder '/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs'
+Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '2layer' on Wed Aug 14 14:02:04 EDT 2019 within Working-folder '/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs'
 
 Resources:
 
@@ -22,7 +22,7 @@ Resources:
    orgASUXPlaygroundOhioPublic2layer0subnet:     ### create-stack --stack-name org-ASUX-Playground-Ohio-Public-2layer-0-subnet
       Type: AWS::CloudFormation::Stack
       DependsOn:
-      - orgASUXPlaygroundOhio2layerssh0SG
+      - orgASUXPlaygroundOhioVPC
       Properties:
          TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-Public-2layer-0-subnet
 
@@ -43,7 +43,7 @@ Resources:
    orgASUXPlaygroundOhioPrivate2layer1subnet:     ### create-stack --stack-name org-ASUX-Playground-Ohio-Private-2layer-1-subnet
       Type: AWS::CloudFormation::Stack
       DependsOn:
-      - orgASUXPlaygroundOhio2layerEC2MyWebASUXLinux1
+      - orgASUXPlaygroundOhioVPC
       Properties:
          TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-Private-2layer-1-subnet
 
