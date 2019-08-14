@@ -136,9 +136,9 @@ public final class YAMLTools
     {
         final String HDR = CLASSNAME + ": readUserDefaultsYamlFile("+ _filename +"): ";
         final String filenamePrefix = _filename.endsWith(".yaml") ? _filename.replaceAll(".yaml$","") : _filename;
-        final String fnAlone        = EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ filenamePrefix +"-"+ EnvironmentParameters.ALONE       +".yaml";
-        final String fnDept         = EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ filenamePrefix +"-"+ EnvironmentParameters.DEPT        +".yaml";
-        final String fnEnterprise   = EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ filenamePrefix +"-"+ EnvironmentParameters.ENTERPRISE  +".yaml";
+        final String fnAlone        = Environment.USERCONFIGHOME_CFN +"/"+ filenamePrefix +"-"+ Environment.ALONE       +".yaml";
+        final String fnDept         = Environment.USERCONFIGHOME_CFN +"/"+ filenamePrefix +"-"+ Environment.DEPT        +".yaml";
+        final String fnEnterprise   = Environment.USERCONFIGHOME_CFN +"/"+ filenamePrefix +"-"+ Environment.ENTERPRISE  +".yaml";
         String nameOfFileThatExists;
         InputStream is1;
         try {
