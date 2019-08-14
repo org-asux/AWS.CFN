@@ -54,7 +54,7 @@ public final class BootCheckAndConfig {
     // =================================================================================
 
     public boolean verbose;
-    public EnvironmentParameters envParams;
+    public Environment myEnv;
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -63,11 +63,11 @@ public final class BootCheckAndConfig {
     /**
      * The only constructor
      * @param _verbose  Whether you want deluge of debug-output onto System.out.
-     * @param _allProps a (NotNull) reference provided by CmdInvoker().memoryAndContext.getAllPropsRef().. or other source
+     * @param _env a NotNull instance
      */
-    public BootCheckAndConfig( final boolean _verbose, final LinkedHashMap<String, Properties> _allProps  ) {
+    public BootCheckAndConfig( final boolean _verbose, Environment _env  ) {
         this.verbose = _verbose;
-        this.envParams = new EnvironmentParameters( _verbose, _allProps );
+        this.myEnv = _env;
     }
 
     // =================================================================================
@@ -87,32 +87,31 @@ public final class BootCheckAndConfig {
     public void check( final CmdLineArgs _cmdLA ) throws Exception
     {   final String HDR = CLASSNAME + ": check(_v," + _cmdLA.cmdName + ",_allProps): ";
 
-        final Properties sysprops     = this.envParams.getAllPropsRef().get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
+        final Properties sysprops     = this.myEnv.getAllPropsRef().get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
         final String orgasuxhome      = sysprops.getProperty("ORGASUXHOME");
         final String awshome          = sysprops.getProperty("AWSHOME");
         final String awscfnhome       = sysprops.getProperty("AWSCFNHOME");
 
         // --------------------
-        this.envParams.setCmd( _cmdLA.cmdName );
         final String cfnJobTYPEString = getCFNJobTypeAsString( _cmdLA.cmdName );
         if (this.verbose) System.out.println( HDR + "cfnJobTYPEString=" + cfnJobTYPEString );
 
         // --------------------
         if (orgasuxhome == null) {
-            throw new Exception("ERROR! " + EnvironmentParameters.ORGASUXHOME + " is NOT defined.");
+            throw new Exception("ERROR! " + Environment.ORGASUXHOME + " is NOT defined.");
         }
         if (awshome == null) {
-            throw new Exception("ERROR! " + EnvironmentParameters.AWSHOME + " is NOT defined.");
+            throw new Exception("ERROR! " + Environment.AWSHOME + " is NOT defined.");
         }
         if (awscfnhome == null) {
-            throw new Exception("ERROR! " + EnvironmentParameters.AWSCFNHOME + " is NOT defined.");
+            throw new Exception("ERROR! " + Environment.AWSCFNHOME + " is NOT defined.");
         }
 
-        this.envParams.setHomeFolders( orgasuxhome, awshome, awscfnhome );
-        if (this.verbose) System.out.println(HDR + "ORGASUXHOME=" + this.envParams.get_orgasuxhome() + " AWSHOME=" + this.envParams.get_awshome() + " AWSCFNHOME=" + this.envParams.get_awscfnhome()  + " jobSetName=" + _cmdLA.jobSetName );
+        this.myEnv.setHomeFolders( orgasuxhome, awshome, awscfnhome );
+        if (this.verbose) System.out.println(HDR + "ORGASUXHOME=" + this.myEnv.get_orgasuxhome() + " AWSHOME=" + this.myEnv.get_awshome() + " AWSCFNHOME=" + this.myEnv.get_awscfnhome()  + " jobSetName=" + _cmdLA.jobSetName );
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-        fileCheck( this.envParams.get_orgasuxhome(), "/asux.js", false /* _bMissingIsOk */ );
+        fileCheck( this.myEnv.get_orgasuxhome(), "/asux.js", false /* _bMissingIsOk */ );
         // final File asux_js = new File( orgasuxhome +"/asux.js" );
         // if ( ! asux_js.exists() ) {
         //      final String es = "Please ensure the correct value of 'ORGASUXHOME' as thatfolder is missing the file/script 'asux.js', which is currently set to "+orgasuxhome;
@@ -122,8 +121,8 @@ public final class BootCheckAndConfig {
         //      throw new Exception( es );
         // }
 
-        fileCheck( this.envParams.get_awssdkhome(), EnvironmentParameters.AWSREGIONSLOCATIONS, false /* _bMissingIsOk */ );
-        fileCheck( this.envParams.get_awssdkhome(), EnvironmentParameters.AWSLOCATIONSREGIONS, false /* _bMissingIsOk */ );
+        fileCheck( this.myEnv.get_awssdkhome(), Environment.AWSREGIONSLOCATIONS, false /* _bMissingIsOk */ );
+        fileCheck( this.myEnv.get_awssdkhome(), Environment.AWSLOCATIONSREGIONS, false /* _bMissingIsOk */ );
         // Don't need checks for 'AWSprofile' (a.k.a. ~/.aws/.profile) as this check is done within org.ASUX.AWS-SDK project's code, prior to interacting with AWS-SDK.
 
         // --------------------
@@ -133,22 +132,22 @@ public final class BootCheckAndConfig {
                             // Objective: To determine that at least one of these exists.
                             // So, let's make sure that these below fileCheck() calls .. do _NOT_ throw a FileNotFoundException.
                             // For that the last parameter _MUST_ be true
-                            final boolean exists1 = fileCheck( EnvironmentParameters.USERCONFIGHOME_CFN, EnvironmentParameters.TAGS_ALONE_MASTER, true /* _bMissingIsOk */ );
-                            if (this.verbose) System.out.println(HDR + "exists1="+ exists1 +" for "+ EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ EnvironmentParameters.TAGS_ALONE_MASTER );
-                            final boolean exists2 = fileCheck( EnvironmentParameters.USERCONFIGHOME_CFN, EnvironmentParameters.TAGS_DEPT_MASTER, true /* _bMissingIsOk */ );
-                            if (this.verbose) System.out.println(HDR + "exists2="+ exists1 +" for "+ EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ EnvironmentParameters.TAGS_DEPT_MASTER );
-                            final boolean exists3 = fileCheck( EnvironmentParameters.USERCONFIGHOME_CFN, EnvironmentParameters.TAGS_ENTERPRISE_MASTER, true /* _bMissingIsOk */ );
-                            if (this.verbose) System.out.println(HDR + "exists3="+ exists1 +" for "+ EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ EnvironmentParameters.TAGS_ENTERPRISE_MASTER );
+                            final boolean exists1 = fileCheck( Environment.USERCONFIGHOME_CFN, Environment.TAGS_ALONE_MASTER, true /* _bMissingIsOk */ );
+                            if (this.verbose) System.out.println(HDR + "exists1="+ exists1 +" for "+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_ALONE_MASTER );
+                            final boolean exists2 = fileCheck( Environment.USERCONFIGHOME_CFN, Environment.TAGS_DEPT_MASTER, true /* _bMissingIsOk */ );
+                            if (this.verbose) System.out.println(HDR + "exists2="+ exists1 +" for "+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_DEPT_MASTER );
+                            final boolean exists3 = fileCheck( Environment.USERCONFIGHOME_CFN, Environment.TAGS_ENTERPRISE_MASTER, true /* _bMissingIsOk */ );
+                            if (this.verbose) System.out.println(HDR + "exists3="+ exists1 +" for "+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_ENTERPRISE_MASTER );
                             if (  !  ( exists1 || exists2 || exists3 ) )
-                                throw new Exception( "Missing defaults file named "+ EnvironmentParameters.TAGS_ALONE_MASTER +" or "+ EnvironmentParameters.TAGS_DEPT_MASTER +" or "+ EnvironmentParameters.TAGS_ENTERPRISE_MASTER +" within folder: "+ EnvironmentParameters.USERCONFIGHOME_CFN );
+                                throw new Exception( "Missing defaults file named "+ Environment.TAGS_ALONE_MASTER +" or "+ Environment.TAGS_DEPT_MASTER +" or "+ Environment.TAGS_ENTERPRISE_MASTER +" within folder: "+ Environment.USERCONFIGHOME_CFN );
                             break;
             case SUBNET:
             case EC2PLAIN:
             case VPC:
             case SG:
-                            fileCheck( this.envParams.get_awscfnhome(), this.envParams.getJOB_DEFAULTS(), false /* _bMissingIsOk */ );
-                            fileCheck( _cmdLA.jobSetName, this.envParams.getJOBSET_MASTER(), this.envParams.bInRecursionByFullStack );
-                            // fileCheck( _cmdLA.jobSetName, "jobset-" + this.envParams.cfnJobTYPEString + ".properties" ); // we can't do this for all cfnJob-TYPEs
+                            fileCheck( this.myEnv.get_awscfnhome(), this.myEnv.getJOB_DEFAULTS_FILEPATH(), false /* _bMissingIsOk */ );
+                            fileCheck( _cmdLA.jobSetName, this.myEnv.getJOBSET_MASTER_FILEPATH(), this.myEnv.bInRecursionByFullStack );
+                            // fileCheck( _cmdLA.jobSetName, "jobset-" + this.myEnv.cfnJobTYPEString + ".properties" ); // we can't do this for all cfnJob-TYPEs
                             break;
             case VPNCLIENT:
             case SGEFS:
@@ -176,42 +175,65 @@ public final class BootCheckAndConfig {
     public void configure( final CmdLineArgs _cmdLA ) throws Exception
     {   final String HDR = CLASSNAME + ": configure(_v," + _cmdLA.cmdName + ",_allProps): ";
 
-        final Properties sysprops       = this.envParams.getAllPropsRef().get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
-        // this.envParams.orgasuxhome      = sysprops.getProperty("ORGASUXHOME");
-        // this.envParams.awshome          = sysprops.getProperty("AWSHOME");
-        // this.envParams.awscfnhome       = sysprops.getProperty("AWSCFNHOME");
-        // this.envParams.cfnJobTYPEString = getCFNJobTypeAsString( _cmdLA.cmdName );
+        final Properties sysprops       = this.myEnv.getAllPropsRef().get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
         // Now check and obtain ALL the important Property Objects.
-        if( this.envParams.getAllPropsRef().get( "Tags" ) == null ) {
-            this.envParams.getAllPropsRef().put( "Tags", new Properties() );
+        if( this.myEnv.getAllPropsRef().get( "Tags" ) == null ) {
+            this.myEnv.getAllPropsRef().put( "Tags", new Properties() );
         }
-        final Properties globalProps = this.envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        final Properties globalProps = this.myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         assertTrue( globalProps != null );
-        final Properties Tags        = this.envParams.getAllPropsRef().get( "Tags" );
+        final Properties Tags        = this.myEnv.getAllPropsRef().get( "Tags" );
         assertTrue( Tags != null );
 
-        final Properties AWSRegionsLocations = org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.get_awssdkhome()  +"/"+ EnvironmentParameters.AWSREGIONSLOCATIONS );
-        final Properties AWSLocationsRegions = org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.get_awssdkhome()  +"/"+ EnvironmentParameters.AWSLOCATIONSREGIONS );
-        this.envParams.getAllPropsRef().put( "AWSRegionsLocations", AWSRegionsLocations );
-        this.envParams.getAllPropsRef().put( "AWSLocationsRegions", AWSLocationsRegions );
+        final Properties AWSRegionsLocations = org.ASUX.common.Utils.parseProperties( "@"+ this.myEnv.get_awssdkhome()  +"/"+ Environment.AWSREGIONSLOCATIONS );
+        final Properties AWSLocationsRegions = org.ASUX.common.Utils.parseProperties( "@"+ this.myEnv.get_awssdkhome()  +"/"+ Environment.AWSLOCATIONSREGIONS );
+        this.myEnv.getAllPropsRef().put( "AWSRegionsLocations", AWSRegionsLocations );
+        this.myEnv.getAllPropsRef().put( "AWSLocationsRegions", AWSLocationsRegions );
         // We need this specific '{AWSCFNHOME}/config/AWSRegionsLocations.properties' because we need to CONVERT a AWSRegion into an AWSLocation
+        // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ AWSREGIONSLOCATIONS ) );
 
         // --------------------
-        // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ AWSREGIONSLOCATIONS ) );
+        final String cfnJobTYPEString = getCFNJobTypeAsString( _cmdLA.cmdName );
+        globalProps.setProperty( "cfnJobTYPE", cfnJobTYPEString ); // this.myEnv.getCfnJobTYPEString()
+        globalProps.setProperty( "JobSetName", _cmdLA.jobSetName );
+        globalProps.setProperty( "ItemNumber", _cmdLA.itemNumber );
+        globalProps.setProperty( "PublicOrPrivate", _cmdLA.PublicOrPrivate );
+        // final String InitialCapitalStr = Character.toUpperCase( _cmdLA.PublicOrPrivate.charAt(0) ) + _cmdLA.PublicOrPrivate.substring(1);
+        // globalProps.setProperty( "PublicOrPrivateStr", InitialCapitalStr );
+        if (this.verbose) System.out.println( HDR + "JobSetName=" + _cmdLA.jobSetName + " ItemNumber=" + _cmdLA.itemNumber + " PublicOrPrivate=" + _cmdLA.PublicOrPrivate );
+
+        final String AWSRegion    = Macros.evalThoroughly( this.verbose, "${ASUX::AWSRegion}", this.myEnv.getAllPropsRef() );
+        final String AWSLocation  = Macros.evalThoroughly( this.verbose, "${ASUX::AWS-${ASUX::AWSRegion}}", this.myEnv.getAllPropsRef() );
+        globalProps.setProperty( "AWSLocation", AWSLocation );
+
+        // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+        if ( this.myEnv.enhancedUserInput == null ) { // this can be != null, if configure() is invoked repeatedly for '--fullstack-gen' (CmdProcessorFullStack.java)
+            final UserInput userInput = new UserInput( this.verbose, AWSRegion, AWSLocation );
+            this.myEnv.enhancedUserInput = new UserInputEnhanced( userInput );
+        }
+        this.myEnv.enhancedUserInput.setCmd( _cmdLA.cmdName, cfnJobTYPEString );
+
+        // --------------------
         switch ( _cmdLA.cmdName ) {
             case EC2PLAIN:
             case VPC:
             case SG:
             case SUBNET:
-                            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.get_awscfnhome()  +"/"+ this.envParams.getJOB_DEFAULTS() ) );
-                            // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _cmdLA.jobSetName +"/"+ EnvironmentParameters.JOBSET_MASTER ) );
-                            // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _cmdLA.jobSetName +"/jobset-" + this.envParams.cfnJobTYPEString + ".properties" ) );
-                            final boolean isItOkIfFileIsMissing = this.envParams.bInRecursionByFullStack;
-                            loadPropsIntoGlobal( "@"+ _cmdLA.jobSetName +"/"+ this.envParams.getJOBSET_MASTER(),                              globalProps, isItOkIfFileIsMissing );
-                            loadPropsIntoGlobal( "@"+ _cmdLA.jobSetName +"/jobset-" + this.envParams.getCfnJobTYPEString() + ".properties",   globalProps, isItOkIfFileIsMissing );
-                            break;
+                            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.myEnv.get_awscfnhome()  +"/"+ this.myEnv.getJOB_DEFAULTS_FILEPATH() ) );
+                            // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _cmdLA.jobSetName +"/"+ Environment.JOBSET_MASTER ) );
+                            // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ _cmdLA.jobSetName +"/jobset-" + this.myEnv.cfnJobTYPEString + ".properties" ) );
+                            final boolean isItOkIfFileIsMissing = this.myEnv.bInRecursionByFullStack;
+                            loadPropsIntoGlobal( "@"+ _cmdLA.jobSetName +"/"+ this.myEnv.getJOBSET_MASTER_FILEPATH(),    globalProps, isItOkIfFileIsMissing );
+                            loadPropsIntoGlobal( "@"+ _cmdLA.jobSetName +"/jobset-" + this.myEnv.getCfnJobTYPEString() + ".properties",   globalProps, isItOkIfFileIsMissing );
+
+                            if (  !  this.myEnv.bInRecursionByFullStack ) { // if boot.configure() is being recursively called within CmdProcessorFullStack.java
+                                final Stack stack = new Stack( this.verbose, AWSRegion, AWSLocation );
+                                this.myEnv.setStack( stack );
+                                break;
+                            }
             case FULLSTACK: // get defaults from ~/.ASUX.org/.
                             // Note: We have 'fileCheck()' invocations for these 3 Tags-props-files in this.check() method.
                             // So, we know at least one of these exists.
@@ -219,10 +241,16 @@ public final class BootCheckAndConfig {
                             // For that the last parameter _MUST_ be true
 // Loading these property files is TOO early.
 // It gets OVERWRITTEN by the config/DEFAULTS/Tags_Defaults.properties
-                            // loadPropsIntoGlobal( "@"+ EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ EnvironmentParameters.TAGS_ALONE_MASTER,       Tags, true /* _bMissingIsOk */ );
-                            // loadPropsIntoGlobal( "@"+ EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ EnvironmentParameters.TAGS_DEPT_MASTER,        Tags, true /* _bMissingIsOk */ );
-                            // loadPropsIntoGlobal( "@"+ EnvironmentParameters.USERCONFIGHOME_CFN +"/"+ EnvironmentParameters.TAGS_ENTERPRISE_MASTER,  Tags, true /* _bMissingIsOk */ );
-                            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.envParams.get_awscfnhome()  +"/"+ this.envParams.getJOB_DEFAULTS() ) );
+                            // loadPropsIntoGlobal( "@"+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_ALONE_MASTER,       Tags, true /* _bMissingIsOk */ );
+                            // loadPropsIntoGlobal( "@"+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_DEPT_MASTER,        Tags, true /* _bMissingIsOk */ );
+                            // loadPropsIntoGlobal( "@"+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_ENTERPRISE_MASTER,  Tags, true /* _bMissingIsOk */ );
+                            globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.myEnv.get_awscfnhome()  +"/"+ this.myEnv.getJOB_DEFAULTS_FILEPATH() ) );
+
+                            if ( this.myEnv.getStackSet() == null ) {
+                                // ..getStackSet() can be != null, if configure() is invoked repeatedly for '--fullstack-gen' (CmdProcessorFullStack.java)
+                                final StackSet stackSet = new StackSet( this.verbose, AWSRegion, AWSLocation );
+                                this.myEnv.setStackSet( stackSet );
+                            }
                             break;
             case UNDEFINED:
             default:        final String es = " Unimplemented command: " + _cmdLA.cmdName;
@@ -232,32 +260,20 @@ public final class BootCheckAndConfig {
         if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
         // --------------------
-        globalProps.setProperty( "cfnJobTYPE", this.envParams.getCfnJobTYPEString() );
-        globalProps.setProperty( "JobSetName", _cmdLA.jobSetName );
-        globalProps.setProperty( "ItemNumber", _cmdLA.itemNumber );
-        globalProps.setProperty( "PublicOrPrivate", _cmdLA.PublicOrPrivate );
-        // final String InitialCapitalStr = Character.toUpperCase( _cmdLA.PublicOrPrivate.charAt(0) ) + _cmdLA.PublicOrPrivate.substring(1);
-        // globalProps.setProperty( "PublicOrPrivateStr", InitialCapitalStr );
-        if (this.verbose) System.out.println( HDR + "JobSetName=" + _cmdLA.jobSetName + " ItemNumber=" + _cmdLA.itemNumber + " PublicOrPrivate=" + _cmdLA.PublicOrPrivate );
-
-        final String AWSRegion    = Macros.evalThoroughly( this.verbose, "${ASUX::AWSRegion}", this.envParams.getAllPropsRef() );
-        final String AWSLocation  = Macros.evalThoroughly( this.verbose, "${ASUX::AWS-${ASUX::AWSRegion}}", this.envParams.getAllPropsRef() );
-        this.envParams.setFundamentalGlobalProps( AWSRegion, AWSLocation );
-        globalProps.setProperty( "AWSLocation", AWSLocation );
-
-        final String MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}", this.envParams.getAllPropsRef() );
-        final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-${ASUX::JobSetName}${ASUX::ItemNumber}", this.envParams.getAllPropsRef() );
+        final String MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, "${ASUX::MyOrgName}-${ASUX::MyEnvironment}-${ASUX::AWSLocation}", this.myEnv.getAllPropsRef() );
+        final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-${ASUX::JobSetName}${ASUX::ItemNumber}", this.myEnv.getAllPropsRef() );
         globalProps.setProperty( "MyStackNamePrefix", MyStackNamePrefix );
-        globalProps.setProperty( EnvironmentParameters.MYVPCSTACKPREFIX, MyVPCStackPrefix );
+        globalProps.setProperty( Environment.MYVPCSTACKPREFIX, MyVPCStackPrefix );
+        this.myEnv.enhancedUserInput.setMyStackNamePrefix( MyStackNamePrefix );
+        // this.myEnv.enhancedUserInput.setMyVPCStackPrefix ( MyVPCStackPrefix  );
         if (this.verbose) System.out.println( HDR + "MyStackNamePrefix=" + MyStackNamePrefix + " MyVPCStackPrefix=" + MyVPCStackPrefix );
-        this.envParams.setFundamentalPrefixes( MyStackNamePrefix, MyVPCStackPrefix );
 
-        final String VPCID = MyVPCStackPrefix + "-VPCID"; // Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-VPCID", this.envParams.getAllPropsRef()  );
-        final String DefaultAZ = MyVPCStackPrefix + "-AZ-ID"; // Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-AZ-ID", this.envParams.getAllPropsRef() );
+        final String VPCID = MyVPCStackPrefix + "-VPCID"; // Macros.evalThoroughly( this.verbose, "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-VPCID", this.myEnv.getAllPropsRef()  );
+        final String DefaultAZ = MyVPCStackPrefix + "-AZ-ID"; // Macros.evalThoroughly( this.verbose, "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-AZ-ID", this.myEnv.getAllPropsRef() );
         globalProps.setProperty( "VPCID", VPCID ) ;
         globalProps.setProperty( "DefaultAZ", DefaultAZ );
-        if (this.verbose) System.out.println( HDR + "VPCID=" + VPCID + " DefaultAZ=" + DefaultAZ );
 
+        if (this.verbose) System.out.println( HDR + "VPCID=" + VPCID + " DefaultAZ=" + DefaultAZ );
         if (this.verbose) System.out.println( HDR + "globalProps: Total # of entries = " + globalProps.size() + "." );
 
     }
@@ -267,7 +283,8 @@ public final class BootCheckAndConfig {
     //=================================================================================
 
     /**
-     *  A simple tool to map the cmd - into a String variable, that is used to load the cmd-specific YAML-BATCH scripts.
+     *  <p>A simple tool to map the cmd - into a String variable, that is used to load the cmd-specific YAML-BATCH scripts.</p>
+     * <p>Example: Enums.GenEnum.VPC("VPC-gen") will return "vpc" - in lowercase.</p>
      *  @param _cmdName  a value of type {@link Enums.GenEnum} - it should come from {@link CmdLineArgs#getCmdName()}
      *  @return a string that is always NOT NULL
      *  @throws Exception on any invalid input or for Incomplete-code scenarios
