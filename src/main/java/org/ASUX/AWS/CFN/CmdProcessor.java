@@ -82,7 +82,7 @@ public final class CmdProcessor
     public boolean verbose;
 
     protected CmdInvoker cmdinvoker;
-    protected ArrayList<CreateStackCmd> createdStacks = new ArrayList<>();
+    protected StackSet stackset = null; // new StackSet(_verbose, _awsregion, _awslocation);
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -102,15 +102,15 @@ public final class CmdProcessor
      *  <p>Runs the command to generate CFN-Template YAML via: //${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}</p>
      *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
-     *  @param _cfnJobType a NotNull String (created by {@link BootCheckAndConfig#getCFNJobTypeAsString})
-     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
+     *  @param _cfnJobType a NotNull String (created by {@link BootCheckAndConfig#getCFNJobTypeAsString}).  Either "vpc", "subnet", .. "fullstack-vpc", "fullstack-ec2", ..
+     *  @param _myEnv a NotNull object (created by {@link BootCheckAndConfig#configure})
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
-    public void genYAML( final CmdLineArgs _cmdLA, final String _cfnJobType, final EnvironmentParameters _envParams ) throws IOException, Exception
+    public void genYAML( final CmdLineArgs _cmdLA, final String _cfnJobType, final Environment _myEnv ) throws IOException, Exception
     {
         final String HDR = CLASSNAME + ": genYAML(..,"+ _cfnJobType +",..): ";
-        final Properties globalProps    = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        final Properties globalProps    = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
 
         final String CreatedDateTimeStamp = new Date().toString();
@@ -119,13 +119,13 @@ public final class CmdProcessor
         globalProps.setProperty( "IAMUserARN", IAMUserARN );
 
         String batchFilePath = null;
-        {
+        {   // block with 100% only commented out OLD-CODE <<-------- <<----------
             // String[] batchcmdargs = null;
             // switch ( _cmdLA.getCmdName() ) {
             // case VPC:
             //     // batchcmdargs =  processor.genVPCCmdLine( _cmdLA, _boot );
             //     // final String[] batchcmdargs = { "--batch",
-            //     //                                 "@"+ _envParams.awscfnhome +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt",
+            //     //                                 "@"+ _myEnv.awscfnhome +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt",
             //     //                                 "-i", "/dev/null", // dummy value for '-i'
             //     //                                 "-o", "/dev/null" // this '-o' does Not matter, as we'll be getting the output as the return-value of batcher.go()
             //     //                             }; // without the '-i' and '-o' the 'claBatch.parse()' will fail below.
@@ -143,21 +143,26 @@ public final class CmdProcessor
         switch ( _cmdLA.getCmdName() ) {
             case EC2PLAIN:
                             final CmdProcessorEC2 ec2Processor = new CmdProcessorEC2( this );
-                            batchFilePath = ec2Processor.genYAMLBatchFile( _cmdLA, _envParams );
+                            batchFilePath = ec2Processor.genYAMLBatchFile( _cmdLA, _myEnv );
                             break;
             case VPC:
             case SG:
-                            batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
+                            batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
                             break;
             case SUBNET:
                             assertTrue( _cmdLA.PublicOrPrivate != null && _cmdLA.PublicOrPrivate.length() > 0 ); // CmdLineArgs.class guarantees that it will be 'Public' or 'Private', if NOT NULL.
                             // globalProps.setProperty( "PublicOrPrivate", _cmdLA.PublicOrPrivate );  // already set in BootCheckAndConfig.configure()
                             if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
-                            batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-"+_cmdLA.PublicOrPrivate+"-Create.ASUX-batch.txt";
-                            // batchFilePath = "@"+ _envParams.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
+                            batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-"+_cmdLA.PublicOrPrivate+"-Create.ASUX-batch.txt";
+                            // batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
                             break;
             case FULLSTACK:
+                            final CmdProcessorFullStack fullStackProcessor = new CmdProcessorFullStack( this, this.cmdinvoker );
+                            // do NOT set 'preStr' for FULLSTACK
+                            fullStackProcessor.genAllCFNs( _cmdLA, _myEnv );
+
+                            batchFilePath = "UNDEFINED-for --fullstack-gen"; // set a default value - to help catch any logic-errors
                             break;
             // case SGEFS:     batchFilePath = ;       break;
             // case VPNCLIENT: batchFilePath = ;       break;
@@ -183,7 +188,7 @@ public final class CmdProcessor
 // above 3 lines  -versus-  below 3 lines
                     final BatchCmdProcessor batcher = new BatchCmdProcessor( _cmdLA.verbose, /* showStats */ false, _cmdLA.isOffline(), _cmdLA.getQuoteType(), this.cmdinvoker.dumperopt );
                     batcher.setMemoryAndContext( this.cmdinvoker.getMemoryAndContext() ); // this will invoke.. batcher.initProperties()
-                    if ( _cmdLA.verbose ) new org.ASUX.common.Debug(_cmdLA.verbose).printAllProps( HDR +" FULL DUMP of propsSetRef = ", _envParams.getAllPropsRef() );
+                    if ( _cmdLA.verbose ) new org.ASUX.common.Debug(_cmdLA.verbose).printAllProps( HDR +" FULL DUMP of propsSetRef = ", _myEnv.getAllPropsRef() );
 
                     final Node emptyInput = NodeTools.getEmptyYAML( this.cmdinvoker.dumperopt );
                     final Node outpData2 = batcher.go( batchFilePath, emptyInput );
@@ -193,7 +198,7 @@ public final class CmdProcessor
                         System.exit(99);
                         throw new Exception( "Failure to successfully complete user-command. rerun with --verbose option!" );
                     }
-                    final String outpfile = CmdProcessor.getOutputFilePath( _cmdLA, _envParams, globalProps );
+                    final String outpfile = CmdProcessor.getOutputFilePath( _cmdLA, _myEnv );
                     InputsOutputs.saveDataIntoReference( "@"+ outpfile, outpData2, null, this.cmdinvoker.getYamlWriter(), this.cmdinvoker.dumperopt, _cmdLA.verbose );
                     break;
             case VPNCLIENT:
@@ -216,57 +221,70 @@ public final class CmdProcessor
      *  <p>Runs the command to generate CFN-Template YAML via: //${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}</p>
      *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
-     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
+     *  @param _myEnv a NotNull object (created by {@link BootCheckAndConfig#configure})
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
-    public void genCFNShellScript( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws IOException, Exception
+    public void genCFNShellScript( final CmdLineArgs _cmdLA, final Environment _myEnv ) throws IOException, Exception
     {
-        final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
+        final String HDR = CLASSNAME + ": genVPCCFNShellScript("+ _cmdLA.getCmdName() +",_myEnv): ";
+        final UserInputEnhanced enhancedUserInput = _myEnv.enhancedUserInput;
 
-        final Properties globalProps = _envParams.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
-        // final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}--${ASUX::JobSetName}${ASUX::ItemNumber}", this.allPropsRef );
+        final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        // final String MyStackNamePrefix = Macros.evalThoroughly( this.verbose, "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}--${ASUX::JobSetName}${ASUX::ItemNumber}", this.allPropsRef );
         final String MyStackNamePrefix = globalProps.getProperty( "MyStackNamePrefix" );
-        final String outpfile = this.getOutputFilePath( _cmdLA, _envParams, globalProps ); //_envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".yaml";
+        final String outpfile = CmdProcessor.getOutputFilePath( _cmdLA, _myEnv ); //myEnv.enhancedUserInput.outputFolderPath +"/"+ _myEnv.getCfnJobTYPEString() +".yaml";
 
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
 
-        // String preStr = null;
+        // String stackName = null;
+        // switch( _cmdLA.getCmdName() ) {
+        //     case SUBNET:        stackName = Stack.genSubnetStackName( _cmdLA );      break;
+        //     case EC2PLAIN:      stackName = Stack.genEC2StackName( _cmdLA );         break;
+        //     case VPC:           stackName = Stack.genVPCStackName( _cmdLA );         break;
+        //     case SG:            stackName = Stack.genSGStackName( _cmdLA );          break;
+        //     case FULLSTACK: 
+        //     case VPNCLIENT:
+        //     case SGEFS:
+        //     case UNDEFINED:
+        //     default:        final String es = HDR +" Unimplemented command: " + _cmdLA.getCmdName();
+        //                     System.err.println( es );
+        //                     throw new Exception( es );
+        // } // switch
+
+        // final String properStackname = Macros.evalThoroughly( this.verbose,    stackName,    _myEnv.getAllPropsRef() );
+        // _myEnv.getStack().setStackName( properStackname );
+
         String scriptfile;
-        CreateStackCmd stackCmd = null;
         final String itemSuffix = ( _cmdLA.itemNumber == null || "".equals(_cmdLA.itemNumber.trim()) ) ? "" : "-"+ _cmdLA.itemNumber;
 
         switch ( _cmdLA.getCmdName() ) {
-        case VPC:       // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-VPC  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey="+EnvironmentParameters.MYVPCSTACKPREFIX+",ParameterValue=${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"} --template-body file://"+ outpfile;
-                        stackCmd = new CreateStackCmd( this.verbose, _envParams.getAWSRegion(), outpfile );
-                        stackCmd.setStackName( "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-VPC" );
-                        stackCmd.addParameter( EnvironmentParameters.MYVPCSTACKPREFIX, "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}" );
-                        this.evalMacros( stackCmd, _envParams );
-                        scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +".sh";
+        case VPC:       // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-VPC  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey="+Environment.MYVPCSTACKPREFIX+",ParameterValue=${ASUX::"+Environment.MYVPCSTACKPREFIX+"} --template-body file://"+ outpfile;
+                        _myEnv.getStack().setStackName( Stack.genVPCStackName(_cmdLA) );
+                        _myEnv.getStack().addParameter( Environment.MYVPCSTACKPREFIX, "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}" );
+                        _myEnv.getStack().setCFNTemplateFile( Stack.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
+                        scriptfile = enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +".sh";
                         break;
-        case SUBNET:    // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + itemSuffix +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
-                        stackCmd = new CreateStackCmd( this.verbose, _envParams.getAWSRegion(), outpfile );
-                        stackCmd.setStackName( "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + itemSuffix +"-subnet" );
-                        this.evalMacros( stackCmd, _envParams );
-                        scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + itemSuffix +".sh";
+        case SUBNET:    // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + itemSuffix +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
+                        _myEnv.getStack().setStackName( Stack.genSubnetStackName(_cmdLA) );
+                        _myEnv.getStack().setCFNTemplateFile( Stack.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
+                        scriptfile = enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + itemSuffix +".sh";
                         break;
-        case SG:        // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH"+ itemSuffix +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
-                        stackCmd = new CreateStackCmd( this.verbose, _envParams.getAWSRegion(), outpfile );
-                        stackCmd.setStackName(  "${ASUX::"+EnvironmentParameters.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName + itemSuffix +"-SG" );
-                        stackCmd.addParameter( "MyVPC", "${ASUX::VPCID}" );
-                        this.evalMacros( stackCmd, _envParams );
-                        scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() + itemSuffix +".sh";
+        case SG:        // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH"+ itemSuffix +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
+                        _myEnv.getStack().setStackName( Stack.genSGStackName(_cmdLA) );
+                        _myEnv.getStack().addParameter( "MyVPC", "${ASUX::VPCID}" );
+                        _myEnv.getStack().setCFNTemplateFile( Stack.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
+                        scriptfile = enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() + itemSuffix +".sh";
                         break;
         case EC2PLAIN:  
                         final CmdProcessorEC2 ec2Processor = new CmdProcessorEC2( this );
-                        stackCmd = ec2Processor.genCFNShellScript( _cmdLA, _envParams );
-                        scriptfile = _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ globalProps.getProperty( EnvironmentParameters.MYEC2INSTANCENAME ) +".sh";
+                        ec2Processor.genCFNShellScript( _cmdLA, _myEnv );
+                        _myEnv.getStack().setCFNTemplateFile( Stack.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
+                        scriptfile = enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +"-"+ globalProps.getProperty( Environment.MYEC2INSTANCENAME ) +".sh";
                         break;
         case FULLSTACK:
-                        final CmdProcessorFullStack fullStackProcessor = new CmdProcessorFullStack( this, this.cmdinvoker );
-                        // do NOT set 'preStr' for FULLSTACK
-                        fullStackProcessor.genCFNShellScript( _cmdLA, _envParams );
-                        scriptfile = "??UNDEFINED for FullStack-gen"; // OTHERWISE, Compiler will complain about uninitialized-variable.. .. .. per formula, you can blindly set it to:- _envParams.outputFolderPath +"/"+ _envParams.cfnJobTYPEString +".sh";
+                        // Do Nothing.
+                        scriptfile = "??UNDEFINED for FullStack-gen"; // OTHERWISE, Compiler will complain about uninitialized-variable.. .. .. per formula, you can blindly set it to:- enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +".sh";
                         break;
         case VPNCLIENT:
         case SGEFS:
@@ -282,11 +300,10 @@ public final class CmdProcessor
             case VPC:
             case SG:
             case SUBNET:
-                            // final String postStr = Macros.evalThoroughly( this.verbose, preStr, _envParams.getAllPropsRef() );
-                            this.evalMacros( stackCmd, _envParams );
-                            final String postStr = stackCmd.toString();
+                            // final String postStr = Macros.evalThoroughly( this.verbose, preStr, _myEnv.getAllPropsRef() );
+                            CmdProcessor.evalMacros( this.verbose, _myEnv.getStack(), _myEnv );
+                            final String postStr = _myEnv.getStack().genCLICmd( enhancedUserInput.getOutputFolderPath() );
                             if ( this.verbose ) System.out.println( postStr ); // dump the cmd to execute the CFN script to stdout.
-                            this.createdStacks.add( stackCmd );
 
                             org.ASUX.common.IOUtils.write2File( scriptfile, postStr );
                             org.ASUX.common.IOUtils.setFilePerms( this.verbose, scriptfile, true, true, true, true ); // rwx------ file-permissions
@@ -305,27 +322,36 @@ public final class CmdProcessor
 
     /**
      * Based on whether the VPC, Subnet or EC2 instance is being created - in isolation by itself .. or, as part of a full-stack, the output file-name changes.
-     * This variability is feasible due to {@link EnvironmentParameters#getCfnJobTYPEString()}.
+     * This variability is feasible due to {@link Environment#getCfnJobTYPEString()}.
      * @param _cmdLA NotNull instance obtained from {@link CmdInvoker#processCommand}
-     * @param _envParams MotNull instance obtained from {@link BootCheckAndConfig#configure}
-     * @param _globalProps NotNull instance of java.util.Properties, that is saved in {@link #cmdinvoker}'s MemoryAndContext attribute.
+     * @param _myEnv MotNull instance obtained from {@link BootCheckAndConfig#configure}
      * @return a Nullable string
      * @throws Exception if unimplemented logic or logic-errors
      */
-    public static String getOutputFilePath( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams, final Properties _globalProps )
+    public static String getOutputFilePath( final CmdLineArgs _cmdLA, final Environment _myEnv )
                         throws Exception
     {   final String HDR = CLASSNAME + ": getOutputFilePath(): ";
-        final String itemSuffix = ( _cmdLA.itemNumber == null || "".equals(_cmdLA.itemNumber.trim()) ) ? "" : "-"+ _cmdLA.itemNumber;
-        switch ( _cmdLA.getCmdName() ) {
-            case SUBNET:    return _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + itemSuffix +".yaml";
+        final UserInputEnhanced enhancedUserInput = _myEnv.enhancedUserInput;
+        // final String itemSuffix = ( _cmdLA.itemNumber == null || "".equals(_cmdLA.itemNumber.trim()) ) ? "" : "-"+ _cmdLA.itemNumber;
 
-            case EC2PLAIN:
-                            return _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() +"-"+ _globalProps.getProperty( EnvironmentParameters.MYEC2INSTANCENAME ) +".yaml";
+        switch ( _cmdLA.getCmdName() ) {
+            case FULLSTACK: return null; // <<---- Attention! Unique.. ..
             case VPC:
-            case SG:
-                            return _envParams.outputFolderPath +"/"+ _envParams.getCfnJobTYPEString() + itemSuffix +".yaml";
-            case FULLSTACK:
-                            return null;
+            case SG:        
+            case SUBNET:
+            case EC2PLAIN:
+                            _myEnv.getStack().setCFNTemplateFile( Stack.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
+                            return enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getStack().getCFNTemplateFile();
+            // case SUBNET:    _myEnv.getStack().setCFNTemplateFile( Stack.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
+            //                 return enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getStack().getCFNTemplateFile();
+            //                         // +"/"+ _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + itemSuffix +".yaml";
+            // case EC2PLAIN:  _myEnv.getStack().setCFNTemplateFile( Stack.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
+            //                 return enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getStack().getCFNTemplateFile();
+            //                         // +"/"+ _myEnv.getCfnJobTYPEString() +"-"+ _globalProps.getProperty( Environment.MYEC2INSTANCENAME ) +".yaml";
+            // case VPC:
+            // case SG:        _myEnv.getStack().setCFNTemplateFile( Stack.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
+            //                 return enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getStack().getCFNTemplateFile();
+            //                         // +"/"+ _myEnv.getCfnJobTYPEString() + itemSuffix +".yaml";
             case VPNCLIENT:
             case SGEFS:
             case UNDEFINED:
@@ -339,103 +365,14 @@ public final class CmdProcessor
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
-    /**
-     *  <p>This should be invoked as step #3, after invoking {@link #genYAML(CmdLineArgs, String, EnvironmentParameters)} and {@link #genCFNShellScript(CmdLineArgs, EnvironmentParameters)}.</p>
-     *  <p>This method will generate the Stack-Set YAML, so that all the various components are run as a single set of Nested Stacks (very convenient, rather than run each one-after-another, waiting for each to complete)</p>
-     *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
-     *  @param _envParams a NotNull object (created by {@link BootCheckAndConfig#configure})
-     *  @throws Exception any errors while interacting with AWS-S3 or in writing to local file-system
-     */
-    public void createStackSetCFNTemplate( final CmdLineArgs _cmdLA, final EnvironmentParameters _envParams ) throws Exception
-    {   final String HDR = CLASSNAME + ": createStackSetCFNTemplate(): ";
-        if ( _cmdLA.s3bucketname == null || "".equals( _cmdLA.s3bucketname )  ) {
-            System.out.println( "Not generating StackSET." );
-            return;
-        }
-
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline()  );
-
-        final Tuple<String,String> tuple = awssdk.parseS3Bucketname( _cmdLA.s3bucketname ); // splits "bucketname@eu-west-1" into 'bucketname' & 'eu-west-1'
-        final String properBucketName = tuple.key; // if _cmdLA.s3bucketname was null, this will be null too.
-        final String correctBucketRegionID = ( tuple.val == null || "".equals(tuple.val) )   ?   _envParams.getAWSRegion() : tuple.val;
-        if (  !   awssdk.matchesAWSRegionPattern( correctBucketRegionID ) ) {
-            System.err.println( "\n\nERROR!!!!!! Invalid AWS Region: "+ tuple.val );
-            return;
-        }
-        if ( awssdk.doesBucketExist( properBucketName ) ) {
-            if (  !  awssdk.isValidS3Bucket( correctBucketRegionID, properBucketName ) ) {
-                System.err.println( "\n\nERROR!!!!!! You do _NOT_ have access to the Bucket that you provided on command line: "+ _cmdLA.s3bucketname );
-                return;
-            }
-        } else {
-            System.err.println( "\n\nERROR!!!!!! Invalid Bucketname provided on command line: "+ _cmdLA.s3bucketname );
-            return;
-        }
-        final String s3BucketHTTPSURL = "https://"+ properBucketName +".s3."+ correctBucketRegionID +".amazonaws.com";
-
-        final StringBuffer bufferYAML = new StringBuffer();
-        final StringBuffer bufferShellScript = new StringBuffer();
-        bufferYAML.append( "AWSTemplateFormatVersion: '2010-09-09'\n" );
-        bufferYAML.append( "Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '" );
-        bufferYAML.append( _cmdLA.jobSetName ).append( "' on " ).append( new Date() ).append( " within Working-folder '" ).append( EnvironmentParameters.get_cwd() ).append("'\n");
-        // Parameters:
-        //		AWSprofile:
-        //	 		Type: String
-        //			Description: Your AWS Profile under ~/.aws/config that refers to the CLI KeyPair
-
-        bufferYAML.append( "\nResources:\n\n" );
-        String dependsOn = null;
-        for ( CreateStackCmd stackCmd: this.createdStacks ) {
-            this.evalMacros( stackCmd, _envParams ); // just to be extra-safe.
-            final String s3ObjectURL = "s3://"+ properBucketName +"/"+ stackCmd.getStackName();
-            final String s3ObjectHTTPSURL = s3BucketHTTPSURL +"/"+ stackCmd.getStackName();
-            // if (  !  _cmdLA.isOffline()  ) {
-            // !!!!!!!!!!! DO NOT UNCOMMENT THESE LINES !!!!!!!!!!!
-            // Unless you make arrangements to enhance awssdk.S3put() to take on '--acl' options via API.
-            //     if ( this.verbose ) System.out.println( HDR + "About to upload "+ stackCmd.getCFNTemplateFile() +" as S3-object at s3://"+ stackCmd.getStackName() +"/..." );
-            //     awssdk.S3put( correctBucketRegionID, _cmdLA.s3bucketname,  stackCmd.getStackName() /* _S3ObjectName */,   stackCmd.getCFNTemplateFile() /* _filepathString */ );
-            //     if ( this.verbose ) System.out.println( HDR + "Completed upload to "+ s3ObjectURL );
-            // }
-            final Tuple<String,String> tuple22 = stackCmd.getCFNYAMLString( s3ObjectHTTPSURL, dependsOn );
-            dependsOn = tuple22.key;
-            bufferYAML.append( tuple22.val ).append("\n");
-            bufferShellScript.append( "aws s3 cp --profile ${AWSprofile} --acl public-read  " ) // make the S3 object automatically publicly readable.
-                            .append( stackCmd.getCFNTemplateFile() ).append("   ").append( s3ObjectURL )
-                            .append( " --region " ).append( correctBucketRegionID ).append( "\n" );
-        }
-
-        // Outputs:
-        //   StackRef:
-        //     Value: !Ref myStack
-        //   OutputFromNestedStack:
-        //     Value: !GetAtt myStack.Outputs.BucketName
-
-        final String yamlfile = _envParams.outputFolderPath +"/stackset.yaml";
-        org.ASUX.common.IOUtils.write2File( yamlfile, bufferYAML.toString() );
-        org.ASUX.common.IOUtils.setFilePerms( this.verbose, yamlfile, true, true, false, true ); // readable, writeable, executable, ownerOnly
-        System.out.println( yamlfile );
-
-        // final String MyVPCStackPrefix = Macros.evalThoroughly( this.verbose, _envParams.getMyStackNamePrefix(), _envParams.getAllPropsRef() );
-        bufferShellScript.append( "aws cloudformation create-stack --profile ${AWSprofile} --stack-name " ).append( _envParams.getMyStackNamePrefix() )
-                        .append( " --region " ).append( _envParams.getAWSRegion() )
-                        .append( " --template-body file://")
-                        .append( yamlfile ).append( "\n" );
-
-        final String scriptfile = _envParams.outputFolderPath +"/stackset.sh";
-        org.ASUX.common.IOUtils.write2File( scriptfile, bufferShellScript.toString() );
-        org.ASUX.common.IOUtils.setFilePerms( this.verbose, scriptfile, true, true, true, true ); // rwx------ file-permissions
-        System.out.println( scriptfile );
-    }
-
-    //=================================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //=================================================================================
-
-    private void evalMacros( final CreateStackCmd _stackCmd, final EnvironmentParameters _envParams ) throws Exception
+    public static void evalMacros( final boolean _verbose, final Stack _stackCmd, final Environment _myEnv ) throws Exception
     {   final String HDR = CLASSNAME + ": evalMacros(_stackCmd): ";
 
-        final String newStackName = Macros.evalThoroughly( this.verbose, _stackCmd.getStackName(), _envParams.getAllPropsRef() );
+        final String newStackName = Macros.evalThoroughly( _verbose, _stackCmd.getStackName(), _myEnv.getAllPropsRef() );
         _stackCmd.setStackName( newStackName ); // dont bother to check whether or not.. .. newStackName === _stackCmd.getStackName()
+
+        final String newStackFileName = Macros.evalThoroughly( _verbose, _stackCmd.getCFNTemplateFile(), _myEnv.getAllPropsRef() );
+        _stackCmd.setCFNTemplateFile( newStackFileName );
 
         final LinkedHashMap<String,String> params = _stackCmd.getParams();
         final LinkedHashMap<String,String> newparams = new LinkedHashMap<>();
@@ -443,8 +380,8 @@ public final class CmdProcessor
 
         for( String key: params.keySet() ) {
             final String val = params.get( key );
-            final String keywom = Macros.evalThoroughly( this.verbose, key, _envParams.getAllPropsRef() ); // 'wom' === with out macros
-            final String valwom = Macros.evalThoroughly( this.verbose, val, _envParams.getAllPropsRef() ); // 'wom' === with out macros
+            final String keywom = Macros.evalThoroughly( _verbose, key, _myEnv.getAllPropsRef() ); // 'wom' === with out macros
+            final String valwom = Macros.evalThoroughly( _verbose, val, _myEnv.getAllPropsRef() ); // 'wom' === with out macros
             if ( key.equals( keywom ) ) {
                 if ( val.equals( valwom ) ) {
                     ; // do nothing.  Nothing changed for EITHER the key or the value (in 'params').
@@ -452,7 +389,7 @@ public final class CmdProcessor
                     newparams.put( key, valwom ); // update the value
                 }
             } else {
-                if ( this.verbose ) System.out.println( HDR +"Running macros changed the OLD-Kay'"+ key +"' to '"+ keywom +"." );
+                if ( _verbose ) System.out.println( HDR +"Running macros changed the OLD-Kay'"+ key +"' to '"+ keywom +"." );
                 keysThatChanged.add( key );
                 newparams.put( keywom, valwom ); // add the new pair
             }
@@ -489,7 +426,7 @@ public final class CmdProcessor
     //     // final String HDR = CLASSNAME + ": genVPC(): ";
     //     //${ORGASUXHOME}/asux.js yaml batch @${AWSCFNHOME}/bin/AWSCFN-${CFNContext}-Create.ASUX-batch.txt -i /dev/null -o ${CFNfile}
     //     final String cfnJobType = _boot.getCFNJobType( _cla.cmdName );
-    //     // final String outpfile   = _envParams.outputFolderPath +"/"+ cfnJobType;
+    //     // final String outpfile   = _myEnv.enhancedUserInput.getOutputFolderPath() +"/"+ cfnJobType;
 
     //     final String[] batchcmdargs = { "--batch",
     //                     "@"+ _boot.awscfnhome +"/bin/AWSCFN-"+cfnJobType+"-Create.ASUX-batch.txt",
