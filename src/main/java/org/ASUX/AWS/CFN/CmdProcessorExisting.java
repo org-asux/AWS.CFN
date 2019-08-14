@@ -148,7 +148,7 @@ public final class CmdProcessorExisting
         if ( _MyOrgName != null && _MyDomainName != null ) {
             for( LinkedHashMap<String,Object> vpc: vpcs ) {
                 if ( this.verbose ) System.out.println( HDR +"checking out VPC: "+ vpc );
-                if ( _MyOrgName.equals(vpc.get(EnvironmentParameters.MYORGNAME)) &&  _MyDomainName.equals(vpc.get(EnvironmentParameters.MYDOMAINNAME)) ) {
+                if ( _MyOrgName.equals(vpc.get(Environment.MYORGNAME)) &&  _MyDomainName.equals(vpc.get(Environment.MYDOMAINNAME)) ) {
                     final String s = (String) vpc.get( org.ASUX.AWSSDK.AWSSDK.VPC_ID );
                     if ( this.verbose ) System.out.println( HDR +"Found a VPC that matched the OrgName and DomainName provided: '"+ s +"' "+ vpc );
                     System.out.print( "Using 'existing' VPC '"+ s +"'\t" );
@@ -281,7 +281,7 @@ public final class CmdProcessorExisting
         if ( _MyOrgName != null && _MyDomainName != null ) {
             for( LinkedHashMap<String,Object> subnet: subnets ) {
                 if ( this.verbose ) System.out.println( HDR +"Checking.. Subnet: "+ subnet );
-                if ( _MyOrgName.equals(subnet.get(EnvironmentParameters.MYORGNAME)) &&  _MyDomainName.equals(subnet.get(EnvironmentParameters.MYDOMAINNAME)) ) {
+                if ( _MyOrgName.equals(subnet.get(Environment.MYORGNAME)) &&  _MyDomainName.equals(subnet.get(Environment.MYDOMAINNAME)) ) {
                     final String id = (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.SUBNET_ID );
                     if ( this.verbose ) System.out.println( HDR +"Found a Subnet that matched the OrgName and DomainName provided.  ID is '"+ id +"' "+ subnet );
                     if ( _PublicOrPrivate.equals( (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.KV_PUBLICorPRIVATE ) ) ) {
@@ -398,7 +398,7 @@ public final class CmdProcessorExisting
         if ( _MyOrgName != null && _MyDomainName != null ) {
             for( LinkedHashMap<String,Object> sg: SGs ) {
                 if ( this.verbose ) System.out.println( HDR +"Checking.. security-group: "+ sg );
-                if ( _MyOrgName.equals(sg.get(EnvironmentParameters.MYORGNAME)) &&  _MyDomainName.equals(sg.get(EnvironmentParameters.MYDOMAINNAME)) ) {
+                if ( _MyOrgName.equals(sg.get(Environment.MYORGNAME)) &&  _MyDomainName.equals(sg.get(Environment.MYDOMAINNAME)) ) {
                     final String id = (String) sg.get( org.ASUX.AWSSDK.AWSSDK.SG_ID );
                     if ( this.verbose ) System.out.println( HDR +"Found a SG that matched the OrgName and DomainName provided.  ID is '"+ id +"' "+ sg );
                     if ( this.verbose ) System.out.println( HDR +"Found a Security-Group - Specifically for Port of Interest ="+ _portOfInterest +". ID is '"+ id +"'." );
