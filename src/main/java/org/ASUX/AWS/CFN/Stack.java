@@ -55,8 +55,8 @@ public final class Stack implements Serializable
 
     public boolean verbose;
 
-    public final String AWSRegion;
-    public final String AWSLocation;
+    public String AWSRegion;
+    public String AWSLocation;
 
     // ----------- PRIVATE ----------
     private String stackName;
@@ -96,8 +96,11 @@ public final class Stack implements Serializable
     public String getStackName()                        { return this.stackName; }
     public void   setStackName( final String _sn )      { this.stackName = _sn;  }
 
-    // public String getStackFileName()                        { return this.stackFileName; }
-    // public void   setStackFileName( final String _sn )      { this.stackFileName = _sn;  }
+    public String getAWSRegion()                        { return this.AWSRegion; }
+    public void   setAWSRegion( final String _sn )      { this.AWSRegion = _sn;  }
+
+    public String getAWSLocation()                        { return this.AWSLocation; }
+    public void   setAWSLocation( final String _sn )      { this.AWSLocation = _sn;  }
 
     /** 
      *  <p>In contrast with getStackName(), which can return a string containing '-', '_', etc.. (pretty much any Java-String that can be a valid file-name)..<br>
@@ -223,15 +226,18 @@ public final class Stack implements Serializable
     /**
      *  <p>Supporting method to the 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
      *  <p>This specific method is actually invoked by {@link #genSubnetStackName(CmdLineArgs)} and {@link #genSGStackName(CmdLineArgs)}, to help appropriately incorporate the value of the &lt;itemNumber&gt; cmdline arguments for 'subnet-gen' amd 'sg-gen' commands</p>
-     *  @param _cmdLA a NotNull instance
-     *  @return NotNull String
+     *  @param _cmdLA_itemNumber a Nullable String
+     *  @return NotNull String (can be empty-string)
      */
-    private static final String getItemNumberSuffix( final CmdLineArgs _cmdLA ) {
-        final String itemSuffix = ( _cmdLA.itemNumber == null || "".equals(_cmdLA.itemNumber.trim()) ) ? "" : "-"+ _cmdLA.itemNumber;
+    public static final String getItemNumberSuffix( final String _cmdLA_itemNumber ) {
+        // final String itemSuffix = ( _cmdLA_itemNumber == null || "".equals(_cmdLA_itemNumber.trim()) ) ? "" : "-"+ _cmdLA_itemNumber;
+        final String itemSuffixWWOHyphen = ( _cmdLA_itemNumber == null || "".equals(_cmdLA_itemNumber.trim()) ) ? "" : _cmdLA_itemNumber;
+        // WWO === With or With-OUT
+        final String itemSuffix = ( itemSuffixWWOHyphen == null || "".equals(itemSuffixWWOHyphen) || itemSuffixWWOHyphen.startsWith("-") ) ? itemSuffixWWOHyphen : "-"+ itemSuffixWWOHyphen;
         return itemSuffix;
     }
-    //=================================================================================
 
+    //=================================================================================
     /**
      *  <p>One of the set of 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
      *  <p>{@link #genVPCStackName(CmdLineArgs)}, {@link #genSubnetStackName(CmdLineArgs)}, {@link #genSGStackName(CmdLineArgs)} and {@link #genEC2StackName(CmdLineArgs)}</p>
@@ -243,7 +249,6 @@ public final class Stack implements Serializable
     }
 
     //=================================================================================
-
     /**
      *  <p>One of the set of 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
      *  <p>{@link #genVPCStackName(CmdLineArgs)}, {@link #genSubnetStackName(CmdLineArgs)}, {@link #genSGStackName(CmdLineArgs)} and {@link #genEC2StackName(CmdLineArgs)}</p>
@@ -251,11 +256,10 @@ public final class Stack implements Serializable
      *  @return NotNull String
      */
     public static final String genSubnetStackName( final CmdLineArgs _cmdLA ) {
-        return "${ASUX::"+ Environment.MYVPCSTACKPREFIX +"}-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + getItemNumberSuffix(_cmdLA) +"-subnet";
+        return "${ASUX::"+ Environment.MYVPCSTACKPREFIX +"}-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + Stack.getItemNumberSuffix(_cmdLA.itemNumber) +"-subnet";
     }
 
     //=================================================================================
-
     /**
      *  <p>One of the set of 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
      *  <p>{@link #genVPCStackName(CmdLineArgs)}, {@link #genSubnetStackName(CmdLineArgs)}, {@link #genSGStackName(CmdLineArgs)} and {@link #genEC2StackName(CmdLineArgs)}</p>
@@ -263,11 +267,11 @@ public final class Stack implements Serializable
      *  @return NotNull String
      */
     public static final String genSGStackName( final CmdLineArgs _cmdLA ) {
-        return "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName + getItemNumberSuffix(_cmdLA) +"-SG";
+        return "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-"+_cmdLA.PublicOrPrivate +"-"+  _cmdLA.jobSetName + Stack.getItemNumberSuffix(_cmdLA.itemNumber) +"-SG";
+                                                        // we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
     }
 
     //=================================================================================
-
     /**
      *  <p>One of the set of 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
      *  <p>{@link #genVPCStackName(CmdLineArgs)}, {@link #genSubnetStackName(CmdLineArgs)}, {@link #genSGStackName(CmdLineArgs)} and {@link #genEC2StackName(CmdLineArgs)}</p>
@@ -294,23 +298,37 @@ public final class Stack implements Serializable
      *  @return a NotNull String representing JUST the file-name ONLY.  !!ATTENTION!! Prepend it with a Folder-path, to exactly place the file in the right location in the file-system.
      *  @throws Exception for unimplemented commands (code-safety checks)
      */
-    public static final String genStackCFNFileName( final Enums.GenEnum _cmd, final CmdLineArgs _cmdLA, final Environment _myEnv ) throws Exception
-    {   final String HDR = CLASSNAME + ": getStackCFNFileName(_cmdLA,_myEnv): ";
-        final String itemSuffix = ( _cmdLA.itemNumber == null || "".equals(_cmdLA.itemNumber.trim()) ) ? "" : "-"+ _cmdLA.itemNumber;
+    public static final String genStackCFNFileName( final Enums.GenEnum _cmd, final CmdLineArgs _cmdLA, final Environment _myEnv ) throws Exception {
+        return genStackCFNFileName(_cmd, _cmdLA, _myEnv, ".yaml");
+    }
+
+    /**
+     *  <p>Yet-another utility-function - to help STANDARDIZE the naming of FILE-NAMES for script that _EXECUTE_ 'aws cloudformation' commands for CFN-Stacks</p>
+     *  @param _cmd see {@link Enums.GenEnum}
+     *  @param _cmdLA a NotNull instance
+     *  @param _myEnv a NotNull instance
+     *  @return a NotNull String representing JUST the file-name ONLY.  !!ATTENTION!! Prepend it with a Folder-path, to exactly place the file in the right location in the file-system.
+     *  @throws Exception for unimplemented commands (code-safety checks)
+     */
+    public static final String genStackScriptFileName( final Enums.GenEnum _cmd, final CmdLineArgs _cmdLA, final Environment _myEnv ) throws Exception {
+        return genStackCFNFileName(_cmd, _cmdLA, _myEnv, ".sh");
+    }
+
+
+    private static final String genStackCFNFileName( final Enums.GenEnum _cmd, final CmdLineArgs _cmdLA, final Environment _myEnv, final String _suffix ) throws Exception
+    {   final String HDR = CLASSNAME + ": getStackCFNFileName("+ _cmd +"_cmdLA,_myEnv,"+ _suffix +"): ";
 
         switch ( _cmd ) {
-            case SUBNET:    return _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + itemSuffix +".yaml";
-
+            case VPC:       return _myEnv.getCfnJobTYPEString() + Stack.getItemNumberSuffix(_cmdLA.itemNumber) +_suffix; // ".yaml";
+            case SUBNET:    return _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + Stack.getItemNumberSuffix(_cmdLA.itemNumber) +_suffix; // ".yaml";
+            case SG:        return _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + Stack.getItemNumberSuffix(_cmdLA.itemNumber) +_suffix; // ".yaml";
+                            // we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
             case EC2PLAIN:
                             final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
-                            return _myEnv.getCfnJobTYPEString() +"-"+ globalProps.getProperty( Environment.MYEC2INSTANCENAME ) +".yaml";
-            case VPC:
-            case SG:
-                            return _myEnv.getCfnJobTYPEString() + itemSuffix +".yaml";
+                            return _myEnv.getCfnJobTYPEString() +"-"+ globalProps.getProperty( Environment.MYEC2INSTANCENAME ) +_suffix; // ".yaml";
             case FULLSTACK:
-                            return null;
+                            return null;    // <<------- <<--------
             case VPNCLIENT:
-            case SGEFS:
             case UNDEFINED:
             default:        final String es = HDR +" Unimplemented command: " + _cmd;
                             System.err.println( es );
