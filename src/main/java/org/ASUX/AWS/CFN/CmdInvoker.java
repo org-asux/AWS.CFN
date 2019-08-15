@@ -151,6 +151,8 @@ public class CmdInvoker extends org.ASUX.YAML.NodeImpl.CmdInvoker {
         final Environment env = new Environment( this.verbose, this.memoryAndContext.getAllPropsRef() );
         final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, env );
         boot.check( cmdLA ); // cmdLA.getCmdName(), cmdLA.getJobSetName(), cmdLA.getItemNumber() );
+        if ( cmdLA.cmdName == Enums.GenEnum.FULLSTACK )
+            boot.checkForFullStack( cmdLA );
         boot.configure( cmdLA ); // cmdLA.getCmdName(), cmdLA.getJobSetName(), cmdLA.getItemNumber() );
         // This boot.configure() will invoke the following:-
         // myEnvVPC.setHomeFolders( .. .. .. );
