@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '2layer' on Wed Aug 14 14:02:04 EDT 2019 within Working-folder '/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs'
+Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '2layer' on Wed Aug 14 22:22:47 EDT 2019 within Working-folder '/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs'
 
 Resources:
 
@@ -10,12 +10,12 @@ Resources:
          Parameters:
             MyVPCStackPrefix: org-ASUX-Playground-Ohio
 
-   orgASUXPlaygroundOhio2layerssh0SG:     ### create-stack --stack-name org-ASUX-Playground-Ohio-2layer-ssh-0-SG
+   orgASUXPlaygroundOhiossh2layer0SG:     ### create-stack --stack-name org-ASUX-Playground-Ohio-ssh-2layer-0-SG
       Type: AWS::CloudFormation::Stack
       DependsOn:
       - orgASUXPlaygroundOhioVPC
       Properties:
-         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-2layer-ssh-0-SG
+         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Ohio-ssh-2layer-0-SG
          Parameters:
             MyVPC: org-ASUX-Playground-Ohio-VPCID
 

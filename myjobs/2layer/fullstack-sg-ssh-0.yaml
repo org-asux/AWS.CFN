@@ -32,7 +32,7 @@ Resources:
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: SG-SSHssh-0-org-ASUX-Playground-Ohio
+        Value: SG-ssh-0-org-ASUX-Playground-Ohio
       - Key: APPLNAME
         Value: SSH-into-LinuxEC2Instances
       - Key: CHRGCODE
@@ -62,12 +62,12 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Sat Aug 10 18:10:58 EDT 2019
+        Value: Wed Aug 14 22:22:44 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
 Outputs:
-  SGSSHPlayground:
+  SGPlayground-ssh-0:
     Description: Security Group for enabling SSH access to Linux EC2 instances for the ___UNKNOWN__ application(s) and EC2-instances within the Playground environment
     Value: !Ref 'SGSSHPlayground'
     Export:
-      Name: 'org-ASUX-Playground-Ohio-2layer-SG-SSHssh-0'
+      Name: 'org-ASUX-Playground-Ohio-2layer-SG-ssh-0'
