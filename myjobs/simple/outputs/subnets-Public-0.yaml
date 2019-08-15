@@ -2,7 +2,7 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: >-
   WARNING!!!!  WARNING!!!! Note that you are billed for the AWS resources that you use when you create a stack from this template. WARNING!!!!  WARNING!!!!  This YAML file is generated using ASUX.org's Batch-based scripting. The command used was - .. tbd .. See details of ASUX.org project at https://github.com/org-asux/org-ASUX.github.io/wiki These were in-turn based on the AWS CloudFormation Sample Template @ https://s3.amazonaws.com/cloudformation-examples/user-guide/cross-stack/SampleNetworkCrossStack.template VPC_with_PublicIPs_And_DNS - Sample template that creates a VPC with DNS and public IPs enabled.
 Parameters:
-  MyStackNamePrefix:
+  MyVPCStackPrefix:
     Description: The prefix for almost ALL Exports by CFN-templates created by ASUX.org tools.  Because of tools from ASUX.org I can set a default!  Typically it's something like "${MyOrgName}-${MyEnvironment}-${AWSLocation}"
     Type: String
     Default: org-ASUX-Playground-Tokyo
@@ -15,23 +15,19 @@ Parameters:
     Type: String
     Default: 'false'
   MyPublicRouteTable:
-    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-simple-PublicRouteTableID"
+    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PublicRouteTable is associated with VPC/IGW is this parameter.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-simple0-PublicRouteTableID"
     Type: String
     Default: org-ASUX-Playground-Tokyo-PublicRouteTableID
-  MyPrivateRouteTable:
-    Description: Each VPC has (for all purposes) a unique IGW.  This unique default PrivateRouteTable is associated with only the VPC CIDRBlock.  Because of tools from ASUX.org I can set a default!  Typically it's something like "org-ASUX-Playground-Tokyo-simple-PrivateRouteTableID"
-    Type: String
-    Default: org-ASUX-Playground-Tokyo-PrivateRouteTableID
 Conditions:
   doesExistSubnet1: !Equals
-  - ASUXorgWorks
-  - ASUXorgWorks
+  - ASUXorg_Tools_Work
+  - ASUXorg_Tools_Work
   doesExistSubnet2: !Equals
-  - ASUXorgWorks
-  - ASUXorgWorks
+  - ASUXorg_Tools_Work
+  - ASUXorg_Tools_Work
   doesExistSubnet3: !Equals
-  - ASUXorgWorks
-  - ASUXorgWorks
+  - ASUXorg_Tools_Work
+  - ASUXorg_Tools_Work
 Resources:
   MyPublicSubnetAZ1:
     Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
@@ -45,11 +41,13 @@ Resources:
       AvailabilityZone: ap-northeast-1a
       Tags:
       - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public1
+        Value: Subnet-Public1-org-ASUX-Playground-Tokyo-simple0
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -76,10 +74,12 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Wed Aug 14 21:11:50 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetAZ2:
     Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
     Type: 'AWS::EC2::Subnet'
@@ -92,11 +92,13 @@ Resources:
       AvailabilityZone: ap-northeast-1c
       Tags:
       - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public2
+        Value: Subnet-Public2-org-ASUX-Playground-Tokyo-simple0
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -123,10 +125,12 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Wed Aug 14 21:11:50 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetAZ3:
     Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
     Type: 'AWS::EC2::Subnet'
@@ -139,11 +143,13 @@ Resources:
       AvailabilityZone: ap-northeast-1d
       Tags:
       - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
         Value: ap-northeast-1
       - Key: ENV
         Value: Playground
       - Key: Name
-        Value: org-ASUX-Playground-Tokyo-simple-subnets-Public3
+        Value: Subnet-Public3-org-ASUX-Playground-Tokyo-simple0
       - Key: APPLNAME
         Value: UNDEFINED-APPLNAME
       - Key: CHRGCODE
@@ -170,10 +176,174 @@ Resources:
         Value: org-ASUX
       - Key: MyEnvironment
         Value: Playground
-      - Key: AWSRegion
-        Value: ap-northeast-1
       - Key: MyDomainName
         Value: playground.asux.org
+      - Key: Created
+        Value: Wed Aug 14 21:11:50 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
+  EIPForNATGateway1:
+    Description: NOTE, NAT-GW (NAT-Gateway) No.1 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Tokyo-simple0-Subnet-Public1-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  MyNATGW1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - EIPForNATGateway1
+        - 'AllocationId'
+      SubnetId: !Ref 'MyPublicSubnetAZ1'
+      Tags:
+      - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
+        Value: ap-northeast-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: NATGW-1-org-ASUX-Playground-Tokyo-simple0
+      - Key: APPLNAME
+        Value: UNDEFINED-APPLNAME
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Wed Aug 14 21:11:50 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
+  EIPForNATGateway2:
+    Description: NOTE, NAT-GW (NAT-Gateway) No.2 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Tokyo-simple0-Subnet-Public2-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  MyNATGW2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - EIPForNATGateway2
+        - 'AllocationId'
+      SubnetId: !Ref 'MyPublicSubnetAZ2'
+      Tags:
+      - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
+        Value: ap-northeast-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: NATGW-2-org-ASUX-Playground-Tokyo-simple0
+      - Key: APPLNAME
+        Value: UNDEFINED-APPLNAME
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Wed Aug 14 21:11:50 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
+  EIPForNATGateway3:
+    Description: NOTE, NAT-GW (NAT-Gateway) No.3 is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet 'org-ASUX-Playground-Tokyo-simple0-Subnet-Public3-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
+    Type: 'AWS::EC2::EIP'
+    Properties:
+      Domain: vpc
+  MyNATGW3:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+        - EIPForNATGateway3
+        - 'AllocationId'
+      SubnetId: !Ref 'MyPublicSubnetAZ3'
+      Tags:
+      - Key: LOCATION
+        Value: Tokyo
+      - Key: AWSRegion
+        Value: ap-northeast-1
+      - Key: ENV
+        Value: Playground
+      - Key: Name
+        Value: NATGW-3-org-ASUX-Playground-Tokyo-simple0
+      - Key: APPLNAME
+        Value: UNDEFINED-APPLNAME
+      - Key: CHRGCODE
+        Value: org.ASUX
+      - Key: ITOWNER
+        Value: Sarma
+      - Key: BIZOWNER
+        Value: Sarma
+      - Key: CLIENT
+        Value: SomeClient
+      - Key: ARCHLAYER
+        Value: Network
+      - Key: SNAPSHOTS
+        Value: 'No'
+      - Key: USERBASE
+        Value: admins
+      - Key: DISTRLIST
+        Value: tosarma@gmail.com
+      - Key: SVCGRP
+        Value: org.ASUX
+      - Key: VALIDATED
+        Value: 'No'
+      - Key: MyOrgName
+        Value: org-ASUX
+      - Key: MyEnvironment
+        Value: Playground
+      - Key: MyDomainName
+        Value: playground.asux.org
+      - Key: Created
+        Value: Wed Aug 14 21:11:50 EDT 2019
+      - Key: CreatedBy
+        Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetRouteTableAssociationAZ1:
     Type: 'AWS::EC2::SubnetRouteTableAssociation'
     Condition: doesExistSubnet1
@@ -219,16 +389,34 @@ Outputs:
     Value: !Ref 'MyPublicSubnetAZ1'
     Condition: doesExistSubnet1
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Public1-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple0-Subnet-Public1-ID'
   DefaultPublicSubnet2:
     Description: The subnet no.2's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPublicSubnetAZ2'
     Condition: doesExistSubnet2
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Public2-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple0-Subnet-Public2-ID'
   DefaultPublicSubnet3:
     Description: The subnet no.3's ID to use for web servers if public, or for databases if private.
     Value: !Ref 'MyPublicSubnetAZ3'
     Condition: doesExistSubnet3
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-Subnet-Public3-ID'
+      Name: 'org-ASUX-Playground-Tokyo-simple0-Subnet-Public3-ID'
+  NATGW1:
+    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Tokyo-simple0-Subnet-Public1-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
+    Value: !Ref 'MyNATGW1'
+    Condition: doesExistSubnet1
+    Export:
+      Name: !Sub '${MyVPCStackPrefix}-NATGW-1-ID'
+  NATGW2:
+    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Tokyo-simple0-Subnet-Public2-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
+    Value: !Ref 'MyNATGW2'
+    Condition: doesExistSubnet2
+    Export:
+      Name: !Sub '${MyVPCStackPrefix}-NATGW-2-ID'
+  NATGW3:
+    Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Tokyo-simple0-Subnet-Public3-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
+    Value: !Ref 'MyNATGW3'
+    Condition: doesExistSubnet3
+    Export:
+      Name: !Sub '${MyVPCStackPrefix}-NATGW-3-ID'

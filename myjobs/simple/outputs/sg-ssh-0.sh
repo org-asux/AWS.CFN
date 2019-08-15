@@ -1,1 +1,1 @@
-aws cloudformation create-stack --stack-name org-ASUX-Playground-Tokyo-simple-SG-SSH  --region ap-northeast-1 --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=org-ASUX-Playground-Tokyo-VPCID --template-body file:///tmp/sg-ssh.yaml
+aws cloudformation create-stack --stack-name org-ASUX-Playground-Tokyo-simple-0-SG --region ap-northeast-1 --parameters  ParameterKey=MyVPC,ParameterValue=org-ASUX-Playground-Tokyo-VPCID --template-body file:///tmp/sg-ssh-0.yaml --profile ${AWSprofile} 
