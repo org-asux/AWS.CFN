@@ -61,7 +61,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
     public static final String CLASSNAME = CmdLineArgs.class.getName();
 
     protected static final String VPCGEN = "vpc-gen";
-    protected static final String SUBNETSGEN = "subnets-gen";
+    protected static final String SUBNETSGEN = "subnet-gen";
     protected static final String SGGEN = "sg-gen";
     // protected static final String SGEFSGEN = "sg-efs-gen";
     protected static final String EC2PLAINGEN = "ec2plain-gen";
@@ -122,9 +122,9 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
 
         final Option vpcgen       = CmdLineArgsCommon.genOption( "vpc", VPCGEN, "create a new VPC", 1, "jobname" );
         final Option subnetsgen   = CmdLineArgsCommon.genOption( "s", SUBNETSGEN, "create private or public subnets within a VPC", 2, "jobname" );
-            subnetsgen.setArgName("JobSetName> <public|private"); // overwrite what was set within genOption()
-        final Option sggen = CmdLineArgsCommon.genOption( "gs", SGGEN, "create a SecurityGroup just to allow specific protocol-access to a AMZN2-Linux EC2-instance", 1, "jobname" );
-        // final Option sgefsgen     = CmdLineArgsCommon.genOption( "ge", SGEFSGEN, "create a SecurityGroup just to MOUNT an EFS onto a AMZN2-Linux EC2-instance", 1, "jobname" );
+            subnetsgen.setArgName("JobSetName> <public|private"); // overwrite what was set within genOption() above
+        final Option sggen = CmdLineArgsCommon.genOption( "gs", SGGEN, "create a SecurityGroup just to allow specific protocol-access to a AMZN2-Linux EC2-instance", 2, "jobname" );
+            sggen.setArgName("JobSetName> <ssh|https"); // overwrite what was set within genOption() above
         final Option ec2plaingen  = CmdLineArgsCommon.genOption( "e", EC2PLAINGEN, "create a new plain EC2-instance of AMZN2-Linux", 2, "jobname" );
             ec2plaingen.setArgName("JobSetName> <public|private"); // overwrite what was set within genOption()
 
@@ -211,12 +211,11 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         }
         if ( _apacheCmdProcessor.hasOption( SGGEN ) ) {
             this.cmdName = Enums.GenEnum.SG;
-            this.jobSetName = _apacheCmdProcessor.getOptionValue( SGGEN );
+            final String[] sgArgs = _apacheCmdProcessor.getOptionValues( SGGEN );
+            this.jobSetName = sgArgs[0];
+            this.PublicOrPrivate = sgArgs[1];
         }
-        // if ( _apacheCmdProcessor.hasOption( SGEFSGEN ) ) {
-        //     this.cmdName = Enums.GenEnum.SGEFS;
-        //     this.jobSetName = _apacheCmdProcessor.getOptionValue( SGEFSGEN );
-        // }
+
         if ( _apacheCmdProcessor.hasOption( EC2PLAINGEN ) ) {
             this.cmdName = Enums.GenEnum.EC2PLAIN;
             new ReusableCode().setInstanceVariables( EC2PLAINGEN, _apacheCmdProcessor.getOptionValues( EC2PLAINGEN ), this );
@@ -243,10 +242,10 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
         this.itemNumber = _apacheCmdProcessor.getOptionValue( ITEMNUMBER );
         if ( this.itemNumber == null )
             this.itemNumber = "";
-        else {
-            if ( ! this.itemNumber.startsWith("-") )
-            this.itemNumber = "-"+ this.itemNumber; // add a '-' hyphen prefix to the 'this.itemNumber'
-        }
+        // else {
+        //     if ( ! this.itemNumber.startsWith("-") )
+        //     this.itemNumber = "-"+ this.itemNumber; // add a '-' hyphen prefix to the 'this.itemNumber'
+        // }
 
         //-------------------------------------------
         this.s3bucketname = _apacheCmdProcessor.getOptionValue( S3BUCKETNAME );
