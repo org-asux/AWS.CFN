@@ -1,0 +1,5 @@
+### This is the file            'AWSCFN-fullstack-sg-ssh-Create.ASUX-batch.txt'
+
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-fullstack-sg-Create.ASUX-batch.txt
+
+#EoF
