@@ -24,9 +24,6 @@ properties AWSRegionLocations=${ASUX::AWSHOME}/AWS-SDK/config/AWSRegionsLocation
 
 properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-DEFAULTS.properties
 properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-${ASUX::cfnJobTYPE}-DEFAULTS.properties
-#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-EFS-DEFAULTS.properties
-#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-SG-DEFAULTS.properties
-#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-EC2-DEFAULTS.properties
 
 properties Tags=?${ASUX::user.home}/.ASUX.org/AWS.CFN/Tags-Alone-Master.properties
 properties Tags=?${ASUX::user.home}/.ASUX.org/AWS.CFN/Tags-Dept-Master.properties
