@@ -106,7 +106,7 @@ eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote 
 if ($status != 0) exit $status
 diff /tmp/${CMD}-OrgASUXplayEC2plain.yaml  ${TEMPLATEFLDR}/${CMD}-OrgASUXplayEC2plain.yaml
 diff /tmp/${CMD}-OrgASUXplayEC2plain.sh    ${TEMPLATEFLDR}/${CMD}-OrgASUXplayEC2plain.sh
-echo $DIVIDER
+cat $DIVIDER
 
 # set CMD=vpnclient
 # echo ${CMD}
@@ -114,7 +114,7 @@ echo $DIVIDER
 # if ($status != 0) exit $status
 # diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
 # diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-# echo $DIVIDER
+# cat $DIVIDER
 
 ###-------------------------------------------------------------------
 ### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -135,41 +135,41 @@ echo ''
 
 set CMD=fullstack-vpc
 cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
-git diff ${CMD}.yaml
+git diff ${JOBSET}/${CMD}.yaml
 cat $DIVIDER
-git diff ${CMD}.sh
+git diff ${JOBSET}/${CMD}.sh
 
-set CMD=fullstack-subnets-Public
+set CMD=fullstack-subnet-Public
 cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
-git diff ${CMD}.yaml
+git diff ${JOBSET}/${CMD}*.yaml
 cat $DIVIDER
-git diff ${CMD}.sh
+git diff ${JOBSET}/${CMD}*.sh
 
-set CMD=fullstack-subnets-Private
+set CMD=fullstack-subnet-Private
 cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
-git diff ${CMD}.yaml
+git diff ${JOBSET}/${CMD}*.yaml
 cat $DIVIDER
-git diff ${CMD}.sh
+git diff ${JOBSET}/${CMD}*.sh
 
-set CMD=fullstack-sg-ssh
+set CMD=fullstack-sg
 cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
-git diff ${CMD}.yaml
+git diff ${JOBSET}/${CMD}*.yaml
 cat $DIVIDER
-git diff ${CMD}.sh
+git diff ${JOBSET}/${CMD}*.sh
 
 set CMD=fullstack-ec2plain-MyWebASUXLinux1
 cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
-git diff ${CMD}.yaml
+git diff ${JOBSET}/${CMD}.yaml
 cat $DIVIDER
-git diff ${CMD}.sh
+git diff ${JOBSET}/${CMD}.sh
 
 set CMD=fullstack-ec2plain-MyPrivASUXLinux2
 cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
-git diff ${CMD}.yaml
+git diff ${JOBSET}/${CMD}.yaml
 cat $DIVIDER
-git diff ${CMD}.sh
+git diff ${JOBSET}/${CMD}.sh
 
-cat $DIVIDER; echo -n "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! git checkout --force ? .. (or press Cntl-C) >>"; set ANS=$<
+cat $DIVIDER; echo -n "\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!  git checkout --force ? .. (or press Cntl-C) >>"; set ANS=$<
 git checkout --force ${JOBSET}/*.yaml ${JOBSET}/*.sh
 git status
 
