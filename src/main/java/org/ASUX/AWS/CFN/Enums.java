@@ -51,7 +51,7 @@ public final class Enums
      */
     public enum GenEnum {
 
-        VPC("VPC-gen"), SUBNET("Subnets-gen"), SG("SG-gen"), SGEFS("SG-EFS-gen"), EC2PLAIN("EC2plain-gen"),
+        VPC("VPC-gen"), SUBNET("Subnet-gen"), SG("SG-gen"), EC2PLAIN("EC2plain-gen"),
         FULLSTACK("fullstack-gen"), VPNCLIENT("VPNClient-gen"),
         UNDEFINED("undefined");
 
