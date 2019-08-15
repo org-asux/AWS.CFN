@@ -201,7 +201,7 @@ public final class Environment implements Serializable {
 
     public String getJOB_DEFAULTS_FILEPATH()
                 throws Exception
-    {   final String HDR = CLASSNAME + ": getJOB_DEFAULTS(): ";
+    {   final String HDR = CLASSNAME + ": getJOB_DEFAULTS_FILEPATH(): ";
         switch ( this.enhancedUserInput.getCmd() ) {
             case FULLSTACK:
                             return FULLSTACKJOB_DEFAULTS; // PREFIXFULLSTACK +"/"+ JOB_DEFAULTS;
@@ -214,7 +214,6 @@ public final class Environment implements Serializable {
                         else
                             return JOB_DEFAULTS;
             case VPNCLIENT:
-            case SGEFS:
             case UNDEFINED:
             default:        final String es = HDR +" Unimplemented command: " + this.enhancedUserInput.getCmd();
                             System.err.println( es );
@@ -233,7 +232,6 @@ public final class Environment implements Serializable {
             case VPC:
             case SG:         return JOBSET_MASTER;
             case VPNCLIENT:
-            case SGEFS:
             case UNDEFINED:
             default:        final String es = HDR +" Unimplemented command: " + this.enhancedUserInput.getCmd();
                             System.err.println( es );
