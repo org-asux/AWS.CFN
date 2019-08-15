@@ -46,7 +46,7 @@ if ( "$VERBOSE" != "" ) pwd
 set RUNTESTCMD="java -cp ${CLASSPATH} org.ASUX.AWS.CFN.CmdLineArgs"
 set RUNTESTCMD="asux aws.cfn"
 
-set DIVIDER=~/etc/.line
+set DIVIDER=${HOME}/etc/.line
 
 ###-------------------------------------------------------------------
 ### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -68,39 +68,35 @@ diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
 diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
 cat $DIVIDER
 
-set CMD=subnets
+set CMD=subnet
 set PublicOrPrivate=Public
+set itemNumber=0
 echo ${CMD}
-eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote ${OFFLINE}"
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} -n ${itemNumber}  --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
-diff /tmp/${CMD}-${PublicOrPrivate}.yaml  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.yaml
-diff /tmp/${CMD}-${PublicOrPrivate}.sh  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.sh
+diff /tmp/${CMD}-${PublicOrPrivate}-${itemNumber}.yaml  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}-${itemNumber}.yaml
+diff /tmp/${CMD}-${PublicOrPrivate}-${itemNumber}.sh  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}-${itemNumber}.sh
 cat $DIVIDER
 
-set CMD=subnets
+set CMD=subnet
 set PublicOrPrivate=Private
+set itemNumber=1
 echo ${CMD}
-eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote ${OFFLINE}"
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --itemNumber ${itemNumber}   --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
-diff /tmp/${CMD}-${PublicOrPrivate}.yaml  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.yaml
-diff /tmp/${CMD}-${PublicOrPrivate}.sh  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}.sh
+diff /tmp/${CMD}-${PublicOrPrivate}-${itemNumber}.yaml  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}-${itemNumber}.yaml
+diff /tmp/${CMD}-${PublicOrPrivate}-${itemNumber}.sh  ${TEMPLATEFLDR}/${CMD}-${PublicOrPrivate}-${itemNumber}.sh
 cat $DIVIDER
 
-set CMD=sg-ssh
+set CMD=sg
+set SGPORTS=ssh
+set itemNumber=0
 echo ${CMD}
-eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote ${OFFLINE}"
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${SGPORTS}  --itemNumber ${itemNumber}   --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
-diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
+diff /tmp/${CMD}-${SGPORTS}-${itemNumber}.yaml  ${TEMPLATEFLDR}/${CMD}-${SGPORTS}-${itemNumber}.yaml
+diff /tmp/${CMD}-${SGPORTS}-${itemNumber}.sh  ${TEMPLATEFLDR}/${CMD}-${SGPORTS}-${itemNumber}.sh
 cat $DIVIDER
-
-# set CMD=sg-efs
-# echo ${CMD}
-# eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
-# if ($status != 0) exit $status
-# diff /tmp/${CMD}.yaml  ${TEMPLATEFLDR}/${CMD}.yaml
-# diff /tmp/${CMD}.sh  ${TEMPLATEFLDR}/${CMD}.sh
-# echo $DIVIDER
 
 set CMD=ec2plain
 set PublicOrPrivate=Public
@@ -109,7 +105,7 @@ echo "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote 
 eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} ${PublicOrPrivate} --no-quote ${OFFLINE}"
 if ($status != 0) exit $status
 diff /tmp/${CMD}-OrgASUXplayEC2plain.yaml  ${TEMPLATEFLDR}/${CMD}-OrgASUXplayEC2plain.yaml
-diff /tmp/${CMD}-OrgASUXplayEC2plain.sh  ${TEMPLATEFLDR}/${CMD}-OrgASUXplayEC2plain.sh
+diff /tmp/${CMD}-OrgASUXplayEC2plain.sh    ${TEMPLATEFLDR}/${CMD}-OrgASUXplayEC2plain.sh
 echo $DIVIDER
 
 # set CMD=vpnclient
@@ -133,45 +129,49 @@ set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs${OFFLINE}
 ###--------------
 set CMD=fullstack
 echo ${CMD}
-eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote"
+eval "$RUNTESTCMD ${VERBOSE} ${CMD}-gen ${JOBSET} --no-quote --s3 org-asux-aws-cfn@us-east-1"
 if ($status != 0) exit $status
 echo ''
 
 set CMD=fullstack-vpc
-cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
 git diff ${CMD}.yaml
 cat $DIVIDER
 git diff ${CMD}.sh
 
 set CMD=fullstack-subnets-Public
-cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
 git diff ${CMD}.yaml
 cat $DIVIDER
 git diff ${CMD}.sh
 
 set CMD=fullstack-subnets-Private
-cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
 git diff ${CMD}.yaml
 cat $DIVIDER
 git diff ${CMD}.sh
 
 set CMD=fullstack-sg-ssh
-cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
 git diff ${CMD}.yaml
 cat $DIVIDER
 git diff ${CMD}.sh
 
 set CMD=fullstack-ec2plain-MyWebASUXLinux1
-cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
 git diff ${CMD}.yaml
 cat $DIVIDER
 git diff ${CMD}.sh
 
 set CMD=fullstack-ec2plain-MyPrivASUXLinux2
-cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
 git diff ${CMD}.yaml
 cat $DIVIDER
 git diff ${CMD}.sh
+
+cat $DIVIDER; echo -n "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! git checkout --force ? .. (or press Cntl-C) >>"; set ANS=$<
+git checkout --force ${JOBSET}/*.yaml ${JOBSET}/*.sh
+git status
 
 ###-------------------------------------------------------------------
 ### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -189,7 +189,7 @@ while ( "$ANS" != "yes" )
         echo -n "       Enter 'yes' to proceed /or/ press Cntl-C to abort >>";  set ANS=$<
 end
 
-eval "$RUNTESTCMD ${VERBOSE} fullstack-gen ${JOBSET} --no-quote"
+eval "$RUNTESTCMD ${VERBOSE} fullstack-gen ${JOBSET} --no-quote --s3 org-asux-aws-cfn@us-east-1"
 if ($status != 0) EXITSCRIPT $status
 echo ''
 
@@ -197,25 +197,25 @@ echo ''
 # set CMD=fullstack-sg-ssh
 
 set CMD=fullstack-subnets-Public
-cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
 git diff ${CMD}.yaml
 cat $DIVIDER
 git diff ${CMD}.sh
 
 set CMD=fullstack-subnets-Private
-cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
 git diff ${CMD}.yaml
 cat $DIVIDER
 git diff ${CMD}.sh
 
 set CMD=fullstack-ec2plain-MyWebASUXLinux1
-cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
 git diff ${CMD}.yaml
 cat $DIVIDER
 git diff ${CMD}.sh
 
 set CMD=fullstack-ec2plain-MyPrivASUXLinux2
-cat $DIVIDER; echo -n "Continue with ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
+cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
 git diff ${CMD}.yaml
 cat $DIVIDER
 git diff ${CMD}.sh
