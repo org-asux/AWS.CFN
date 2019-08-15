@@ -158,4 +158,34 @@ public class UserInput implements Serializable
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    /**
+     *  <p>Supporting method to the 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
+     *  <p>This specific method is actually invoked by {@link Stack#genSubnetStackName(CmdLineArgs)} and {@link Stack#genSGStackName(CmdLineArgs)}, to help appropriately incorporate the value of the &lt;itemNumber&gt; cmdline arguments for 'subnet-gen' amd 'sg-gen' commands</p>
+     *  @param _cmdLA_itemNumber a Nullable String
+     *  @return NotNull String (can be empty-string)
+     */
+    public static final String getItemNumberSuffix( final String _cmdLA_itemNumber ) {
+        // final String itemSuffix = ( _cmdLA_itemNumber == null || "".equals(_cmdLA_itemNumber.trim()) ) ? "" : "-"+ _cmdLA_itemNumber;
+        final String itemSuffixWWOHyphen = ( _cmdLA_itemNumber == null || "".equals(_cmdLA_itemNumber.trim()) ) ? "" : _cmdLA_itemNumber;
+        // WWO === With or With-OUT
+        final String itemSuffix = ( itemSuffixWWOHyphen == null || "".equals(itemSuffixWWOHyphen) || itemSuffixWWOHyphen.startsWith("-") ) ? itemSuffixWWOHyphen : "-"+ itemSuffixWWOHyphen;
+        return itemSuffix;
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
 };
