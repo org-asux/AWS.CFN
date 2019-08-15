@@ -36,7 +36,7 @@ set PROJECTPATH=${AWSCFNFLDR}
 # set TESTSRCFLDR=${PROJECTPATH}/test
 # chdir ${TESTSRCFLDR}
 # if ( "$VERBOSE" != "" ) pwd
-chdir ${AWSCFNFLDR}/myjobs      ### <---------- <<------------ Must be in ./myjobs subfolder to run any tests.
+chdir ${AWSCFNFLDR}/test/myjobs      ### <---------- <<------------ Must be in ./myjobs subfolder to run any tests.
 if ( "$VERBOSE" != "" ) pwd
 
 #____   set OUTPUTFLDR=/tmp/test-output-AWSCFN${OFFLINE}
@@ -56,7 +56,7 @@ set TESTNUM=0
 
 set JOBSET=simple
 
-set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/myjobs/${JOBSET}
+set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/test/myjobs/${JOBSET}
 set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs${OFFLINE}
 
 ###------------------------------
@@ -123,7 +123,7 @@ cat $DIVIDER
 set JOBSET=2layer
 echo -n "Proceed with ${JOBSET} ? .. (or press Cntl-C) >>";  set ANS=$<
 
-set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/myjobs/${JOBSET}
+set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/test/myjobs/${JOBSET}
 set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs${OFFLINE}
 
 ###--------------
@@ -180,12 +180,13 @@ git status
 set JOBSET=2layerExisting
 echo -n "Proceed with ${JOBSET} ? .. (or press Cntl-C) >>";  set ANS=$<
 
-set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/myjobs/${JOBSET}
+set SAMPLEJOBHOMEFLDR=${AWSCFNFLDR}/test/myjobs/${JOBSET}
 set TEMPLATEFLDR=${SAMPLEJOBHOMEFLDR}/outputs${OFFLINE}
 
 ###--------------
 while ( "$ANS" != "yes" )
-        echo ".. .. .. .. .. Does Sydney already have the ASUX.org created VPC & SG-SSH ?  If not, run ${cwd}/${JOBSET}/fullstack-vpc-existing.sh    &    ${cwd}/${JOBSET}/fullstack-sg-ssh-existing.sh"
+        echo ".. .. .. .. .. Does Sydney/ap-northeast-2 already have the ASUX.org created VPC & SG-SSH ?  If not, run ${cwd}/${JOBSET}/fullstack-vpc-existing.sh    &    ${cwd}/${JOBSET}/fullstack-sg-ssh-existing.sh"
+        echo aws ec2 describe-vpcs --region ap-northeast-2 --output json --profile ${AWSprofile}˝
         echo -n "       Enter 'yes' to proceed /or/ press Cntl-C to abort >>";  set ANS=$<
 end
 
