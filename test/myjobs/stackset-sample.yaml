@@ -1,0 +1,141 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created by the Jobset "2layer.yaml"
+
+### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+### https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/quickref-cloudformation.html
+### https://github.com/aws-samples/aws-cloudformation-advanced-reinvent-2018/blob/master/Instructions.md
+
+### aws cloudformation create-stack-set --stack-set-name my-awsconfig-stackset --template-url ___			\
+###						--operation-preferences FailureToleranceCount=0,MaxConcurrentCount=1										\
+###						--accounts '["account_ID_1","account_ID_2"]'  --regions '["region_1","region_2"]'
+
+Parameters:
+	# AWSprofile:
+	# 	Type: String
+	# 	Description: Your AWS Profile under ~/.aws/config that refers to the CLI KeyPair
+
+### --------------------------
+Resources:
+	org-ASUX-Playground-Ohio-VPC:   ### create-stack --stack-name org-ASUX-Playground-Ohio-VPC
+		Type: AWS::CloudFormation::Stack
+		Properties:
+			TemplateURL: file:///Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layer/fullstack-vpc.yaml
+			# NotificationARNs  ### OPTIONAL: SNS-topic ARNs to publish the stack-related-events.
+      #   - ARN1          ### Maximum 5 ARNs
+      Parameters:
+        MyVPCStackPrefix: org-ASUX-Playground-Ohio
+      # Tags: 
+      #   - Key: __
+      #     Value: ___
+      # TimeoutInMinutes: '3'   ### When CloudFormation detects that the nested-stack has reached the CREATE_COMPLETE state, it marks the nested-stack resource as CREATE_COMPLETE in the parent-stack and resumes creating the parent-stack.
+
+  org-ASUX-Playground-Ohio-2layer-SG-SSH:            ### create-stack --stack-name org-ASUX-Playground-Ohio-2layer-SG-SSH
+		Type: AWS::CloudFormation::Stack
+		Properties:
+			TemplateURL: file:///Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layer/fullstack-sg-ssh.yaml
+		Parameters:
+			MyVPC: org-ASUX-Playground-Ohio-VPCID
+
+  org-ASUX-Playground-Ohio-subnets-Public-2layer:            ### create-stack --stack-name org-ASUX-Playground-Ohio-subnets-Public-2layer
+		Type: AWS::CloudFormation::Stack
+		Properties:
+			TemplateURL: file:///Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layer/fullstack-subnets-Public.yaml
+		# Parameters: None!!!
+
+  org-ASUX-Playground-Ohio-subnets-Private-2layer:            ### create-stack --stack-name org-ASUX-Playground-Ohio-subnets-Private-2layer
+		Type: AWS::CloudFormation::Stack
+		Properties:
+			TemplateURL: file:///Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layer/fullstack-subnets-Private.yaml
+		# Parameters: None!!!
+
+  org-ASUX-Playground-Ohio-2layer-EC2-MyWebASUXLinux1:            ### create-stack --stack-name org-ASUX-Playground-Ohio-2layer-EC2-MyWebASUXLinux1
+		Type: AWS::CloudFormation::Stack
+		Properties:
+			TemplateURL: file:///Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layer/fullstack-ec2plain-MyWebASUXLinux1.yaml
+		Parameters:
+			MyPublicSubnet1: org-ASUX-Playground-Ohio-2layer-Subnet-Public1-ID
+			MySSHSecurityGroup: org-ASUX-Playground-Ohio-2layer-SG-SSH
+			MyIamInstanceProfiles: EC2-ReadWrite-to-S3
+			AWSAMIID: ami-0d8f6eb4f641ef691
+			EC2InstanceType: t2.micro
+			MySSHKeyName: Ohio-org-ASUX-Playground-LinuxSSH.pem
+
+  org-ASUX-Playground-Ohio-2layer-EC2-MyPrivASUXLinux2:            ### create-stack --stack-name org-ASUX-Playground-Ohio-2layer-EC2-MyPrivASUXLinux2
+		Type: AWS::CloudFormation::Stack
+		Properties:
+			TemplateURL: file:///Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layer/fullstack-ec2plain-MyPrivASUXLinux2.yaml
+		Parameters:
+			MyPrivateSubnet1: org-ASUX-Playground-Ohio-2layer-Subnet-Private1-ID
+			MySSHSecurityGroup: org-ASUX-Playground-Ohio-2layer-SG-SSH
+			MyIamInstanceProfiles: EC2-ReadWrite-to-S3
+			AWSAMIID: ami-0d8f6eb4f641ef691
+			EC2InstanceType: t2.micro
+			MySSHKeyName: Ohio-org-ASUX-Playground-LinuxSSH.pem
+
+  # Create:            ### create-stack --stack-name 
+	# 	Type: AWS::CloudFormation::Stack
+	# 	Properties:
+	# 		TemplateURL: FILE
+	# 	Parameters:
+	# 		X: Y
+
+### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# Outputs:
+#   StackRef:
+#     Value: !Ref myStack
+#   OutputFromNestedStack:
+#     Value: !GetAtt myStack.Outputs.BucketName
+
+### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+# Metadata:
+#   AWS::CloudFormation::Interface:
+
+#     ParameterGroups:
+#       - Label:
+#           default: Rule Parameters
+#       - Parameters:
+#           - KMSId
+
+#     ParameterLabels:
+#       - KMSId:
+#           default: KMS Key Id or ARN
+
+# Parameters:
+#   KMSId:
+#     Type: String
+#     Description: "[Optional] Id or ARN of the KMS key that is used to encrypt the volume."
+#     Default: ""
+
+### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+### https://sanderknape.com/2017/07/cloudformation-stacksets-automated-cross-account-region-deployments/
+# Resources:
+#   MyApplication:
+#     Type: "AWS::CodeDeploy::Application"
+#   MyApplication2:
+#     Type: "AWS::CodeDeploy::Application"
+
+### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+### ------------------------ LANDING ZONE -------------------------
+### Landing Zone's configuration in a manifest.yaml
+### https://medium.com/@superluminar/extending-aws-landing-zone-a-real-world-example-63b8d46115dc
+# - name: APIGatewayAccountSetup
+#     baseline_products:
+#       - AWS-Landing-Zone-Account-Vending-Machine
+#     depends_on:
+#       - APIGatewayCloudWatchRole
+#     template_file: templates/superluminar/apigw-account-setup.template.yaml
+#     deploy_method: stack_set
+#     regions:
+#       - eu-central-1
+# - name: APIGatewayCloudWatchRole
+#     baseline_products:
+#       - AWS-Landing-Zone-Account-Vending-Machine
+#     template_file: templates/superluminar/apigw-cloudwatch-role.template
+#     deploy_method: stack_set
+
+### EOF
