@@ -181,26 +181,11 @@ public final class CmdProcessorFullStack
         }
         final String AWSRegion   = tuple.key;
         final String AWSLocation = tuple.val;
-
         globalProps.setProperty( "AWSRegion", AWSRegion );
+        // The above are IMPORTANT lines.  Until we read the YAML from 'fullStackJob_Filename', we had NO clue what the 'AWSRegion' is.
         if ( this.verbose ) System.out.println( HDR +"AWSRegion="+ AWSRegion +" AWSLocation="+ AWSLocation );
 
-        //-------------- Initialize a few things ------------
-        final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, Environment.deepClone( _myEnv ) );
-        boot.myEnv.enhancedUserInput = new UserInputEnhanced( new UserInput( this.verbose, AWSRegion, AWSLocation ) );
-        // The above is an IMPORTANT line.  Until we read the YAML from 'fullStackJob_Filename', we had NO clue what the 'AWSRegion' is.
-        // So, any existing value of _myEnv.enhancedUserInput is invalid.
-        boot.configure( _cmdLA );   // this will set appropriate instance-variables in myEnvVPC, myEnvSubnet, .. myEnvEC2
-        assertTrue( boot.myEnv.getStackSet() != null );
-            // it's ok if boot.myEnv.getStack() ==== null
-
-        final Path path = FileSystems.getDefault().getPath( _myEnv.get_cwd(), _cmdLA.jobSetName );
-        // final File outputFldr = new File( _cmdLA.jobSetName );
-        final File newOutputFldr = path.toFile();
-        newOutputFldr.mkdir(); // create a folder in '.' called '{JobSetName}'
-        boot.myEnv.enhancedUserInput.setOutputFolderPath( newOutputFldr.getAbsolutePath() );
-
-        //========================================================================
+        //================================== READ more from JobConfig YAML file ======================================
         // invoking org.ASUX.YAML.NodeImpl.CmdInvoker() is too generic.. especially, when I am clear as daylight that I want to invoke --read YAML-command.
         // final org.ASUX.YAML.NodeImpl.CmdInvoker nodeImplCmdInvoker = org.ASUX.YAML.NodeImpl.CmdInvoker(
         //             this.verbose, false,  _cmdInvoker.getMemoryAndContext(), (DumperOptions)_cmdInvoker.getLibraryOptionsObject() );
@@ -219,15 +204,15 @@ public final class CmdProcessorFullStack
 
         //------------------------
         // If user did NOT provide key inputs like MyOrgName and MyDomainName.. then see if user provided a VPC created by ASUX.org tools.
-        final String MyOrgName      = (existingVPCID == null) ? myOrgName_asEnteredByUser     : getVPCTag( existingVPCID, "MyOrgName", _cmdLA, boot.myEnv );
+        final String MyOrgName      = (existingVPCID == null) ? myOrgName_asEnteredByUser     : getVPCTag( existingVPCID, "MyOrgName", _cmdLA, AWSRegion );
         if ( myOrgName_asEnteredByUser != null &&  !  myOrgName_asEnteredByUser.equals( MyOrgName ) )
             System.err.println( "Hey! The value of '"+ myOrgName_asEnteredByUser +"' for MyOrgName does _NOT_ match the corresponding-Tag for the VPC ID # "+ existingVPCID );
 
-        final String MyEnvironment  = (existingVPCID == null) ? myEnvironment_asEnteredByUser : getVPCTag( existingVPCID, "MyEnvironment", _cmdLA, boot.myEnv );
+        final String MyEnvironment  = (existingVPCID == null) ? myEnvironment_asEnteredByUser : getVPCTag( existingVPCID, "MyEnvironment", _cmdLA, AWSRegion );
         if ( myEnvironment_asEnteredByUser != null &&  !  myEnvironment_asEnteredByUser.equals( MyEnvironment ) )
             System.err.println( "Hey! The value of '"+ myEnvironment_asEnteredByUser +"' for MyEnvironment does _NOT_ match the corresponding-Tag for the VPC ID # "+ existingVPCID );
 
-        final String MyDomainName   = (existingVPCID == null) ? myDomainName_asEnteredByUser  : getVPCTag( existingVPCID, "MyDomainName", _cmdLA, boot.myEnv );
+        final String MyDomainName   = (existingVPCID == null) ? myDomainName_asEnteredByUser  : getVPCTag( existingVPCID, "MyDomainName", _cmdLA, AWSRegion );
         if ( myDomainName_asEnteredByUser != null &&  !  myDomainName_asEnteredByUser.equals( MyDomainName ) )
             System.err.println( "Hey! The value of '"+ myDomainName_asEnteredByUser +"' for MyDomainName does _NOT_ match the corresponding-Tag for the VPC ID # "+ existingVPCID );
 
@@ -249,9 +234,23 @@ public final class CmdProcessorFullStack
         globalProps.setProperty( "IGWExistingOrNew", ( IGWID == null ) ? "new" : "existing" );
         // So.. after the above code, if IGW ID is null, then .. we'll create a new IGW (within the @${ASUX::AWSCFNHOME}/bin/AWSCFN-fullstack-vpc-create.txt).
 
-        //------------------------
+        //========================================================================
+        //----------------------- Initialize a few things ------------------------
+        //========================================================================
+        final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, Environment.deepClone( _myEnv ) );
+        boot.myEnv.enhancedUserInput = new UserInputEnhanced( new UserInput( this.verbose, AWSRegion, AWSLocation ) );
+        boot.myEnv.enhancedUserInput.setCmd( _cmdLA.cmdName, BootCheckAndConfig.getCFNJobTypeAsString( _cmdLA.cmdName ) );
+        // So, any existing value of _myEnv.enhancedUserInput is invalid.
         // redo - cuz we set Macro-sensitive values for 'MyOrgName' and 'MyEnvironment' and 'MyDomainName' above..
-        boot.configure( _cmdLA );   // this will set appropriate instance-variables in boot.myEnv
+        boot.configure( _cmdLA );   // this will set appropriate instance-variables in myEnvVPC, myEnvSubnet, .. myEnvEC2
+        assertTrue( boot.myEnv.getStackSet() != null );
+            // it's ok if boot.myEnv.getStack() ==== null
+
+        final Path path = FileSystems.getDefault().getPath( _myEnv.get_cwd(), _cmdLA.jobSetName );
+        // final File outputFldr = new File( _cmdLA.jobSetName );
+        final File newOutputFldr = path.toFile();
+        newOutputFldr.mkdir(); // create a folder in '.' called '{JobSetName}'
+        boot.myEnv.enhancedUserInput.setOutputFolderPath( newOutputFldr.getAbsolutePath() );
 
         //========================================================================
         //-------------------------- Prep for Recursion --------------------------
@@ -340,7 +339,10 @@ public final class CmdProcessorFullStack
                 // boot.myEnv.setStack( stackSG );
                 // boot.myEnv.getStack().setCFNTemplateFile( Stack.genStackCFNFileName( boot.myEnv.enhancedUserInput.getCmd(), _cmdLA, boot.myEnv ) );
                 // boot.myEnv.getStackSet().add( boot.myEnv.getStack() ); // add the above new Stack object/instance
-                final CmdLineArgs claSG = CmdLineArgs.deepCloneWithChanges( _cmdLA, Enums.GenEnum.SG, SGPortType_asEnteredByUser+"-"+ix, null );
+                final CmdLineArgs claSG = CmdLineArgs.deepCloneWithChanges( _cmdLA, Enums.GenEnum.SG, "-"+ix, SGPortType_asEnteredByUser );
+                                                                            // The last argument is 'PublicOrPrivate'.. .. but ..
+                                                                            //  we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing
+                                                                            // the SG-PORT# (ssh/https/..) as provided by user on commandline.
                 final Stack stackSG = new Stack( this.verbose, AWSRegion, AWSLocation );
                 this.reconfigureBoot( Enums.GenEnum.SG, claSG, stackSG, boot.myEnv, boot);  // FYI: boot.myEnv gets replaced with a clone
 
@@ -708,11 +710,11 @@ public final class CmdProcessorFullStack
      *  @param _existingVPCID a NotNull string representing the VPC-ID of an existing AWS VPC
      *  @param _tagKey a NotNull string representing the key-of-a-tag, whose 'value' (if exists) will be returned
      *  @param _cmdLA to pass-on flags like '--offline' '--yamllibrary' etc..
-     *  @param _myEnv a NotNull object (created by {@link BootCheckAndConfig#configure})
+     *  @param _AWSRegion pass in valid AWS region names like 'us-east-2', 'us-west-1', 'ap-northeast-1' ..
      *  @return a Null-string, or, the value of an existing tag
      *  @throws Exception on any invalid VPC details provided, or any missing cached-files (for --ofline mode), etc...
      */
-    public String getVPCTag( final String _existingVPCID, final String _tagKey, final CmdLineArgs _cmdLA, final Environment _myEnv ) throws Exception
+    public String getVPCTag( final String _existingVPCID, final String _tagKey, final CmdLineArgs _cmdLA, final String _AWSRegion ) throws Exception
     {   final String HDR = CLASSNAME + ": getVPCTag("+ _existingVPCID +","+ _tagKey +",<cmdLA>,<myEnv>): ";
 
         if ( this.previouslyFoundExistingVPCID.equals( _existingVPCID) && (this.previouslyFoundMap.size() > 0)  )  {
@@ -720,7 +722,7 @@ public final class CmdProcessorFullStack
             if (this.verbose) System.out.println( HDR + "Speeding VPC-details lookup using CACHED-information for _existingVPCID='" + _existingVPCID +"'\n"+ this.previouslyFoundMap );
         } else {
             final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
-            final ArrayList< LinkedHashMap<String,Object> > arrOfMaps = awssdk.getVPCs( _myEnv.enhancedUserInput.getAWSRegion(), /* _onlyNonDefaultVPC */ false );
+            final ArrayList< LinkedHashMap<String,Object> > arrOfMaps = awssdk.getVPCs( _AWSRegion, /* _onlyNonDefaultVPC */ false );
             for ( LinkedHashMap<String,Object> map: arrOfMaps ) {
                 final String anExistingVPCID = (String) map.get( AWSSDK.VPC_ID );
                 if (this.verbose) System.out.println( HDR + "Going to search Existing VPC with ID='" + anExistingVPCID +"'\n"+ map );
@@ -743,7 +745,7 @@ public final class CmdProcessorFullStack
     //=================================================================================
 
     /**
-     *  <p>This should be invoked as step #3, after invoking {@link #genYAML(CmdLineArgs, String, Environment)} and {@link #genCFNShellScript(CmdLineArgs, Environment)}.</p>
+     *  <p>This should be invoked as the final step, after repeatedly invoking {@link CmdProcessor#genYAML(CmdLineArgs, String, Environment)} and {@link CmdProcessor#genCFNShellScript(CmdLineArgs, Environment)}.</p>
      *  <p>This method will generate the Stack-Set YAML, so that all the various components are run as a single set of Nested Stacks (very convenient, rather than run each one-after-another, waiting for each to complete)</p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
      *  @param _myEnv a NotNull object (created by {@link BootCheckAndConfig#configure})
