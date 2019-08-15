@@ -109,11 +109,11 @@ public final class Stack implements Serializable
      */
     public String getStackId()                          { return this.getStackName().replaceAll("-","").replaceAll("_","").replaceAll("\\.",""); }
 
-    public String getCFNTemplateFile()                  { return this.CFNTemplateFile; }
-    public void   setCFNTemplateFile( final String _cf )  { this.CFNTemplateFile = _cf; }
+    public String getCFNTemplateFileName()                  { return this.CFNTemplateFile; }
+    public void   setCFNTemplateFileName( final String _cf )  { this.CFNTemplateFile = _cf; }
 
     public String toString() {
-        return this.getStackName() +", "+ this.AWSRegion +", "+ this.getParamsAsString() +", "+ this.getCFNTemplateFile() ;
+        return this.getStackName() +", "+ this.AWSRegion +", "+ this.getParamsAsString() +", "+ this.getCFNTemplateFileName() ;
     }
 
     //=================================================================================
@@ -152,7 +152,7 @@ public final class Stack implements Serializable
     //=================================================================================
 
     public String genCLICmd( final String _folderPath ) {
-        return Stack.genCLICmd( this.getStackName(), this.AWSRegion, this.getParamsAsString(), this.getCFNTemplateFile(), _folderPath );
+        return Stack.genCLICmd( this.getStackName(), this.AWSRegion, this.getParamsAsString(), this.getCFNTemplateFileName(), _folderPath );
     }
 
     /**
@@ -161,7 +161,7 @@ public final class Stack implements Serializable
      *  @param _AWSRegion since this implementation of toString(), can be null
      *  @param _params since this implementation of toString(), can be null
      *  @param _cfnfile since this implementation of toString(), can be null
-     *  @param _folderPath the folder in which the CFN-Template-File is location (the file represented by {@link #getCFNTemplateFile()}
+     *  @param _folderPath the folder in which the CFN-Template-File is location (the file represented by {@link #getCFNTemplateFileName()}
      *  @return a NotNull String
      */
     public static String genCLICmd( final String _stackName, final String _AWSRegion, final String _params, final String _cfnfile, final String _folderPath ) {
@@ -224,21 +224,6 @@ public final class Stack implements Serializable
     //=================================================================================
 
     /**
-     *  <p>Supporting method to the 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
-     *  <p>This specific method is actually invoked by {@link #genSubnetStackName(CmdLineArgs)} and {@link #genSGStackName(CmdLineArgs)}, to help appropriately incorporate the value of the &lt;itemNumber&gt; cmdline arguments for 'subnet-gen' amd 'sg-gen' commands</p>
-     *  @param _cmdLA_itemNumber a Nullable String
-     *  @return NotNull String (can be empty-string)
-     */
-    public static final String getItemNumberSuffix( final String _cmdLA_itemNumber ) {
-        // final String itemSuffix = ( _cmdLA_itemNumber == null || "".equals(_cmdLA_itemNumber.trim()) ) ? "" : "-"+ _cmdLA_itemNumber;
-        final String itemSuffixWWOHyphen = ( _cmdLA_itemNumber == null || "".equals(_cmdLA_itemNumber.trim()) ) ? "" : _cmdLA_itemNumber;
-        // WWO === With or With-OUT
-        final String itemSuffix = ( itemSuffixWWOHyphen == null || "".equals(itemSuffixWWOHyphen) || itemSuffixWWOHyphen.startsWith("-") ) ? itemSuffixWWOHyphen : "-"+ itemSuffixWWOHyphen;
-        return itemSuffix;
-    }
-
-    //=================================================================================
-    /**
      *  <p>One of the set of 4 utility functions to help STANDARDIZE the naming of STACKS - whether for VPC, SUBNET, SG OR EC2.. ..</p>
      *  <p>{@link #genVPCStackName(CmdLineArgs)}, {@link #genSubnetStackName(CmdLineArgs)}, {@link #genSGStackName(CmdLineArgs)} and {@link #genEC2StackName(CmdLineArgs)}</p>
      *  @param _cmdLA a NotNull instance
@@ -256,7 +241,7 @@ public final class Stack implements Serializable
      *  @return NotNull String
      */
     public static final String genSubnetStackName( final CmdLineArgs _cmdLA ) {
-        return "${ASUX::"+ Environment.MYVPCSTACKPREFIX +"}-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + Stack.getItemNumberSuffix(_cmdLA.itemNumber) +"-subnet";
+        return "${ASUX::"+ Environment.MYVPCSTACKPREFIX +"}-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + UserInput.getItemNumberSuffix(_cmdLA.itemNumber) +"-subnet";
     }
 
     //=================================================================================
@@ -267,7 +252,7 @@ public final class Stack implements Serializable
      *  @return NotNull String
      */
     public static final String genSGStackName( final CmdLineArgs _cmdLA ) {
-        return "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-"+_cmdLA.PublicOrPrivate +"-"+  _cmdLA.jobSetName + Stack.getItemNumberSuffix(_cmdLA.itemNumber) +"-SG";
+        return "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-"+_cmdLA.PublicOrPrivate +"-"+  _cmdLA.jobSetName + UserInput.getItemNumberSuffix(_cmdLA.itemNumber) +"-SG";
                                                         // we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
     }
 
@@ -285,56 +270,6 @@ public final class Stack implements Serializable
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
-
-    //=================================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //=================================================================================
-
-    /**
-     *  <p>Yet-another utility-function - to help STANDARDIZE the naming of FILE-NAMES for CFN-Stacks</p>
-     *  @param _cmd see {@link Enums.GenEnum}
-     *  @param _cmdLA a NotNull instance
-     *  @param _myEnv a NotNull instance
-     *  @return a NotNull String representing JUST the file-name ONLY.  !!ATTENTION!! Prepend it with a Folder-path, to exactly place the file in the right location in the file-system.
-     *  @throws Exception for unimplemented commands (code-safety checks)
-     */
-    public static final String genStackCFNFileName( final Enums.GenEnum _cmd, final CmdLineArgs _cmdLA, final Environment _myEnv ) throws Exception {
-        return genStackCFNFileName(_cmd, _cmdLA, _myEnv, ".yaml");
-    }
-
-    /**
-     *  <p>Yet-another utility-function - to help STANDARDIZE the naming of FILE-NAMES for script that _EXECUTE_ 'aws cloudformation' commands for CFN-Stacks</p>
-     *  @param _cmd see {@link Enums.GenEnum}
-     *  @param _cmdLA a NotNull instance
-     *  @param _myEnv a NotNull instance
-     *  @return a NotNull String representing JUST the file-name ONLY.  !!ATTENTION!! Prepend it with a Folder-path, to exactly place the file in the right location in the file-system.
-     *  @throws Exception for unimplemented commands (code-safety checks)
-     */
-    public static final String genStackScriptFileName( final Enums.GenEnum _cmd, final CmdLineArgs _cmdLA, final Environment _myEnv ) throws Exception {
-        return genStackCFNFileName(_cmd, _cmdLA, _myEnv, ".sh");
-    }
-
-
-    private static final String genStackCFNFileName( final Enums.GenEnum _cmd, final CmdLineArgs _cmdLA, final Environment _myEnv, final String _suffix ) throws Exception
-    {   final String HDR = CLASSNAME + ": getStackCFNFileName("+ _cmd +"_cmdLA,_myEnv,"+ _suffix +"): ";
-
-        switch ( _cmd ) {
-            case VPC:       return _myEnv.getCfnJobTYPEString() + Stack.getItemNumberSuffix(_cmdLA.itemNumber) +_suffix; // ".yaml";
-            case SUBNET:    return _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + Stack.getItemNumberSuffix(_cmdLA.itemNumber) +_suffix; // ".yaml";
-            case SG:        return _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + Stack.getItemNumberSuffix(_cmdLA.itemNumber) +_suffix; // ".yaml";
-                            // we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
-            case EC2PLAIN:
-                            final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
-                            return _myEnv.getCfnJobTYPEString() +"-"+ globalProps.getProperty( Environment.MYEC2INSTANCENAME ) +_suffix; // ".yaml";
-            case FULLSTACK:
-                            return null;    // <<------- <<--------
-            case VPNCLIENT:
-            case UNDEFINED:
-            default:        final String es = HDR +" Unimplemented command: " + _cmd;
-                            System.err.println( es );
-                            throw new Exception( es );
-        } // switch
-    }
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
