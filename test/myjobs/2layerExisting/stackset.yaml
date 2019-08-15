@@ -1,17 +1,17 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '2layerExisting' on Thu Aug 08 15:54:26 EDT 2019 within Working-folder '/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs'
+Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '2layerExisting' on Thu Aug 15 14:44:05 EDT 2019 within Working-folder '/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/test/myjobs'
 
 Resources:
 
-   orgASUXPlaygroundSydneysubnetsPublic2layerExisting:     ### create-stack --stack-name org-ASUX-Playground-Sydney-subnets-Public-2layerExisting
+   orgASUXPlaygroundSydneyPublic2layerExisting0subnet:     ### create-stack --stack-name org-ASUX-Playground-Sydney-Public-2layerExisting-0-subnet
       Type: AWS::CloudFormation::Stack
       Properties:
-         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Sydney-subnets-Public-2layerExisting
+         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Sydney-Public-2layerExisting-0-subnet
 
    orgASUXPlaygroundSydney2layerExistingEC2MyWebASUXLinux1:     ### create-stack --stack-name org-ASUX-Playground-Sydney-2layerExisting-EC2-MyWebASUXLinux1
       Type: AWS::CloudFormation::Stack
       DependsOn:
-      - orgASUXPlaygroundSydneysubnetsPublic2layerExisting
+      - orgASUXPlaygroundSydneyPublic2layerExisting0subnet
       Properties:
          TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Sydney-2layerExisting-EC2-MyWebASUXLinux1
          Parameters:
@@ -22,17 +22,15 @@ Resources:
             MySSHKeyName: Sydney-org-ASUX-Playground-LinuxSSH.pem
             MyPublicSubnet1: org-ASUX-Playground-Sydney-2layerExisting-Subnet-Public1-ID
 
-   orgASUXPlaygroundSydneysubnetsPrivate2layerExisting:     ### create-stack --stack-name org-ASUX-Playground-Sydney-subnets-Private-2layerExisting
+   orgASUXPlaygroundSydneyPrivate2layerExisting1subnet:     ### create-stack --stack-name org-ASUX-Playground-Sydney-Private-2layerExisting-1-subnet
       Type: AWS::CloudFormation::Stack
-      DependsOn:
-      - orgASUXPlaygroundSydney2layerExistingEC2MyWebASUXLinux1
       Properties:
-         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Sydney-subnets-Private-2layerExisting
+         TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Sydney-Private-2layerExisting-1-subnet
 
    orgASUXPlaygroundSydney2layerExistingEC2MyPrivASUXLinux2:     ### create-stack --stack-name org-ASUX-Playground-Sydney-2layerExisting-EC2-MyPrivASUXLinux2
       Type: AWS::CloudFormation::Stack
       DependsOn:
-      - orgASUXPlaygroundSydneysubnetsPrivate2layerExisting
+      - orgASUXPlaygroundSydneyPrivate2layerExisting1subnet
       Properties:
          TemplateURL: https://org-asux-aws-cfn.s3.us-east-1.amazonaws.com/org-ASUX-Playground-Sydney-2layerExisting-EC2-MyPrivASUXLinux2
          Parameters:
