@@ -1,13 +1,9 @@
 ### This is the file 'AWSCFN-CommonHeader-post.ASUX-batch.txt'
 
-//=============================================================
-//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//=============================================================
+#___	properties DigitToAlphaProps=${ASUX::AWSCFNHOME}/config/DigitToAlpha.properties
 
-properties DigitToAlphaProps=${ASUX::AWSCFNHOME}/config/DigitToAlpha.properties
-
-properties AWSLocationsRegion=${ASUX::AWSHOME}/AWS-SDK/config/AWSLocationsRegions.properties
-properties AWSRegionLocations=${ASUX::AWSHOME}/AWS-SDK/config/AWSRegionsLocations.properties
+#___	properties AWSLocationsRegion=${ASUX::AWSHOME}/AWS-SDK/config/AWSLocationsRegions.properties
+#___	properties AWSRegionLocations=${ASUX::AWSHOME}/AWS-SDK/config/AWSRegionsLocations.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
