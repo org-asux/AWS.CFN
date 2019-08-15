@@ -1,13 +1,13 @@
 ### This is the file 'AWSCFN-Network-Create.ASUX-batch.txt'
 
-//=============================================================
-//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//=============================================================
 ### The 1st thing you do - Is to define's the JOB-parameters
 ### You can do it in 2 ways (or do both ways, as shown in next 3 lines below):-
 ###	(1) Via a properties-file
 ###	(2) or via setProperty
 
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
 ### So.. 1st load the "PRE" common stuff - that's common to all jobs
 
 #__ setProperty	?AWSCFNHOME=${ASUX::ORGASUXHOME}/AWS/CFN
@@ -102,7 +102,7 @@ setProperty Tag_Name=IGW-${ASUX::MyVPCStackPrefix}
 yaml --insert Resources,MyInternetGateway,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 yaml --macro ''
 
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGWAttach.yaml
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/IGWNewAttach.yaml
 yaml --macro ''
 
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRouteTable.yaml
@@ -111,10 +111,26 @@ yaml --insert Resources,MyPublicRouteTable,Properties  @${ASUX::AWSCFNHOME}/AWSC
 yaml --macro ''
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRoute.yaml
 
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateRouteTable.yaml
-setProperty Tag_Name=PrivateRT-${ASUX::MyVPCStackPrefix}
-yaml --insert Resources,MyPrivateRouteTable,Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
-yaml --macro ''
+saveTo !TopElemResources
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+foreach
+	### We'll go with the best design (__MULTIPLE__ PRIVATE RTs), to enable Private Subnet instances to access internet, in a very FAULT-TOLERANT way.
+	useAsInput !TopElemResources
+
+	yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PrivateRouteTable.yaml
+	yaml --macro ''
+	yaml --macro ''
+	setProperty Tag_Name=PrivateRT-AZ${ASUX::foreach.index+1}-${ASUX::MyVPCStackPrefix}
+	yaml --insert Resources,MyPrivateRouteTableAZ${ASUX::foreach.index+1},Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+	yaml --macro ''
+
+	saveTo !TopElemResources
+end
+
+//--------------------------------------------------
+useAsInput !TopElemResources
 
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/ACLDefault.yaml
 setProperty Tag_Name=NACL-Public-${ASUX::MyVPCStackPrefix}
@@ -138,7 +154,11 @@ setProperty WhichNACLRef=MyPrivateNetworkAcl	### The RHS of the '=' refers to th
 include @${ASUX::AWSCFNHOME}/bin/AWSCFN-NACL-subnet-Private.txt
 
 //--------------------------------------------------
+#___ print include ?@${ASUX::AWSCFNHOME}/bin/${ASUX::Rt53VPCAssocGenScript} \n
+#___ include ?@${ASUX::AWSCFNHOME}/bin/${ASUX::Rt53VPCAssocGenScript}   ### Typically, 'Rt53VPCAssocGenScript' === 'AWSCFN-Rt53-VPCAssociation.txt'
+### Rt53 is __NOT__ relevent for plain 'vpc-gen JOBNAME' command.
 
+//--------------------------------------------------
 useAsInput !YAMLROOT
 yaml --insert / !TopElemResources
 saveTo !YAMLROOT
@@ -150,6 +170,16 @@ makeNewRoot Outputs
 yaml --insert Outputs @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-VPC.yaml
 yaml --macro ''
 saveTo !TopElemOutputs
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+	
+foreach
+	useAsInput !TopElemOutputs
+	yaml --insert     Outputs    @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-PrivateRouteTable.yaml
+	yaml --macro ''
+	saveTo !TopElemOutputs
+end
 
 //--------------------------------------------------
 useAsInput !YAMLROOT
