@@ -68,7 +68,7 @@ public final class StackSet implements Serializable
 
     private final ArrayList<Stack> stackHeirarchy = new ArrayList<Stack>();
     private final ArrayList<Stack> stacksCreated = new ArrayList<Stack>();
-    private final ArrayList<Stack> stackDependsOn = new ArrayList<Stack>(); // <<-- Note: Here, the ArrayElements are REFERENCES to Stacks in 'stacksCreated'
+    private final ArrayList<Stack> stackDependencyIs = new ArrayList<Stack>(); // <<-- Note: Here, the ArrayElements are REFERENCES to Stacks in 'stacksCreated'
 
     private final LinkedHashMap<String,String> parameters = new LinkedHashMap<>();
 
@@ -110,11 +110,11 @@ public final class StackSet implements Serializable
      */
     public String getStackSetId()                         { return this.getStackSetName().replaceAll("-","").replaceAll("_","").replaceAll("\\.",""); }
 
-    public String getCFNTemplateFile()                    { return this.CFNTemplateFile; }
-    public void   setCFNTemplateFile( final String _cf )  { this.CFNTemplateFile = _cf; }
+    public String getCFNTemplateFileName()                    { return this.CFNTemplateFile; }
+    public void   setCFNTemplateFileName( final String _cf )  { this.CFNTemplateFile = _cf; }
 
     public String toString() {
-        return this.getStackSetName() +", "+ this.AWSRegion +", "+ this.getParamsAsString() +", "+ this.getCFNTemplateFile() ;
+        return this.getStackSetName() +", "+ this.AWSRegion +", "+ this.getParamsAsString() +", "+ this.getCFNTemplateFileName() ;
     }
 
     //=================================================================================
@@ -137,7 +137,7 @@ public final class StackSet implements Serializable
     //=================================================================================
 
     public String genCLICmd( final String _folderPath ) {
-        return Stack.genCLICmd( this.getStackSetName(), this.AWSRegion, this.getParamsAsString(), this.getCFNTemplateFile(), _folderPath );
+        return Stack.genCLICmd( this.getStackSetName(), this.AWSRegion, this.getParamsAsString(), this.getCFNTemplateFileName(), _folderPath );
     }
 
     //=================================================================================
@@ -151,17 +151,17 @@ public final class StackSet implements Serializable
 
         if ( this.stackHeirarchy.size() >= 1 ) {
             final Stack previous = this.stackHeirarchy.get( this.stackHeirarchy.size() - 1 );
-            this.stackDependsOn.add( previous );
+            this.stackDependencyIs.add( previous );
         } else {
-            this.stackDependsOn.add( null ); // null on purpose(so that the sizes of stackDependsOn and stacksCreated are identical)
+            this.stackDependencyIs.add( null ); // null on purpose (so that.. the sizes of 'stackDependencyIs' and 'stacksCreated 'are identical)
         }
-        assertTrue( this.stacksCreated.size() == this.stackDependsOn.size() );
+        assertTrue( this.stacksCreated.size() == this.stackDependencyIs.size() );
 
         this.stackHeirarchy.add( _stk );
     }
 
     //--------------------------
-    public void popDependency() {
+    public void popDependencyHeirarchy() {
         if ( this.stackHeirarchy.size() <= 0 )
             return;
         this.stackHeirarchy.remove( this.stackHeirarchy.size() - 1 );
@@ -183,10 +183,10 @@ public final class StackSet implements Serializable
      *  @param ix corresponding to the element-index of this class (which extends java.util.ArrayList).  Will internally check if 'ix' is within the range.
      *  @return a Nullable String, representing the purely-AlphaNumeric StackId (Not the stackName).  Null, if 'ix' is invalid.
      */
-    public final Stack getDependencyForStack( final int ix ) {
+    public final Stack getDependencyFor( final int ix ) {
         // return this.stackHasDependencyOn.get(ix);
-        return ( ix <= 0 || this.stackDependsOn.size() <= ix )   ?   null : this.stackDependsOn.get( ix );
-        // return ( ix <= 0 || this.stackDependsOn.size() <= ix || this.stackDependsOn.size() <= 1 )   ?   null : this.stackDependsOn.get( ix - 1 );
+        return ( ix <= 0 || this.stackDependencyIs.size() <= ix )   ?   null : this.stackDependencyIs.get( ix );
+        // return ( ix <= 0 || this.stackDependencyIs.size() <= ix || this.stackDependencyIs.size() <= 1 )   ?   null : this.stackDependencyIs.get( ix - 1 );
     }
 
     //=================================================================================
