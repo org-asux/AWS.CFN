@@ -193,6 +193,40 @@ public class UserInputEnhanced extends UserInput
     //=================================================================================
 
     /**
+     *  <p>A simple tool to map the cmd - into a String variable, that is used to load the cmd-specific YAML-BATCH scripts.</p>
+     * <p>Example: Enums.GenEnum.VPC("VPC-gen") will return "vpc" - in lowercase.</p>
+     *  @param _cmdName  a value of type {@link Enums.GenEnum} - it should come from {@link CmdLineArgs#getCmdName()}
+     *  @return a string that is always NOT NULL
+     *  @throws Exception on any invalid input or for Incomplete-code scenarios
+     */
+    public static String getCFNJobTypeAsString( final Enums.GenEnum _cmdName ) throws Exception
+    {   final String HDR = CLASSNAME + ": getJobType("+ _cmdName +"): ";
+        switch (_cmdName) {
+            case VPC: // cfnJobTYPEString="vpc"; break;
+            case SUBNET: // cfnJobTYPEString="subnets"; break;
+            case SG: // cfnJobTYPEString="sg"; break;
+            case EC2PLAIN: // cfnJobTYPEString="ec2plain"; break;
+            case VPNCLIENT: // cfnJobTYPEString="vpnclient"; break;
+            case FULLSTACK: // cfnJobTYPEString="vpnclient"; break;
+                String cfnJobTYPEString = _cmdName.toString();
+                cfnJobTYPEString = cfnJobTYPEString.replaceAll("-gen$", "").toLowerCase();
+                assertTrue( cfnJobTYPEString != null );
+                return cfnJobTYPEString;
+                // break;
+
+            case UNDEFINED: // cfnJobTYPEString="vpc"; break;
+            default:
+                final String es = HDR + "Internal Error: INCOMPLETE CODE.  Switch(_cmdName) for _cmdName=" + _cmdName.toString();
+                System.err.println(es);
+                throw new Exception(es);
+        } // switch
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    /**
      * This deepClone function is VERY MUCH necessary, as No cloning-code can handle 'transient' variables in this class.
      * 
      * @param _orig what you want to deep-clone
