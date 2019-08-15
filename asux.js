@@ -38,8 +38,8 @@ CmdLine
 	.option('--verbose', 'A value that can be increased by repeating', 0)
 	.option('--offline', 'whether to assume No internet and use cached responses (previously saved)', 0)
 .command('vpc-gen ...', 'create a new VPC in a specific region', { isDefault: false, noHelp: false } )
-.command('subnets-gen ...', 'create a new subnet (must also specify public or private)', { isDefault: false, noHelp: false } )
-.command('sg-ssh-gen ...', 'create a new Security-Group for allowing SSH access to EC2 instances', { isDefault: false, noHelp: false } )
+.command('subnet-gen ...', 'create a new subnet (must also specify public or private)', { isDefault: false, noHelp: false } )
+.command('sg-gen ...', 'create a new Security-Group for allowing SSH access to EC2 instances', { isDefault: false, noHelp: false } )
 .command('ec2plain-gen ...', 'create a new simple EC2 AWS-Linux2 instance (with packages optionally specified to install)', { isDefault: false, noHelp: false } )
 // .command('ec2efs-gen ...', 'create a new simple AWS-Linux2 EC2 instance with an EFS mounted under /mnt', { isDefault: false, noHelp: true } )
 .command('ecs-gen ...', 'create a new Elastic Container Service instance', { isDefault: false, noHelp: true } )
@@ -72,13 +72,13 @@ CmdLine.on('command:vpc-gen', function () {
   processCFNCmd(COMMAND);
 });
 
-CmdLine.on('command:subnets-gen', function () {
-  COMMAND="subnets-gen";
+CmdLine.on('command:subnet-gen', function () {
+  COMMAND="subnet-gen";
   processCFNCmd(COMMAND);
 });
 
-CmdLine.on('command:sg-ssh-gen', function () {
-  COMMAND="sg-ssh-gen";
+CmdLine.on('command:sg-gen', function () {
+  COMMAND="sg-gen";
   processCFNCmd(COMMAND);
 });
 
