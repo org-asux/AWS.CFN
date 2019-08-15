@@ -169,6 +169,7 @@ git diff ${JOBSET}/${CMD}.yaml
 cat $DIVIDER
 git diff ${JOBSET}/${CMD}.sh
 
+###--------------------
 cat $DIVIDER; echo -n "\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!  git checkout --force ? .. (or press Cntl-C) >>"; set ANS=$<
 git checkout --force ${JOBSET}/*.yaml ${JOBSET}/*.sh
 git status
@@ -197,29 +198,34 @@ echo ''
 # set CMD=fullstack-vpc
 # set CMD=fullstack-sg-ssh
 
-set CMD=fullstack-subnets-Public
+set CMD=fullstack-subnet-Public
 cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
-git diff ${CMD}.yaml
+git diff ${JOBSET}/${CMD}*.yaml
 cat $DIVIDER
-git diff ${CMD}.sh
+git diff ${JOBSET}/${CMD}*.sh
 
-set CMD=fullstack-subnets-Private
+set CMD=fullstack-subnet-Private
 cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
-git diff ${CMD}.yaml
+git diff ${JOBSET}/${CMD}*.yaml
 cat $DIVIDER
-git diff ${CMD}.sh
+git diff ${JOBSET}/${CMD}*.sh
 
 set CMD=fullstack-ec2plain-MyWebASUXLinux1
 cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
-git diff ${CMD}.yaml
+git diff ${JOBSET}/${CMD}.yaml
 cat $DIVIDER
-git diff ${CMD}.sh
+git diff ${JOBSET}/${CMD}.sh
 
 set CMD=fullstack-ec2plain-MyPrivASUXLinux2
 cat $DIVIDER; echo -n "show diff for ${CMD} ? .. (or press Cntl-C) >>"; set ANS=$<
-git diff ${CMD}.yaml
+git diff ${JOBSET}/${CMD}.yaml
 cat $DIVIDER
-git diff ${CMD}.sh
+git diff ${JOBSET}/${CMD}.sh
+
+###--------------------
+cat $DIVIDER; echo -n "\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!\!  git checkout --force ? .. (or press Cntl-C) >>"; set ANS=$<
+git checkout --force ${JOBSET}/*.yaml ${JOBSET}/*.sh
+git status
 
 ###-------------------------------------------------------------------
 ### @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
