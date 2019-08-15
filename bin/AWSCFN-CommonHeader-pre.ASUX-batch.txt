@@ -1,14 +1,5 @@
 ### This is the file 'AWSCFN-CommonHeader-pre.ASUX-batch.txt'
 
-#_____ print ORGASUXHOME=${ASUX::ORGASUXHOME} \n
-
-//=============================================================
-//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-//=============================================================
-
-#______ setProperty	AWSCFNHOME=${ASUX::ORGASUXHOME}/AWS/CFN
-#______ setProperty	AWSCFNHOME=/Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN
-
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
@@ -21,15 +12,22 @@
 
 properties GLOBAL.VARIABLES=${ASUX::AWSCFNHOME}/config/DEFAULTS/job-DEFAULTS.properties
 
+properties DigitToAlphaProps=${ASUX::AWSCFNHOME}/config/DigitToAlpha.properties
+
+properties AWSLocationsRegion=${ASUX::AWSHOME}/AWS-SDK/config/AWSLocationsRegions.properties
+properties AWSRegionLocations=${ASUX::AWSHOME}/AWS-SDK/config/AWSRegionsLocations.properties
+
+
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
 
 properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-DEFAULTS.properties
 properties Tags=${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-${ASUX::cfnJobTYPE}-DEFAULTS.properties
-#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-EFS-DEFAULTS.properties
-#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-SG-DEFAULTS.properties
-#____ ${ASUX::AWSCFNHOME}/config/DEFAULTS/Tags-EC2-DEFAULTS.properties
+
+properties Tags=?${ASUX::user.home}/.ASUX.org/AWS.CFN/Tags-Alone-Master.properties
+properties Tags=?${ASUX::user.home}/.ASUX.org/AWS.CFN/Tags-Dept-Master.properties
+properties Tags=?${ASUX::user.home}/.ASUX.org/AWS.CFN/Tags-Enterprise-Master.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
