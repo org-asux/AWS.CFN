@@ -75,12 +75,12 @@ public final class BootCheckAndConfig {
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // =================================================================================
 
-    // private Tuple<String,String>   captureUserInput( final String AWSRegion, final String AWSLocation ) throws Exception
-    // {   final String HDR = CLASSNAME + ": captureUserInput("+ AWSRegion +","+ AWSLocation + "): "; 
+    // private Tuple<String,String>   capture User Input( final String AWSRegion, final String AWSLocation ) throws Exception
+    // {   final String HDR = CLASSNAME + ": capture User Input("+ AWSRegion +","+ AWSLocation + "): "; 
     // }
 
-    private Tuple<String,String>  captureUserInput( final Enums.GenEnum _cmd ) throws Exception
-    {   final String HDR = CLASSNAME + ": captureUserInput(): ";
+    private Tuple<String,String>  evalAWSRegionLocation( final Enums.GenEnum _cmd ) throws Exception
+    {   final String HDR = CLASSNAME + ": evalAWSRegionLocation(): ";
 
         // --------------------
         final String AWSRegion    = Macros.evalThoroughly( this.verbose, "${ASUX::AWSRegion}", this.myEnv.getAllPropsRef() );
@@ -94,7 +94,7 @@ public final class BootCheckAndConfig {
             final UserInput userInput = new UserInput( this.verbose, AWSRegion, AWSLocation );
             this.myEnv.enhancedUserInput = new UserInputEnhanced( userInput );
         }
-        final String cfnJobTYPEString = BootCheckAndConfig.getCFNJobTypeAsString( _cmd );
+        final String cfnJobTYPEString = UserInputEnhanced.getCFNJobTypeAsString( _cmd );
         this.myEnv.enhancedUserInput.setCmd( _cmd, cfnJobTYPEString );
 
         // --------------------
@@ -105,7 +105,7 @@ public final class BootCheckAndConfig {
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // =================================================================================
 
-    private Tuple<String,String>   init( final CmdLineArgs _cmdLA ) throws Exception
+    private void  init( final CmdLineArgs _cmdLA ) throws Exception
     {   final String HDR = CLASSNAME + ": init(" + _cmdLA.cmdName + "): ";
 
         // Now check and obtain ALL the important Property Objects.
@@ -123,22 +123,16 @@ public final class BootCheckAndConfig {
         // globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ awscfnhome  +"/"+ AWSREGIONSLOCATIONS ) );
 
         // --------------------
-        final String cfnJobTYPEString = getCFNJobTypeAsString( _cmdLA.cmdName );
-        globalProps.setProperty( "cfnJobTYPE", cfnJobTYPEString ); // this.myEnv.getCfnJobTYPEString()
-        globalProps.setProperty( "JobSetName", _cmdLA.jobSetName );
-        globalProps.setProperty( "ItemNumber", _cmdLA.itemNumber );
-        globalProps.setProperty( "PublicOrPrivate", _cmdLA.PublicOrPrivate );
-        // final String InitialCapitalStr = Character.toUpperCase( _cmdLA.PublicOrPrivate.charAt(0) ) + _cmdLA.PublicOrPrivate.substring(1);
-        // globalProps.setProperty( "PublicOrPrivateStr", InitialCapitalStr );
-        if (this.verbose) System.out.println( HDR + "JobSetName=" + _cmdLA.jobSetName + " ItemNumber=" + _cmdLA.itemNumber + " PublicOrPrivate=" + _cmdLA.PublicOrPrivate );
-
-        // --------------------
-        final Tuple<String,String> tuple = this.captureUserInput( _cmdLA.cmdName );
+        // The following will be ineffective for '--fullstack' (a.k.a.  cmdName == Enums.GenEnum.FULLSTACK )
+        // The following will have to be 're-calculated' within CmdProcessorFullStack.java
+        final Tuple<String,String> tuple = this.evalAWSRegionLocation( _cmdLA.cmdName );
         final String AWSRegion   = tuple.key;
         final String AWSLocation = tuple.val;
+        assertTrue( this.myEnv.enhancedUserInput != null );
+
         globalProps.setProperty( "AWSLocation", AWSLocation );
 
-        return tuple;
+        // return tuple;
     }
 
     //=================================================================================
@@ -159,7 +153,7 @@ public final class BootCheckAndConfig {
         final String awscfnhome       = sysprops.getProperty("AWSCFNHOME");
 
         // --------------------
-        final String cfnJobTYPEString = getCFNJobTypeAsString( _cmdLA.cmdName );
+        final String cfnJobTYPEString = UserInputEnhanced.getCFNJobTypeAsString( _cmdLA.cmdName );
         if (this.verbose) System.out.println( HDR + "cfnJobTYPEString=" + cfnJobTYPEString );
 
         // --------------------
@@ -178,12 +172,6 @@ public final class BootCheckAndConfig {
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-        final Tuple<String,String> tuple = this.init( _cmdLA );
-        final String AWSRegion   = tuple.key;
-        final String AWSLocation = tuple.val;
-
-        // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-
         fileCheck( this.myEnv.get_orgasuxhome(), "/asux.js", false /* _bMissingIsOk */ );
         // final File asux_js = new File( orgasuxhome +"/asux.js" );
         // if ( ! asux_js.exists() ) {
@@ -197,6 +185,51 @@ public final class BootCheckAndConfig {
         fileCheck( this.myEnv.get_awssdkhome(), Environment.AWSREGIONSLOCATIONS, false /* _bMissingIsOk */ );
         fileCheck( this.myEnv.get_awssdkhome(), Environment.AWSLOCATIONSREGIONS, false /* _bMissingIsOk */ );
         // Don't need checks for 'AWSprofile' (a.k.a. ~/.aws/.profile) as this check is done within org.ASUX.AWS-SDK project's code, prior to interacting with AWS-SDK.
+
+        // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+        // Important: The above filechecks will ensure the following init() will Not cause incomprehensible errors (to end-user)
+
+        this.init( _cmdLA );
+        // final Tuple<String,String> tuple = this.evalAWSRegionLocation( _cmdLA.cmdName );
+        // final String AWSRegion   = tuple.key;
+        // final String AWSLocation = tuple.val;
+
+        // --------------------
+        final Properties Tags        = this.myEnv.getAllPropsRef().get( "Tags" );
+        assertTrue( Tags != null );
+
+        // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
+        switch ( _cmdLA.cmdName ) {
+            case FULLSTACK: // use checkFullStack() instead.
+                            break;
+            case SUBNET:
+            case EC2PLAIN:
+            case VPC:
+            case SG:
+                            fileCheck( this.myEnv.get_awscfnhome(), this.myEnv.getJOB_DEFAULTS_FILEPATH(), false /* _bMissingIsOk */ );
+                            fileCheck( _cmdLA.jobSetName, this.myEnv.getJOBSET_MASTER_FILEPATH(), this.myEnv.bInRecursionByFullStack );
+                            // fileCheck( _cmdLA.jobSetName, "jobset-" + this.myEnv.cfnJobTYPEString + ".properties" ); // we can't do this for all cfnJob-TYPEs
+                            break;
+            case VPNCLIENT:
+            case UNDEFINED:
+            default:        final String es = HDR +" Unimplemented command: " + _cmdLA.cmdName;
+                            System.err.println( es );
+                            throw new Exception( es );
+        } // switch
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
+    /**
+     *  Checks for critical environment variables and for critical cmdline parameters like AWSRegion. Then loads all Propertyfiles for the job.
+     *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
+     *  @throws Exception on any missing variables or parameters
+     */
+    public void checkForFullStack( final CmdLineArgs _cmdLA ) throws Exception
+    {   final String HDR = CLASSNAME + ": checkFullStack(" + _cmdLA.cmdName + "): ";
 
         // --------------------
         switch ( _cmdLA.cmdName ) {
@@ -218,10 +251,6 @@ public final class BootCheckAndConfig {
             case EC2PLAIN:
             case VPC:
             case SG:
-                            fileCheck( this.myEnv.get_awscfnhome(), this.myEnv.getJOB_DEFAULTS_FILEPATH(), false /* _bMissingIsOk */ );
-                            fileCheck( _cmdLA.jobSetName, this.myEnv.getJOBSET_MASTER_FILEPATH(), this.myEnv.bInRecursionByFullStack );
-                            // fileCheck( _cmdLA.jobSetName, "jobset-" + this.myEnv.cfnJobTYPEString + ".properties" ); // we can't do this for all cfnJob-TYPEs
-                            break;
             case VPNCLIENT:
             case UNDEFINED:
             default:        final String es = HDR +" Unimplemented command: " + _cmdLA.cmdName;
@@ -247,16 +276,21 @@ public final class BootCheckAndConfig {
     public void configure( final CmdLineArgs _cmdLA ) throws Exception
     {   final String HDR = CLASSNAME + ": configure(" + _cmdLA.cmdName + "): ";
 
-        this.init( _cmdLA );
 
-        // final Properties sysprops       = this.myEnv.getAllPropsRef().get( org.ASUX.common.OSScriptFileScanner.SYSTEM_ENV );
         final Properties globalProps = this.myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
-        final Properties Tags        = this.myEnv.getAllPropsRef().get( "Tags" );
-        assertTrue( Tags != null );
+
+        // --------------------
+        final String cfnJobTYPEString = UserInputEnhanced.getCFNJobTypeAsString( _cmdLA.cmdName );
+        globalProps.setProperty( "cfnJobTYPE", cfnJobTYPEString ); // this.myEnv.getCfnJobTYPEString()
+        globalProps.setProperty( "JobSetName", _cmdLA.jobSetName );
+        globalProps.setProperty( "ItemNumber", _cmdLA.itemNumber );
+        globalProps.setProperty( "PublicOrPrivate", _cmdLA.PublicOrPrivate );
+        // final String InitialCapitalStr = Character.toUpperCase( _cmdLA.PublicOrPrivate.charAt(0) ) + _cmdLA.PublicOrPrivate.substring(1);
+        // globalProps.setProperty( "PublicOrPrivateStr", InitialCapitalStr );
+        if (this.verbose) System.out.println( HDR + "JobSetName=" + _cmdLA.jobSetName + " ItemNumber=" + _cmdLA.itemNumber + " PublicOrPrivate=" + _cmdLA.PublicOrPrivate );
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
-        // --------------------
         switch ( _cmdLA.cmdName ) {
             case EC2PLAIN:
             case VPC:
@@ -268,7 +302,7 @@ public final class BootCheckAndConfig {
                             final boolean isItOkIfFileIsMissing = this.myEnv.bInRecursionByFullStack;
                             loadPropsIntoGlobal( "@"+ _cmdLA.jobSetName +"/"+ this.myEnv.getJOBSET_MASTER_FILEPATH(),    globalProps, isItOkIfFileIsMissing );
                             loadPropsIntoGlobal( "@"+ _cmdLA.jobSetName +"/jobset-" + this.myEnv.getCfnJobTYPEString() + ".properties",   globalProps, isItOkIfFileIsMissing );
-                            final Tuple<String,String> tuple = this.captureUserInput( _cmdLA.cmdName );
+                            final Tuple<String,String> tuple = this.evalAWSRegionLocation( _cmdLA.cmdName );
                             final String AWSRegion   = tuple.key;
                             final String AWSLocation = tuple.val;
                             // --------------------
@@ -279,20 +313,22 @@ public final class BootCheckAndConfig {
                             }
             case FULLSTACK: // get defaults from ~/.ASUX.org/.
                             // Note: We have 'fileCheck()' invocations for these 3 Tags-props-files in this.check() method.
-                            // So, we know at least one of these exists.
-                            // So, let's make sure that these below loadPropsIntoGlobal() calls throw a FileNotFoundException.
-                            // For that the last parameter _MUST_ be true
-// Loading these property files is TOO early.
-// It gets OVERWRITTEN by the config/DEFAULTS/Tags_Defaults.properties
-                            // loadPropsIntoGlobal( "@"+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_ALONE_MASTER,       Tags, true /* _bMissingIsOk */ );
-                            // loadPropsIntoGlobal( "@"+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_DEPT_MASTER,        Tags, true /* _bMissingIsOk */ );
-                            // loadPropsIntoGlobal( "@"+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_ENTERPRISE_MASTER,  Tags, true /* _bMissingIsOk */ );
+                            // So, we know __at-least__ one of these exists.
+                            // So, let's make sure that these below loadPropsIntoGlobal() calls .. do _NOT_ throw a FileNotFoundException.
+                            // For that the last ARGUMENT __MUST__ be true
+// ATTENTION!!! Loading these (below) property files is TOO early.
+// REASON: It gets OVERWRITTEN by the config/DEFAULTS/Tags_Defaults.properties - within the ASUX-BATCH scripts.
+// So, the ASUX-BATCH scripts should __RE-LOAD__ these.
+                            final Properties Tags        = this.myEnv.getAllPropsRef().get( "Tags" );
+                            loadPropsIntoGlobal( "@"+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_ALONE_MASTER,       Tags, true /* _bMissingIsOk */ );
+                            loadPropsIntoGlobal( "@"+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_DEPT_MASTER,        Tags, true /* _bMissingIsOk */ );
+                            loadPropsIntoGlobal( "@"+ Environment.USERCONFIGHOME_CFN +"/"+ Environment.TAGS_ENTERPRISE_MASTER,  Tags, true /* _bMissingIsOk */ );
                             globalProps.putAll( org.ASUX.common.Utils.parseProperties( "@"+ this.myEnv.get_awscfnhome()  +"/"+ this.myEnv.getJOB_DEFAULTS_FILEPATH() ) );
-                            final Tuple<String,String> tuple2 = this.captureUserInput( _cmdLA.cmdName );
+                            final Tuple<String,String> tuple2 = this.evalAWSRegionLocation( _cmdLA.cmdName );
                             final String AWSRegion2   = tuple2.key;
                             final String AWSLocation2 = tuple2.val;
                             // --------------------
-                            if ( this.myEnv.getStackSet() == null ) {
+                            if ( this.myEnv.getStackSet() == null ) { // StackSET .. NOT Stack.
                                 // ..getStackSet() can be != null, if configure() is invoked repeatedly for '--fullstack-gen' (CmdProcessorFullStack.java)
                                 final StackSet stackSet = new StackSet( this.verbose, AWSRegion2, AWSLocation2 );
                                 this.myEnv.setStackSet( stackSet );
@@ -322,40 +358,6 @@ public final class BootCheckAndConfig {
         if (this.verbose) System.out.println( HDR + "VPCID=" + VPCID + " DefaultAZ=" + DefaultAZ );
         if (this.verbose) System.out.println( HDR + "globalProps: Total # of entries = " + globalProps.size() + "." );
 
-    }
-
-    //=================================================================================
-    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-    //=================================================================================
-
-    /**
-     *  <p>A simple tool to map the cmd - into a String variable, that is used to load the cmd-specific YAML-BATCH scripts.</p>
-     * <p>Example: Enums.GenEnum.VPC("VPC-gen") will return "vpc" - in lowercase.</p>
-     *  @param _cmdName  a value of type {@link Enums.GenEnum} - it should come from {@link CmdLineArgs#getCmdName()}
-     *  @return a string that is always NOT NULL
-     *  @throws Exception on any invalid input or for Incomplete-code scenarios
-     */
-    public static String getCFNJobTypeAsString( final Enums.GenEnum _cmdName ) throws Exception
-    {   final String HDR = CLASSNAME + ": getJobType("+ _cmdName +"): ";
-        switch (_cmdName) {
-            case VPC: // cfnJobTYPEString="vpc"; break;
-            case SUBNET: // cfnJobTYPEString="subnets"; break;
-            case SG: // cfnJobTYPEString="sg"; break;
-            case EC2PLAIN: // cfnJobTYPEString="ec2plain"; break;
-            case VPNCLIENT: // cfnJobTYPEString="vpnclient"; break;
-            case FULLSTACK: // cfnJobTYPEString="vpnclient"; break;
-                String cfnJobTYPEString = _cmdName.toString();
-                cfnJobTYPEString = cfnJobTYPEString.replaceAll("-gen$", "").toLowerCase();
-                assertTrue( cfnJobTYPEString != null );
-                return cfnJobTYPEString;
-                // break;
-
-            case UNDEFINED: // cfnJobTYPEString="vpc"; break;
-            default:
-                final String es = HDR + "Internal Error: INCOMPLETE CODE.  Switch(_cmdName) for _cmdName=" + _cmdName.toString();
-                System.err.println(es);
-                throw new Exception(es);
-        } // switch
     }
 
     //=================================================================================
