@@ -98,7 +98,6 @@ public class Cmd {
                 case VPC:
                 case SUBNET:
                 case SG:
-                case SGEFS:
                 case EC2PLAIN:
                 case FULLSTACK:
                     break; // do nothing for now.
@@ -125,7 +124,6 @@ public class Cmd {
                 case VPC:
                 case SUBNET:
                 case SG:
-                case SGEFS:
                 case EC2PLAIN:
                 case FULLSTACK:
                     break; // do nothing for now.
