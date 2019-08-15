@@ -1,1 +1,1 @@
-aws cloudformation create-stack --stack-name org-ASUX-Playground-Tokyo-Public-simple-0-subnet --region ap-northeast-1 --parameters  --template-body file:///tmp/subnets-Public-0.yaml --profile ${AWSprofile} 
+aws cloudformation create-stack --stack-name org-ASUX-Playground-Tokyo-Public-simple-0-subnet --region ap-northeast-1 --parameters  --template-body file:///tmp/subnet-Public-0.yaml --profile ${AWSprofile} 
