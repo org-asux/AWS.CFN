@@ -23,7 +23,7 @@ AWS:
 
     SG:
       SG-ID: existing
-      sg-type: ssh  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH _CANNOT_ be created.
+      SG-type: ssh  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH _CANNOT_ be created.
                     ### Multiple SG-type?  Simply add another entry of 'SG-type'!
           ### Code will use the 'SG-type' to search for existing-SecurityGroups, for an SG in the following sequence:-
           ###   (1) Match Tag/Name for MyOrgName/MyDomainName .. _IF_ provided above
