@@ -33,18 +33,18 @@ saveTo !YAMLROOT
 //--------------------------------------------------
 makeNewRoot Resources
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/SG_SSH.yaml
-yaml --macro @/dev/null
-yaml --macro @/dev/null   ### Don't know why.  If I do NOT run this twice, I get a duplicate YAML element for /Resources/SGSSHPlayground1/Properties
+yaml --macro ''
 
-setProperty Tag_Name=SG-SSH${ASUX::ItemNumber}-${ASUX::MyVPCStackPrefix}
+setProperty Tag_Name=SG-${ASUX::PublicOrPrivate}${ASUX::ItemNumber}-${ASUX::MyVPCStackPrefix}
+							### we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
 yaml --insert Resources,SGSSH${ASUX::MyEnvironment},Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
-yaml --macro @/dev/null
+yaml --macro ''
 saveTo !TopElemResources
 
 //--------------------------------------------------
 useAsInput !YAMLROOT
 yaml --insert / !TopElemResources
-yaml --macro @/dev/null
+yaml --macro ''
 saveTo !YAMLROOT
 
 //=============================================================
