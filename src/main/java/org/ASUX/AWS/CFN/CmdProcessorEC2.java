@@ -138,7 +138,7 @@ public final class CmdProcessorEC2
 
         final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         final String MyStackNamePrefix = globalProps.getProperty( Environment.MYSTACKNAMEPREFIX );
-        final String outpfile = CmdProcessor.getOutputFilePath( _cmdLA, _myEnv );  // _myEnv.enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +".yaml";
+        // final String outpfile = CmdProcessor.getOutputFilePath( _cmdLA, _myEnv );  // _myEnv.enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +".yaml";
 
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
 
