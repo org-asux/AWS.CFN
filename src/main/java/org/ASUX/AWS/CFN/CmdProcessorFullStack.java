@@ -768,8 +768,11 @@ public final class CmdProcessorFullStack
             return;
         }
         if ( awssdk.doesBucketExist( properBucketName ) ) {
-            if (  !  awssdk.isValidS3Bucket( correctBucketRegionID, properBucketName ) ) {
+            final boolean haveAccess = awssdk.isValidS3Bucket( correctBucketRegionID, properBucketName )
+                                    && awssdk.haveS3BucketAccess( correctBucketRegionID, properBucketName, AWSSDK.S3Permissions.READWRITE ); 
+            if (  ! haveAccess  ) {
                 System.err.println( "\n\nERROR!!!!!! You do _NOT_ have access to the Bucket that you provided on command line: "+ _cmdLA.s3bucketname );
+                // awssdk.listBuckets( correctBucketRegionID ); // show the buckets that the user has in the region?
                 return;
             }
         } else {
