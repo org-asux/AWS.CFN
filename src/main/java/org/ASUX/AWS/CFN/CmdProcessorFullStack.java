@@ -114,7 +114,8 @@ public final class CmdProcessorFullStack
 
         final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
-        final YAMLTools yamltools = new YAMLTools( this.verbose, /* showStats */ false, this.cmdinvoker.dumperopt );
+        final NodeTools nodetools = (NodeTools) this.cmdinvoker.getYAMLImplementation();
+        final YAMLTools yamltools = new YAMLTools( this.verbose, /* showStats */ false, nodetools );
         final CmdProcessorExisting existingInfrastructure = new CmdProcessorExisting( this.cmdinvoker );
 
         //-------------------------------------
@@ -649,35 +650,37 @@ public final class CmdProcessorFullStack
         final Node yum      = _yamltools.readNodeFromYAML( _mapNode, "yum" );
         final Node rpm      = _yamltools.readNodeFromYAML( _mapNode, "rpm" );
         final Node configCustomCommands = _yamltools.readNodeFromYAML( _mapNode, "configCustomCommands" );
-        // final Node parent   = NodeTools.getNewSingleMap( "Packages", "", this.cmdinvoker.dumperopt );
+        // final Node parent   = NodeTools.getNewSingleMap( "Packages", "", nodetools.getDumperOptions() );
+
+        final NodeTools nodetools = (NodeTools) this.cmdinvoker.getYAMLImplementation();
 
         final java.util.List<NodeTuple> tuples = new LinkedList<NodeTuple>();
         if ( yum != null ) { // && yum.getValue().size() > 0 ) {
-            final ScalarNode keyN = new ScalarNode( Tag.STR, "yum", null, null, this.cmdinvoker.dumperopt.getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
+            final ScalarNode keyN = new ScalarNode( Tag.STR, "yum", null, null, nodetools.getDumperOptions().getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
             final NodeTuple tuple = new NodeTuple( keyN, yum );
             tuples.add( tuple );
         }
         if ( rpm != null ) { // && rpm.getValue().size() > 0 ) {
-            final ScalarNode keyN = new ScalarNode( Tag.STR, "rpm", null, null, this.cmdinvoker.dumperopt.getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
+            final ScalarNode keyN = new ScalarNode( Tag.STR, "rpm", null, null, nodetools.getDumperOptions().getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
             final NodeTuple tuple = new NodeTuple( keyN, rpm );
             tuples.add( tuple );
         }
         if ( configCustomCommands != null ) { // && configCustomCommands.getValue().size() > 0 ) {
-            final ScalarNode keyN = new ScalarNode( Tag.STR, "configCustomCommands", null, null, this.cmdinvoker.dumperopt.getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
+            final ScalarNode keyN = new ScalarNode( Tag.STR, "configCustomCommands", null, null, nodetools.getDumperOptions().getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
             final NodeTuple tuple = new NodeTuple( keyN, configCustomCommands );
             tuples.add( tuple );
         }
 
         // This will be the YAML-CONTENTS __UNDER__  'Metadata' / 'AWS::CloudFormation::Init' / 'Standup' / 'Packages'
-        final MappingNode parentMapN = new MappingNode ( Tag.MAP, false, tuples, null, null, this.cmdinvoker.dumperopt.getDefaultFlowStyle() ); // DumperOptions.FlowStyle.BLOCK
+        final MappingNode parentMapN = new MappingNode ( Tag.MAP, false, tuples, null, null, nodetools.getDumperOptions().getDefaultFlowStyle() ); // DumperOptions.FlowStyle.BLOCK
 
         //-----------------
         // now.. create the topmost '_cfnInitContext: ' YAML-entry (for 'AWS::CloudFormation::Init')
         final java.util.List<NodeTuple> tuples2 = new LinkedList<NodeTuple>();
-        final ScalarNode keyN2 = new ScalarNode( Tag.STR, _cfnInitContext, null, null, this.cmdinvoker.dumperopt.getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
+        final ScalarNode keyN2 = new ScalarNode( Tag.STR, _cfnInitContext, null, null, nodetools.getDumperOptions().getDefaultScalarStyle() ); // DumperOptions.ScalarStyle.PLAIN
         final NodeTuple tuple2 = new NodeTuple( keyN2, parentMapN );
         tuples2.add( tuple2 );
-        final MappingNode superParentMapN = new MappingNode ( Tag.MAP, false, tuples2, null, null, this.cmdinvoker.dumperopt.getDefaultFlowStyle() ); // DumperOptions.FlowStyle.BLOCK
+        final MappingNode superParentMapN = new MappingNode ( Tag.MAP, false, tuples2, null, null, nodetools.getDumperOptions().getDefaultFlowStyle() ); // DumperOptions.FlowStyle.BLOCK
 
         //-----------------
         this.cmdinvoker.getMemoryAndContext().saveDataIntoMemory( Environment.CFNINIT_PACKAGES, superParentMapN );   // <<----------- <<-------------
