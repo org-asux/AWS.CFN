@@ -37,7 +37,7 @@ import org.ASUX.yaml.MemoryAndContext;
 import org.ASUX.yaml.CmdLineArgsBasic;
 import org.ASUX.yaml.CmdLineArgsBatchCmd;
 
-import org.ASUX.YAML.NodeImpl.GenericYAMLWriter;
+import org.ASUX.YAML.NodeImpl.NodeTools;
 
 import java.io.InputStreamReader;
 import java.io.FileInputStream;
@@ -91,25 +91,21 @@ public class CmdInvoker extends org.ASUX.YAML.NodeImpl.CmdInvoker {
     /**
      *  The constructor exclusively for use by  main() classes anywhere.
      *  @param _verbose Whether you want deluge of debug-output onto System.out.
+     *  @throws Exception if YAML-implementation is Not properly initialized or YAML-implementation cannot be "loaded"
      */
-    public CmdInvoker( final boolean _verbose ) {
+    public CmdInvoker( final boolean _verbose ) throws Exception {
         super( _verbose, /* showStats= */false );
     }
 
     /**
-     *  Variation of constructor that allows you to pass-in memory from another previously existing instance of this class.  Useful within {@link org.ASUX.yaml.BatchCmdProcessor} which creates new instances of this class, whenever it encounters a YAML or AWS command within the Batch-file.
+     *  Variation of constructor that allows you to pass-in memory from another previously existing instance of this class.  Useful within org.ASUX.YAML.NodeImp.BatchYamlProcessor which creates new instances of this class, whenever it encounters a YAML or AWS command within the Batch-file.
      *  @param _verbose Whether you want deluge of debug-output onto System.out.
-     *  @param _memoryAndContext pass in memory from another previously existing instance of this class.  Useful within {@link org.ASUX.yaml.BatchCmdProcessor} which creates new instances of this class, whenever it encounters a YAML or AWS command within the Batch-file.
-     * @param _dopt a non-null reference to org.yaml.snakeyaml.DumperOptions instance.  CmdInvoker can provide this reference.
+     *  @param _showStats Whether you want a final summary onto console / System.out
+     *  @param _memoryAndContext pass in memory from another previously existing instance of this class.  Useful within org.ASUX.YAML.CollectionImpl.BatchYamlProcessor which creates new instances of this class, whenever it encounters a YAML or AWS command within the Batch-file.
      */
-    public CmdInvoker( final boolean _verbose, final MemoryAndContext _memoryAndContext, final DumperOptions _dopt ) {
-        super(_verbose, /* showStats= */false, _memoryAndContext, _dopt );
-        init();
+    public CmdInvoker( final boolean _verbose, final boolean _showStats, final MemoryAndContext _memoryAndContext ) {
+        super(_verbose, _showStats, _memoryAndContext );
     }
-
-    // @Override
-    // protected void init() {
-    // }
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -128,24 +124,12 @@ public class CmdInvoker extends org.ASUX.YAML.NodeImpl.CmdInvoker {
     public Object processCommand ( org.ASUX.yaml.CmdLineArgsCommon _cmdLA, java.lang.Object _unused )
                 throws FileNotFoundException, IOException, Exception
     {
-        final String HDR = CLASSNAME + ": processCommand("+ _cmdLA.toString() +"): ";
         final CmdLineArgs cmdLA = (CmdLineArgs) _cmdLA;
+        final String HDR = CLASSNAME + ": processCommand("+ cmdLA.getCmdName() +",_inputData: ";// NOTE !!!!!! _cmdLA/CmdLineArgsCommon .. does NOT have 'cmdType' instance-variable
 
-        this.setYamlLibrary( cmdLA.getYAMLLibrary() );
-        if (cmdLA.verbose) System.out.println( HDR +" set YAML-Library to [" + cmdLA.getYAMLLibrary() + " and [" + this.getYamlLibrary() + "]" );
-
-        //---------------------------
-        if ( this.dumperopt == null ) // this won't be null, if this object was created within BatchCmdProcessor.java
-            this.dumperopt = GenericYAMLWriter.defaultConfigurationForSnakeYamlWriter();
-
-        switch( cmdLA.getQuoteType() ) {
-            case DOUBLE_QUOTED: dumperopt.setDefaultScalarStyle( org.yaml.snakeyaml.DumperOptions.ScalarStyle.DOUBLE_QUOTED );  break;
-            case SINGLE_QUOTED: dumperopt.setDefaultScalarStyle( org.yaml.snakeyaml.DumperOptions.ScalarStyle.SINGLE_QUOTED );  break;
-            case LITERAL:       dumperopt.setDefaultScalarStyle( org.yaml.snakeyaml.DumperOptions.ScalarStyle.LITERAL );        break;
-            case FOLDED:        dumperopt.setDefaultScalarStyle( org.yaml.snakeyaml.DumperOptions.ScalarStyle.FOLDED );         break;
-            case PLAIN:         dumperopt.setDefaultScalarStyle( org.yaml.snakeyaml.DumperOptions.ScalarStyle.PLAIN );          break;
-            default:            dumperopt.setDefaultScalarStyle( org.yaml.snakeyaml.DumperOptions.ScalarStyle.FOLDED );         break;
-        }
+        final NodeTools nodetools = (NodeTools) super.getYAMLImplementation();
+        assertTrue( nodetools != null );
+        NodeTools.updateDumperOptions( nodetools.getDumperOptions(), _cmdLA.getQuoteType() ); // Important <<---------- <<---------- <<-----------
 
         //---------------------------
         final Environment env = new Environment( this.verbose, this.memoryAndContext.getAllPropsRef() );
