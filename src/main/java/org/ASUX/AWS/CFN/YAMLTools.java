@@ -36,6 +36,7 @@ import org.ASUX.yaml.YAML_Libraries;
 import org.ASUX.yaml.MemoryAndContext;
 import org.ASUX.yaml.CmdLineArgsBasic;
 import org.ASUX.yaml.CmdLineArgsBatchCmd;
+import org.ASUX.yaml.YAMLImplementation;
 
 import org.ASUX.YAML.NodeImpl.ReadYamlEntry;
 import org.ASUX.YAML.NodeImpl.NodeTools;
@@ -87,16 +88,18 @@ public final class YAMLTools
     //-----------------------------
 	public boolean verbose;
 	private final ReadYamlEntry readcmd;
-	private final DumperOptions dopt;
+	private final YAMLImplementation yamlImpl;
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
-    public YAMLTools( final boolean _verbose, final boolean _showStats, final DumperOptions _dopt ) {
+    public YAMLTools( final boolean _verbose, final boolean _showStats, final YAMLImplementation _yamlImpl ) {
 		this.verbose = _verbose;
-		this.dopt = _dopt;
-        this.readcmd = new ReadYamlEntry( _verbose, _showStats, _dopt );
+		this.yamlImpl = _yamlImpl;
+
+        final NodeTools nodetools = (NodeTools) this.yamlImpl;
+        this.readcmd = new ReadYamlEntry( _verbose, _showStats, nodetools.getDumperOptions() );
     }
 
     //=================================================================================
@@ -115,7 +118,7 @@ public final class YAMLTools
         final InputStream is1                = new FileInputStream( _filename );
         final InputStreamReader filereader   = new InputStreamReader(is1);
         final GenericYAMLScanner yamlscanner = new GenericYAMLScanner( this.verbose );
-        yamlscanner.setYamlLibrary( YAML_Libraries.NodeImpl_Library );
+        yamlscanner.setYAMLLibrary( YAML_Libraries.NodeImpl_Library );
         if ( this.verbose ) System.out.println( HDR +" Reading YAML from file: '"+ _filename +"'" );
         final Node node = yamlscanner.load( filereader );
         if ( this.verbose ) System.out.println( NodeTools.Node2YAMLString( node ) );
@@ -177,17 +180,19 @@ public final class YAMLTools
     /**
      *  <p>Common code refactored into a utility private method.  Given the YAML from the 'Jobfile.yaml', read the various YAML-entries like 'AWS,MyOrgName', 'AWS,MyEnvironment', ..</p>
      *  <p>Warning! if you are expecting a simple string, and you either make a mistake with "_YAMLPath" or .. the user enters much more than a simple string @ '_YAMLPath' .. you've got a problem!</p>
-     *  @param _inputNode NotNull Node object
+     *  @param _inputNode NotNull Node reference
      *  @param _YAMLPath NotNull String representing a COMMA-Delimited YAML-Path-String
      *  @return a Nullable String 
-     *  @throws Exception logic inside method will throw if the right YAML-structure is not provided, or the '_YAMLPath' does not point to a simple String .. (Also, potentially, a org.junit.Assert.AssertionError (Throwable) is thrown, as determined within {@link #getScalarContent})
+     *  @throws Exception logic inside method will throw if the right YAML-structure is not provided, or the '_YAMLPath' does not point to a simple String .. (Also, potentially, a org.junit.Assert.AssertionError (Throwable) is thrown, as determined within org.ASUX.YAML.NodeImpl.NodeTools.getScalarContent)
      */
     public String readStringFromYAML( final Node _inputNode, final String _YAMLPath ) throws Exception {
         final String HDR = CLASSNAME + ": readStringFromYAML(<Node>, "+ _YAMLPath +"): ";
         this.readcmd.searchYamlForPattern( _inputNode, _YAMLPath, "," );
         final Node output = this.readcmd.getOutput();
         if ( this.verbose ) System.out.println( HDR +" output =\n" + NodeTools.Node2YAMLString( output ) +"\n" );
-        final String s = getScalarContent( output, _YAMLPath );
+
+        final NodeTools nodetools = (NodeTools) this.yamlImpl;
+        final String s = nodetools.getScalarContent( output );
         return s;
     }
 
@@ -196,7 +201,7 @@ public final class YAMLTools
      *  Common code refactored into a utility private method.  Given the YAML from the 'Jobfile.yaml', read the various YAML-entries like 'AWS,VPC,subnet,SERVERS,?MyEC2InstanceName?",yum', 'AWS,VPC,subnet,SERVERS,?MyEC2InstanceName?,configCustomCommands'..
      *  @param _inputNode NotNull Node object
      *  @param _YAMLPath NotNull String representing a COMMA-Delimited YAML-Path-String
-     *  @return a possibly-Null Node (or else a runtime-assertion-exception is thrown, as determined within {@link #getScalarContent}
+     *  @return a possibly-Null Node (or else a runtime-assertion-exception is thrown, as determined within org.ASUX.YAML.NodeImpl.NodeTools.getScalarContent()
      *  @throws Exception logic inside method will throw if the right YAML-structure is not provided, to read simple KV-pairs.
      */
     public Node readNodeFromYAML( final Node _inputNode, final String _YAMLPath ) throws Exception {
@@ -215,35 +220,6 @@ public final class YAMLTools
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
-
-    /**
-     *  <p>Assumes that the Node 'YAML-tree' passed in actually either a simple ScalarNode, or a SequenceNode with just one ScalarNode.</p>
-     *  <p>If its not a valid assumption, either an Exception or an Assertion-RuntimeException is thrown</p>
-     *  @param _n a NotNull Node object
-     *  @param _YAMLPath NotNull String representing a COMMA-Delimited YAML-Path-String (to be used exclusively for describing any Exception to the user)
-     *  @return a Nullable simple String
-     *  @throws Exception logic inside method will throw if the right YAML-structure is not provided.
-     */
-    public String getScalarContent( final Node _n, final String _YAMLPath ) throws Exception {
-        final String HDR = CLASSNAME + ": getScalarContent(): ";
-        if ( this.verbose ) System.out.println( HDR +" provided argument =\n" + NodeTools.Node2YAMLString( _n ) + "\n");
-        assertTrue( _n != null );
-        if ( _n instanceof ScalarNode ) {
-            final ScalarNode scalar = (ScalarNode) _n;
-            return scalar.getValue();
-        } else if ( _n instanceof SequenceNode ) {
-            final SequenceNode seqNode = (SequenceNode) _n;
-            final java.util.List<Node> seqs = seqNode.getValue();
-            if( seqs.size() < 1 )
-                return null;
-            assertTrue( seqs.get(0) instanceof ScalarNode );
-            final ScalarNode scalar = (ScalarNode) seqs.get(0);
-            return scalar.getValue();
-        } else {
-            throw new Exception( "Must provide a simple 'scalar' string @ the YAML-Path: "+ _YAMLPath +"\nInvalid Node of type: "+ _n.getNodeId() +"\nInstead, you provided:\n"+ NodeTools.Node2YAMLString( _n ) );
-        }
-    }
-
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
