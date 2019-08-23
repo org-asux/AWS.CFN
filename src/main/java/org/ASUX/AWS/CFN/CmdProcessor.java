@@ -153,7 +153,7 @@ public final class CmdProcessor
                             // we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
                             break;
             case SUBNET:
-                            assertTrue( _cmdLA.PublicOrPrivate != null && _cmdLA.PublicOrPrivate.length() > 0 ); // CmdLineArgs.class guarantees that it will be 'Public' or 'Private', if NOT NULL.
+                            assertTrue( _cmdLA.PublicOrPrivate != null && _cmdLA.PublicOrPrivate.length() > 0 ); // CmdLineArgs.class guarantees that it will be 'Public' or 'Private' or 'Public+natgw', if NOT NULL.
                             // globalProps.setProperty( "PublicOrPrivate", _cmdLA.PublicOrPrivate );  // already set in BootCheckAndConfig.configure()
                             if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
@@ -187,12 +187,14 @@ public final class CmdProcessor
                     // final org.ASUX.YAML.NodeImpl.CmdInvoker nodeImplCmdInvoker = org.ASUX.YAML.NodeImpl.CmdInvoker(
                     //             this.verbose, false,  _cmdInvoker.getMemoryAndContext(), (DumperOptions)_cmdInvoker.getLibraryOptionsObject() );
                     // final Object outputAsIs = nodeImplCmdInvoker.processCommand( cmdlineargs, inputNode );
-// above 3 lines  -versus-  below 3 lines
-                    final BatchCmdProcessor batcher = new BatchCmdProcessor( _cmdLA.verbose, /* showStats */ false, _cmdLA.isOffline(), _cmdLA.getQuoteType(), this.cmdinvoker.dumperopt );
+// above 3 lines  -versus-  below 5 lines
+                    final NodeTools nodetools = (NodeTools) this.cmdinvoker.getYAMLImplementation();
+                    assertTrue( nodetools != null );
+                    final BatchCmdProcessor batcher = new BatchCmdProcessor( _cmdLA.verbose, /* showStats */ false, _cmdLA.isOffline(), _cmdLA.getQuoteType(), nodetools.getDumperOptions() );
                     batcher.setMemoryAndContext( this.cmdinvoker.getMemoryAndContext() ); // this will invoke.. batcher.initProperties()
-                    if ( _cmdLA.verbose ) new org.ASUX.common.Debug(_cmdLA.verbose).printAllProps( HDR +" FULL DUMP of propsSetRef = ", _myEnv.getAllPropsRef() );
+                    if ( _cmdLA.verbose ) org.ASUX.common.Debug.printAllProps( HDR +" FULL DUMP of propsSetRef = ", _myEnv.getAllPropsRef() );
 
-                    final Node emptyInput = NodeTools.getEmptyYAML( this.cmdinvoker.dumperopt );
+                    final Node emptyInput = NodeTools.getEmptyYAML( nodetools.getDumperOptions() );
                     final Node outpData2 = batcher.go( batchFilePath, emptyInput );
                     if ( this.verbose ) System.out.println( HDR +" outpData2 =" + outpData2 +"\n\n");
                     if ( outpData2 == null ) {
@@ -202,7 +204,7 @@ public final class CmdProcessor
                     }
                     _myEnv.getStack().setCFNTemplateFileName( InputOutput.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
                     final String YAMLoutpfile = _myEnv.enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getStack().getCFNTemplateFileName();
-                    InputsOutputs.saveDataIntoReference( "@"+ YAMLoutpfile, outpData2, null, this.cmdinvoker.getYamlWriter(), this.cmdinvoker.dumperopt, _cmdLA.verbose );
+                    InputsOutputs.saveDataIntoReference( "@"+ YAMLoutpfile, outpData2, null, nodetools.getYAMLWriter(), nodetools.getDumperOptions(), _cmdLA.verbose );
                     break;
             case VPNCLIENT:
             case UNDEFINED:
