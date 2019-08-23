@@ -32,6 +32,9 @@
 
 package org.ASUX.AWS.CFN;
 
+import org.ASUX.yaml.YAML_Libraries;
+import org.ASUX.yaml.YAMLImplementation;
+
 import java.io.InputStreamReader;
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -83,12 +86,21 @@ public class Cmd {
             cmdlineargs.define();
             cmdlineargs.parse( args );
 
+            // Step 1: create 'cmdinvoker'
             CmdInvoker cmdinvoker = new CmdInvoker( cmdlineargs.verbose );
             if (cmdlineargs.verbose) System.out.println( HDR +"getting started with cmdline args = " + cmdlineargs + " " );
 
             cmdinvoker.getMemoryAndContext().setAllPropsRef( org.ASUX.common.OSScriptFileScanner.initProperties() );
 
-            //=============================================================
+            // Steps 2 & 3: Startup the factory for YAML-implementation.
+            // For other projects in the org.ASUX family, especially those that do NOT want to know the YAML-implementation.. use the following line instead.
+            final YAMLImplementation<?> yamlImpl = org.ASUX.yaml.YAMLImplementation.startupYAMLImplementationFactory( cmdlineargs.getYAMLLibrary(), cmdlineargs, cmdinvoker );
+            // final YAMLImplementation<?> yamlImpl = org.ASUX.yaml.YAMLImplementation.startupYAMLImplementationFactory( YAML_Libraries.SNAKEYAML_Library, cmdlineargs, cmdinvoker );
+            if (cmdlineargs.verbose) System.out.println( HDR +" set YAML-Library to [" + cmdlineargs.getYAMLLibrary() + " and [" + cmdinvoker.getYAMLLibrary() + "]" );
+
+            //======================================================================
+            // Step 4 on.. start processing...
+
             // read input, whether it's System.in -or- an actual input-file
             if (cmdlineargs.verbose) System.out.println( HDR +" jobSetName: " + cmdlineargs.getJobSetName() +", itemNumber: "+ cmdlineargs.getItemNumber() +" cmdlineargs.getCmdName()="+ cmdlineargs.getCmdName() );
 
