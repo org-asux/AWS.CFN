@@ -192,8 +192,8 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
                     _THIS.jobSetName = _THIS.jobSetName.replaceAll( ".yaml$", "" );
                 if ( verbose ) System.err.println( "_THIS.jobSetName for Cmd="+ _cmd +" is "+ _THIS.jobSetName );
                 _THIS.PublicOrPrivate = subnetsArgs[1];
-                if ( _THIS.PublicOrPrivate == null || ( ! _THIS.PublicOrPrivate.toLowerCase().matches("public|private") ) )
-                    throw new MissingOptionException("Command "+ _cmd +" requires 2nd argument to be precisely 'public' or 'private'");
+                if ( _THIS.PublicOrPrivate == null || ( ! _THIS.PublicOrPrivate.toLowerCase().matches("public|private|public+natgw") ) )
+                    throw new MissingOptionException("Command "+ _cmd +" requires 2nd argument to be precisely 'public' or 'private' or 'public+natgw'");
                 else
                     _THIS.PublicOrPrivate = _THIS.PublicOrPrivate.toLowerCase();
                     _THIS.PublicOrPrivate = Character.toUpperCase( _THIS.PublicOrPrivate.charAt(0) ) + _THIS.PublicOrPrivate.substring(1);
