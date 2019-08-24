@@ -5,6 +5,18 @@
 ###	(1) Via a properties-file
 ###	(2) or via setProperty
 
+
+
+
+
+### !!!!!!!! ATTENTION !!!!!!!!! By default, _EVERY_ AWS security-group automatically includes an outbound-rule that allows all outbound-traffic.
+
+### So .. we're just focused on .. _JUST_ restricting INBOUND-traffic.
+
+
+
+
+
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
