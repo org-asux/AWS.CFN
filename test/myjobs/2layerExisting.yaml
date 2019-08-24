@@ -1,6 +1,6 @@
 ### !!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!
 ### Step 1: /Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layerExisting/fullstack-vpc-existing.sh
-### Step 1: /Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layerExisting/fullstack-sg-ssh-existing.sh
+### Step 2: /Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layerExisting/fullstack-sg-ssh-existing.sh
 ### Note: the '-existing' suffix in the filename.
 ### !!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!
 
@@ -37,6 +37,7 @@ AWS:
 
     subnet:
       public: yes   ### Attention: The public subnet must _ALWAYS_ _PRECEDE_ the _PRIVATE_ subnet(s) creation.
+                    ### The only reason: The Public-subnet will have NAT-GW in it, and.. CFN-EXPORT-names for the NAT-Gateway is a PRE-REQUISITE for the PRIVATE-subnets
 
       SERVERS:
         MyWebASUXLinux1:            ### This is the name of the 1st SERVER.   This is also used to create the DNS name as 'MyWebASUXLinux1.{MyDomainName}'
