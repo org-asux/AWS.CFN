@@ -88,7 +88,7 @@ public final class Environment implements Serializable {
     public static final String CFNINIT_SERVICES = "AWS-CFNInit-Services";
     public static final String EC2INSTANCETYPE = "EC2InstanceType";
     public static final String EC2IAMROLES = "MyIAM-roles";
-
+    public static final String EC2_SGLIST = "MyEC2-SGLIST";
     // ------ private ------
     public static final String JOB_DEFAULTS = "/config/DEFAULTS/job-DEFAULTS.properties"; // under AWSCFNHOME
     public static final String FULLSTACKJOB_DEFAULTS = "/config/DEFAULTS/FullStackJob-DEFAULTS.properties"; // under AWSCFNHOME
