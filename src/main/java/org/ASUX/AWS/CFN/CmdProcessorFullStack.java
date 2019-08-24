@@ -86,6 +86,8 @@ public final class CmdProcessorFullStack
     protected CmdProcessor cmdProcessor;
     protected CmdInvoker cmdinvoker;
 
+    protected LinkedHashMap<String,Stack> createdSGs = new LinkedHashMap<>();
+
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
@@ -313,11 +315,12 @@ public final class CmdProcessorFullStack
                 if ( this.verbose ) System.out.println( HDR +" SecurityGroup YAML-tree =\n" + NodeTools.Node2YAMLString( SG ) +"\n" );
             } // readCmd() can do that.. it will return an array, whose elements _CAN_ be single-element-ARRAYS.  You can ONLY know for sure, based on the context/YAML you're expecting.
 
+            final String SGNickname_asEnteredByUser = yamltools.readStringFromYAML( SG, "SG-nickname" );
             final String existingSecurityGroupID_asEnteredByUser = yamltools.readStringFromYAML( SG, "SG-ID" );
             // the above value can be either the word 'existing' .. or, something like 'sg-0123456789';  We need to handle both variations (so, note the existingInfrastructure.getSGID() call in the next line)
             final String SGPortType_asEnteredByUser = yamltools.readStringFromYAML( SG, "SG-type" );
-            if ( SGPortType_asEnteredByUser == null )
-                throw new Exception( "'SG-type' is _REQUIRED_ inside __EACH__ 'SG' entry within the Job-definition YAML-file.  It is missing in:\n"+ NodeTools.Node2YAMLString( SGs ) );
+            if ( SGPortType_asEnteredByUser == null || SGNickname_asEnteredByUser == null )
+                throw new Exception( "'SG-type' & 'SG-nickname' are _REQUIRED_ inside __EACH__ 'SG' entry within the Job-definition YAML-file.  It is missing in:\n"+ NodeTools.Node2YAMLString( SGs ) );
 
             String existingSecurityGroup = null;
             if ( existingVPCID != null ) {
@@ -354,6 +357,9 @@ public final class CmdProcessorFullStack
 
                 boot.myEnv.getStackSet().popDependencyHeirarchy(); // 'pop' the last StackSet Elem. repreenting the SUBNET created @ top of this FOR-LOOP.
                 boot.myEnv.setStack( null );
+
+                this.createdSGs.put( SGNickname_asEnteredByUser, stackSG ); // Save this, so we can look it up later.
+
             } // if existingSecurityGroup == null
 
             ix ++;
@@ -501,6 +507,8 @@ public final class CmdProcessorFullStack
     {   final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
         final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         final ReadYamlEntry readcmd = _yamltools.getReadcmd(); // new ReadYamlEntry( _cmdLA.verbose, /* showStats */ false, this.cmdinvoker.dumperopt );
+        final NodeTools nodetools = (NodeTools) this.cmdinvoker.getYAMLImplementation();
+
 
         //--------------- SERVERS -------------------
         readcmd.searchYamlForPattern( _subnet, "SERVERS", "," );
@@ -534,7 +542,8 @@ public final class CmdProcessorFullStack
                     final Node valNode = kv.getValueNode();
                     if ( this.verbose ) System.out.println( HDR +" SERVER(#"+ix+") YAML-tree =\n" + NodeTools.Node2YAMLString( valNode ) +"\n" );
                     if ( valNode instanceof MappingNode ) {
-                        parseServerInfo( (MappingNode) valNode, "packages", _yamltools, _myEnv );  // ????????????????????? Need to parametrize "packages"
+                        parseServerInfo( ec2instanceName, (MappingNode) valNode, "packages", _yamltools, _myEnv, _cmdLA.isOffline() );
+// ????????????????????? Need to parametrize "packages"
                     } else {
                         if ( this.verbose ) System.out.println( HDR +" (server["+ ec2instanceName +"] instanceof MappingNode) is Not a mapping within:\n" + NodeTools.Node2YAMLString( mapNode ) + "\n");
                         throw new Exception( "SERVER(#"+ix+")="+ ec2instanceName +" is an Invalid Node of type: "+ valNode.getNodeId() );
@@ -551,13 +560,14 @@ public final class CmdProcessorFullStack
                 assertTrue( seqs.size() >= 1 );
                 int ix = 0;
                 for( Node seqItem: seqs ) {
+                    ec2instanceName = Integer.toString( ix + 1 );
                     if ( seqItem instanceof MappingNode ) {
-                        parseServerInfo( (MappingNode) seqItem, "packages", _yamltools, _myEnv );  // ????????????????????? Need to parametrize "packages"
+                        parseServerInfo( ec2instanceName, (MappingNode) seqItem, "packages", _yamltools, _myEnv, _cmdLA.isOffline() );
+// ????????????????????? Need to parametrize "packages"
                     } else {
                         if ( this.verbose ) System.out.println( HDR +" (server["+ ix +"] instanceof SequenceNode) failed with:\n" + NodeTools.Node2YAMLString( seqItem ) + "\n");
                         throw new Exception( "Invalid Node of type: "+ seqItem.getNodeId() );
                     }
-                    ec2instanceName = Integer.toString( ix + 1 );
                     ix ++;
                 }
             } else { // !  (serverNode instanceof MappingNode)   &&   !  (serverNode instanceof SequenceNode) )
@@ -599,19 +609,24 @@ public final class CmdProcessorFullStack
     /**
      *  <p>Extract YAML-sub-trees from the 1st argument, and save them into "MemoryAndContext" for the 'AWSCFN-ec2plain-Create.ASUX-batch.txt' YamlBatchScript to use.</p>
      *  <p>Make sure the 'labels' for what's put in memory matches what is 'recalled' within the 'AWSCFN-ec2plain-Create.ASUX-batch.txt' YamlBatchScript</p>
+     *  @param _ec2instanceName NotNull String representing the EC2 instance name (as well what will be the FQDN for it)
      *  @param _mapNode should be the YAML-sub-tree determined by: read AWS,VPC,subnet,SERVERS,<MyEC2InstanceName> --delimiter ,
      *  @param _cfnInitContext typically, it's one of the AWS cfn-init ConfigSets (StandupOnly, StandUpInstallAndRun, ..)
      *  @param _yamltools a NotNull instance
      *  @param _myEnv a NotNull object (created by {@link BootCheckAndConfig#exec})
+     *  @param _offline true === NOT To invoke AWS-SDK or any other internet-activity
      *  @throws Exception logic inside method will throw if the right YAML-structure is not provided, to read simple KV-pairs.
      */
-    private void parseServerInfo( final MappingNode _mapNode, final String _cfnInitContext, final YAMLTools _yamltools, final Environment _myEnv )
+    private void parseServerInfo( final String _ec2instanceName, final MappingNode _mapNode, final String _cfnInitContext,
+                                final YAMLTools _yamltools, final Environment _myEnv, final boolean _offline )
                                 throws Exception
     {   final String HDR = CLASSNAME + ": parseServerInfo(<mapNode>,"+ _cfnInitContext +"): ";
 
         if ( this.verbose ) System.out.println( HDR +" input is YAML-tree =\n" + NodeTools.Node2YAMLString( _mapNode ) +"\n" );
 
         final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
+        final NodeTools nodetools = (NodeTools) this.cmdinvoker.getYAMLImplementation();
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
 
         //-----------------
         final String EC2InstanceType      = _yamltools.readStringFromYAML( _mapNode, "EC2InstanceType" );
@@ -647,12 +662,38 @@ public final class CmdProcessorFullStack
         }
 
         //-----------------
+        // Now let's iterator over the various 'SG' elements
+        final Node SGs = _yamltools.readNodeFromYAML( _mapNode, "SG" );
+        if ( this.verbose ) System.out.println( HDR + "SGs="+ NodeTools.Node2YAMLString( SGs ) );
+        assertTrue ( SGs instanceof SequenceNode );
+
+        final ArrayList<String> sgStkNames = new ArrayList<>();
+        final SequenceNode seqNode = (SequenceNode) SGs;
+        final java.util.List<Node> seqs = seqNode.getValue();
+        assertTrue( seqs.size() >= 1 ); // why bother having the SG element and having nothing INSIDE/UNDER that 'sg' LHS-YAML-key
+        StringBuffer strBuf = null;
+        for ( Node n: seqs ) {
+            assertTrue( n instanceof ScalarNode );
+            final ScalarNode scalar = (ScalarNode) n;
+            final Stack stk = this.createdSGs.get( scalar.getValue() ); // check if the user provided a definition of this 'scalar.getValue()' security-group WITHIN the same YAML-file for the job
+            if ( this.verbose ) System.out.println( HDR +" SG-lookup using nickname=" + scalar.getValue() + " points to SG stack-name="+ stk );
+            if ( stk == null ) { // it means, the user did _NOT_ provide a definition of this 'SG' WITHIN the same YAML-file for the job.  (Or, perhaps a typo, but we can't help him)
+                sgStkNames.add ( scalar.getValue() );
+                if ( ! awssdk.matchesAWSIDPattern( scalar.getValue(), "sg" ) )
+                    throw new Exception( "'"+ scalar.getValue() +"' is Not a 'nick-name' for a SG .. Nor.. is it an actual AWS-ID for a security-group\n"+ NodeTools.Node2YAMLString( _mapNode ) );
+            } else {
+                sgStkNames.add ( stk.getStackName() );
+            }
+        }
+        final SequenceNode seqN = NodeTools.ArrayList2Node( this.verbose, sgStkNames, nodetools.getDumperOptions() );
+        this.cmdinvoker.getMemoryAndContext().saveDataIntoMemory( Environment.EC2_SGLIST +"-"+ _ec2instanceName, seqN );   // <<----------- <<-------------
+        if ( this.verbose ) System.out.println( HDR +"Saved ArrayList-as-Node under Memory as !"+ (Environment.EC2_SGLIST +"-"+ _ec2instanceName) );
+
+        //-----------------
         final Node yum      = _yamltools.readNodeFromYAML( _mapNode, "yum" );
         final Node rpm      = _yamltools.readNodeFromYAML( _mapNode, "rpm" );
         final Node configCustomCommands = _yamltools.readNodeFromYAML( _mapNode, "configCustomCommands" );
         // final Node parent   = NodeTools.getNewSingleMap( "Packages", "", nodetools.getDumperOptions() );
-
-        final NodeTools nodetools = (NodeTools) this.cmdinvoker.getYAMLImplementation();
 
         final java.util.List<NodeTuple> tuples = new LinkedList<NodeTuple>();
         if ( yum != null ) { // && yum.getValue().size() > 0 ) {
