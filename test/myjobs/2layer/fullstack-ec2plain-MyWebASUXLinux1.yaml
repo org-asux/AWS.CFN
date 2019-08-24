@@ -93,6 +93,13 @@ Resources:
         Ref: needsMonitoring
       KeyName:
         Ref: MySSHKeyName
+      SecurityGroupIds:
+      - !ImportValue
+        Ref: org-ASUX-Playground-Ohio-5432-2layer-2-SG
+      - !ImportValue
+        Ref: org-ASUX-Playground-Ohio-https-2layer-1-SG
+      - !ImportValue
+        Ref: org-ASUX-Playground-Ohio-ssh-2layer-0-SG
       Tags:
       - Key: LOCATION
         Value: Ohio
@@ -131,7 +138,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Fri Aug 02 18:52:53 EDT 2019
+        Value: Fri Aug 23 23:48:49 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
       - Key: FQDN
