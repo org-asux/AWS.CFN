@@ -5,17 +5,45 @@ AWS:
   MyDomainName: playground.asux.org
 
   VPC:
+
+    ### !!!!!!!! ATTENTION !!!!!!!!! By default, _EVERY_ AWS security-group automatically includes an outbound-rule that allows all outbound-traffic.
+    ### So .. we're just focused on .. _JUST_ restricting INBOUND-traffic.
     SG:
-    - SG-type: ssh
-      #___ SG-ID: sg-01234567890ab  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG-for-SSH must be specified.
+    - SG-nickname: ssh
+      SG-type: ssh
+      #___ SG-ID: sg-01234567890ab  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG must be specified.
+    SG:
+    - SG-nickname: web
+      SG-type: https
+    SG:
+    - SG-nickname: postgres           ### incl. RDS & Aurora
+      SG-type: 5432
+    # SG:
+    # - SG-nickname: MYSQL            ### incl. RDS & Aurora
+    #   SG-type: 3306
+    # SG:
+    # - SG-nickname: MS-SQL           ### incl. RDS
+    #   SG-type: 1433
+    # SG:
+    # - SG-nickname: Amazon Redshift cluster
+    #   SG-type: 5439
+    # SG:
+    # - SG-nickname: Oracle
+    #   SG-type: 1521
 
     subnet:
       public: yes   ### Attention: The public subnet must _ALWAYS_ _PRECEDE_ the _PRIVATE_ subnet(s) creation.
+                    ### The only reason: The Public-subnet will have NAT-GW in it, and.. CFN-EXPORT-names for the NAT-Gateway is a PRE-REQUISITE for the PRIVATE-subnets
 
       SERVERS:
         MyWebASUXLinux1:            ### This is the name of the 1st SERVER.   This is also used to create the DNS name as 'MyWebASUXLinux1.{MyDomainName}'
           EC2InstanceType: t2.micro
           # public: no  ### By default this server will be publicly accessible, as it's in the public-subnet.
+
+          SG:
+          - ssh
+          - web
+          - postgres
 
           MyIAM-roles:
           - EC2-ReadWrite-to-S3
@@ -59,6 +87,10 @@ AWS:
 
           MyIAM-roles:
           - EC2-ReadWrite-to-S3
+
+          SG:
+          - ssh
+          - postgres
 
           yum:
             amazon-efs-utils: []
