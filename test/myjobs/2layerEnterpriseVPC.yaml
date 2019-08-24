@@ -1,9 +1,17 @@
+### !!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!
+### This is about creating NEW servers - when Enterprise-IT has already created the VPCs, Subnets and SGs.
+###   To prep/simulate the 'environment':-
+### Step 1: /Users/Sarma/Documents/Development/src/org.ASUX/AWS/CFN/myjobs/2layer/stackset.sh (or clone/edit it - to remove the EC2-create)
+### Step 2: Delete the EC2 instances - if created
+### Step 3: Go to the AWS-Console and jot down the VPC-ID, SG-ID, Subnet-IDs
+### !!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!
+
 AWS:
-  AWSRegion: tokyo #___ ap-northeast-1
+  AWSRegion: ohio ### tokyo #___ ap-northeast-1
   ### If the following 3 KV-Pairs are NOT provided, then .. 1st check if VPCID is provided (below).  If provided, then.. check the Tags of VPCID, for these 3 KV-pairs.
-  #___ MyOrgName: org-ASUX
-  #___ MyEnvironment: Playground
-  #___ MyDomainName: playground.asux.org
+  #___ MyOrgName: org-ASUX                 ### assuming ASUX.org tools were used to create the VPC (the VPC that is specified below as 'existing')
+  #___ MyEnvironment: Playground           ### assuming ASUX.org tools were used to create the VPC (the VPC that is specified below as 'existing')
+  #___ MyDomainName: playground.asux.org   ### assuming ASUX.org tools were used to create the VPC (the VPC that is specified below as 'existing')
 
   VPC:
     VPCID: vpc-0f99bc8bd45b7b074    ### This means NO vpc.yaml will be created.
