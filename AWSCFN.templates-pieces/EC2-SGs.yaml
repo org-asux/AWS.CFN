@@ -1,0 +1,6 @@
+  ### This will go _UNDER_ EC2-instances' Properties
+  ### SecurityGroupIds:
+  !ImportValue
+    Ref: ${ASUX::foreach.iteration.value} ### This should be equivalent to Stack.java's genSGStackName() method.
+
+#EOF
