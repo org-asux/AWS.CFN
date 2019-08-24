@@ -149,7 +149,8 @@ public final class CmdProcessor
                             batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+ _cfnJobType +"-Create.ASUX-batch.txt";
                             break;
             case SG:
-                            batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+ _cfnJobType +"-"+ _cmdLA.PublicOrPrivate +"-Create.ASUX-batch.txt";
+                            batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+ _cfnJobType +"-Create.ASUX-batch.txt";
+                            // batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+ _cfnJobType +"-"+ _cmdLA.PublicOrPrivate +"-Create.ASUX-batch.txt";
                             // we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
                             break;
             case SUBNET:
