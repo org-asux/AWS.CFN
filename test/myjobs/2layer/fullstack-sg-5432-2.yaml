@@ -62,7 +62,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Fri Aug 23 22:53:19 EDT 2019
+        Value: Fri Aug 23 23:48:49 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
 Outputs:
@@ -70,4 +70,4 @@ Outputs:
     Description: Security Group for enabling SSH access to Linux EC2 instances for the ___UNKNOWN__ application(s) and EC2-instances within the Playground environment
     Value: !Ref 'SGSSHPlayground'
     Export:
-      Name: 'org-ASUX-Playground-Ohio-5432-2layer--2-SG'
+      Name: 'org-ASUX-Playground-Ohio-5432-2layer-2-SG'
