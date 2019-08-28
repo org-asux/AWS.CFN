@@ -1,0 +1,17 @@
+  ### This will go _UNDER_ EC2-instances' Properties
+  ### SecurityGroupIds:
+  Fn::ImportValue:
+    Ref: ${ASUX::foreach.iteration.value} ### This should be equivalent to Stack.java's genSGStackName() method.
+
+### !!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!
+### aws cloundformation !importvalue and !Ref in one single line
+### From AWS own website:- https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-importvalue.html#d0e156476
+### You can't use the short form of !ImportValue when it contains a !Sub.
+### The following example is valid for AWS CloudFormation, but ____NOT____ valid for YAML:
+###       !ImportValue
+###         !Sub "${NetworkStack}-SubnetID" 
+### Instead, you must use the full function name, for example:
+###       Fn::ImportValue:
+###         !Sub "${NetworkStack}-SubnetID"
+
+#EOF
