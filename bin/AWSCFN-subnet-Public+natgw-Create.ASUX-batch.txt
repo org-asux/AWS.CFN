@@ -1,0 +1,186 @@
+### This is the file            'AWSCFN-subnet-Public+natgw-Create.ASUX-batch.txt'
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### The 1st thing you do - Is to define's the JOB-parameters
+### You can do it in 2 ways (or do both ways, as shown in next 3 lines below):-
+###	(1) Via a properties-file
+###	(2) or via setProperty
+
+### So.. 1st load the "PRE" common stuff - that's common to all jobs
+
+#__ setProperty	?AWSCFNHOME=${ASUX::ORGASUXHOME}/AWS/CFN
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-pre.ASUX-batch.txt
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### 2nd load the MOST __FUNDAMENTAL__ job-specific properties!
+###	FYI: We'll load the rest of the properties -- see below, _AFTER_ the "Post" common stuff
+
+setProperty ?cfnJobTYPE=subnets
+
+properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-Master.properties
+properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
+properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::ItemNumber}.properties
+properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}.properties
+properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}-${ASUX::ItemNumber}.properties
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now load the "POST" common stuff - that's common to all jobs.. that __RELY__ on the various properties loaded __ABOVE__
+
+include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-post.ASUX-batch.txt
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+
+### Now load the script-specific ___OVERRIDES___
+### Example: AWSCFN-CommonHeader.ASUX-batch.txt has "Tags" set to some (likely, invalid) default values.
+### Overwrite those default Tags with those specific to this job - via Tags-${ASUX::cfnJobTYPE}.properties
+
+properties Tags=${ASUX::JobSetName}/Tags-MyMaster.properties
+properties Tags=${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
+properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::ItemNumber}.properties
+properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}.properties
+properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}-${ASUX::ItemNumber}.properties
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Load the external inputs (in this case, the list of AZs for the region of interest)
+
+aws.sdk --list-AZs      ${ASUX::AWSRegion} --offline
+#________ useAsInput @${ASUX::AWSHOME}/AWS-SDK/etc/offline-downloads/AWS.AZlist-${ASUX::AWSRegion}.yaml   ### This code to the LEFT, should be automatically invoked by previous line for --offline
+saveTo !AWSAZs
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+### Now build the CFN script I want
+
+useAsInput @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/TopYaml.yaml
+saveTo !YAMLROOT
+
+yaml --insert / @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Parameters-Subnets.yaml
+yaml --macro ''
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+
+makeNewRoot Resources
+saveTo !TopElemResources
+
+//--------------------------------------------------
+
+makeNewRoot Conditions
+saveTo !Conditions
+
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !Conditions
+		yaml --insert Conditions @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Conditions-Subnets.yaml
+		yaml --macro ''
+		saveTo !Conditions
+	end
+
+useAsInput !YAMLROOT
+yaml --insert / !Conditions
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		#______print AZ no. ${ASUX::foreach.index} is: 
+		#______print ${ASUX::foreach.iteration.value}
+		
+		useAsInput !TopElemResources
+		yaml --insert     Resources    @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicSubnet.yaml
+		yaml --macro ''
+		### !!!! ATTENTION !!!!! Try to match the BELOW Tag-name -- with EXPORT name of this Public Subnet
+		setProperty Tag_Name=Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
+		yaml --insert 'Resources,MyPublicSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+		yaml --macro ''
+		saveTo !TopElemResources
+	end
+
+
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemResources
+		yaml --insert     Resources    @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/NATGW.yaml
+		yaml --macro ''
+		### !!!! ATTENTION !!!!! Try to match the BELOW Tag-name -- with EXPORT name of this NATGW
+		setProperty Tag_Name=NATGW-${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
+		yaml --insert 'Resources,MyNATGW${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+		yaml --macro ''
+		saveTo !TopElemResources
+	end
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemResources
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicRouteForAZ.yaml
+		yaml --macro ''
+		saveTo !TopElemResources
+	end
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemResources
+		yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicSubnetACLAssoc.yaml
+		yaml --macro ''
+		saveTo !TopElemResources
+	end
+
+//--------------------------------------------------
+
+useAsInput !YAMLROOT
+yaml --insert / !TopElemResources
+saveTo !YAMLROOT
+
+//=============================================================
+//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+//=============================================================
+makeNewRoot Outputs
+saveTo !TopElemOutputs
+
+//--------------------------------------------------
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemOutputs
+		yaml --insert     Outputs   @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-DefaultPublicSubnet.yaml
+		yaml --macro ''
+		saveTo !TopElemOutputs
+	end
+
+
+useAsInput !AWSAZs
+
+	foreach
+		useAsInput !TopElemOutputs
+		yaml --insert     Outputs   @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-NATGW.yaml
+		yaml --macro ''
+		saveTo !TopElemOutputs
+	end
+
+//--------------------------------------------------
+useAsInput !YAMLROOT
+yaml --insert / !TopElemOutputs
+yaml --macro ''
+saveTo !YAMLROOT
+
+//--------------------------------------------------
+
+#EoF
