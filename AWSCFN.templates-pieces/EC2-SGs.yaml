@@ -1,7 +1,9 @@
   ### This will go _UNDER_ EC2-instances' Properties
   ### SecurityGroupIds:
-  Fn::ImportValue:
-    Ref: ${ASUX::foreach.iteration.value} ### This should be equivalent to Stack.java's genSGStackName() method.
+  Fn::ImportValue: ${ASUX::foreach.iteration.value} ### This should be equivalent to Stack.java's genSGStackName() method.
+
+  # Fn::ImportValue: 
+  #   Ref: ${ASUX::foreach.iteration.value} ### This should be equivalent to Stack.java's genSGStackName() method.
 
 ### !!!!!!!!!!!!!!!! ATTENTION !!!!!!!!!!!!!!!!!
 ### aws cloundformation !importvalue and !Ref in one single line
