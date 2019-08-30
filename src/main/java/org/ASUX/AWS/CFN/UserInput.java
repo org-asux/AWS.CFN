@@ -50,9 +50,9 @@ import java.io.Serializable;
 
 
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+
 /**
- * This enum class is a bit extensive, only because the ENNUMERATED VALUEs are strings.
- * For variations - see https://stackoverflow.com/questions/3978654/best-way-to-create-enum-of-strings
+ *  <p>This class COMPLEMENTS {@link org.ASUX.AWS.CFN.CmdLineArgs}.. .. so that user can provide input via Command-line, but also .. those arguments passed via Cmd-line refer to YAML/other files that contain the rest of the user's input</p>
  */
 public class UserInput implements Serializable
 {
