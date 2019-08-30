@@ -57,6 +57,7 @@ public final class Stack implements Serializable
 
     public String AWSRegion;
     public String AWSLocation;
+    public final Enums.StackComponentType type;
 
     // ----------- PRIVATE ----------
     private String stackName;
@@ -69,12 +70,14 @@ public final class Stack implements Serializable
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
-    public Stack( final boolean _verbose, final String _awsregion, final String _awslocation ) {
+    public Stack( final boolean _verbose, final String _awsregion, final String _awslocation, final Enums.StackComponentType _type ) {
         this.verbose = _verbose;
         this.AWSRegion = _awsregion;
         this.AWSLocation = _awslocation;
+        this.type = _type;
         assertTrue( this.AWSRegion != null );
         assertTrue( this.AWSLocation != null );
+        assertTrue( this.type != Enums.StackComponentType.UNDEFINED );
         // this.CFNTemplateFile = _cfntemplatefile; // , final String _cfntemplatefile
     }
 
@@ -180,10 +183,10 @@ public final class Stack implements Serializable
      *  <p>A utility method that allows you to incorporate the CFN-Template (represented by this instance) as a Nested-Stack within another.</p>
      *  <p>The invoking-code _must_ have "uploaded" the file represented by {@link #CFNTemplateFile} into S3 and must provide that URL-to-S3, as the only argument to this method.</p>
      *  @param _s3ObjectURL must be a valid URL to an object containing the CFN-Template for one specific stack
-     *  @param _dependsOn can be Null.  This will show up as "DependsOn:\n - ..." in the YAML generated.  Very important to help "SEQUENCE" the AWS components within a _STACKSET_ (Note: SET)
+     *  @param _dependsOn NotNull.  This will show up as "DependsOn:\n - ..." in the YAML generated.  Very important to help "SEQUENCE" the AWS components within a _STACKSET_ (Note: SET)
      *  @return returns the NotNull, with 1st elem as the YAML-Key and the 2nd as the YAML-as-MultiLine-String that can be embedded AS-IS (as a Nested-Stack) within another Cloudformation YAML.
      */
-    public Tuple<String,String> getCFNYAMLString( final String _s3ObjectURL, final String _dependsOn )
+    public Tuple<String,String> getCFNYAMLString( final String _s3ObjectURL, final ArrayList<String> _dependsOn )
     {   final String HDR = CLASSNAME + ": getCFNYAMLString(_s3ObjectURL,"+ _dependsOn +"): ";
 
         if ( this.verbose ) System.out.println( HDR + "this="+ this.toString() );
@@ -192,9 +195,11 @@ public final class Stack implements Serializable
         // Note since this YAML is embedded inside another YAML, there at least 1 tab-char at the beginning of _EACH_ line.
         buf.append( "   " ).append( this.getStackId() ).append( ":     ### create-stack --stack-name ").append( this.getStackName() ).append( "\n" );
         buf.append( "      Type: AWS::CloudFormation::Stack\n" );
-        if ( _dependsOn != null ) {
+        if ( _dependsOn.size() > 0 ) {
             buf.append( "      DependsOn:\n");
-            buf.append( "      - ").append( _dependsOn ).append("\n");
+            for ( String aDependency: _dependsOn ) {
+                buf.append( "      - ").append( aDependency ).append("\n");
+            }
         }
         buf.append( "      Properties:\n" );
         buf.append( "         TemplateURL: "+ _s3ObjectURL +"\n" );
@@ -241,7 +246,7 @@ public final class Stack implements Serializable
      *  @return NotNull String
      */
     public static final String genSubnetStackName( final CmdLineArgs _cmdLA ) {
-        return "${ASUX::"+ Environment.MYVPCSTACKPREFIX +"}-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + UserInput.getItemNumberSuffix(_cmdLA.itemNumber) +"-subnet";
+        return "${ASUX::"+ Environment.MYVPCSTACKPREFIX +"}-"+ _cmdLA.scope +"-"+ _cmdLA.jobSetName + UserInput.getItemNumberSuffix(_cmdLA.itemNumber) +"-Subnet";
     }
 
     //=================================================================================
@@ -252,8 +257,8 @@ public final class Stack implements Serializable
      *  @return NotNull String
      */
     public static final String genSGStackName( final CmdLineArgs _cmdLA ) {
-        return "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-"+_cmdLA.PublicOrPrivate +"-"+  _cmdLA.jobSetName + UserInput.getItemNumberSuffix(_cmdLA.itemNumber) +"-SG";
-                                                        // we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
+        return "${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-"+_cmdLA.scope +"-"+  _cmdLA.jobSetName + UserInput.getItemNumberSuffix(_cmdLA.itemNumber) +"-SG";
+                                                        // we're re-purposing '_cmdLA..scope' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
     }
 
     //=================================================================================
