@@ -284,10 +284,13 @@ public final class BootCheckAndConfig {
         globalProps.setProperty( "cfnJobTYPE", cfnJobTYPEString ); // this.myEnv.getCfnJobTYPEString()
         globalProps.setProperty( "JobSetName", _cmdLA.jobSetName );
         globalProps.setProperty( "ItemNumber", _cmdLA.itemNumber );
-        globalProps.setProperty( "PublicOrPrivate", _cmdLA.PublicOrPrivate );
-        // final String InitialCapitalStr = Character.toUpperCase( _cmdLA.PublicOrPrivate.charAt(0) ) + _cmdLA.PublicOrPrivate.substring(1);
+        globalProps.setProperty( "Scope", _cmdLA.scope );
+        globalProps.setProperty( "PublicOrPrivate", _cmdLA.scope );
+        if ( _cmdLA.scope.startsWith("Public"))
+            globalProps.setProperty( "PublicOrPrivate", "Public" );
+        // final String InitialCapitalStr = Character.toUpperCase( _cmdLA.scope.charAt(0) ) + _cmdLA.scope.substring(1);
         // globalProps.setProperty( "PublicOrPrivateStr", InitialCapitalStr );
-        if (this.verbose) System.out.println( HDR + "JobSetName=" + _cmdLA.jobSetName + " ItemNumber=" + _cmdLA.itemNumber + " PublicOrPrivate=" + _cmdLA.PublicOrPrivate );
+        if (this.verbose) System.out.println( HDR + "JobSetName=" + _cmdLA.jobSetName + " ItemNumber=" + _cmdLA.itemNumber + " Scope=" + _cmdLA.scope );
 
         // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
@@ -307,7 +310,7 @@ public final class BootCheckAndConfig {
                             final String AWSLocation = tuple.val;
                             // --------------------
                             if (  !  this.myEnv.bInRecursionByFullStack ) { // if boot.configure() is being recursively called within CmdProcessorFullStack.java
-                                final Stack stack = new Stack( this.verbose, AWSRegion, AWSLocation );
+                                final Stack stack = new Stack( this.verbose, AWSRegion, AWSLocation, Enums.StackComponentType.fromCmdType(_cmdLA.cmdName,_cmdLA.scope) );
                                 this.myEnv.setStack( stack );
                                 break;
                             }
