@@ -24,8 +24,9 @@ setProperty ?cfnJobTYPE=subnets
 properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-Master.properties
 properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
 properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::ItemNumber}.properties
-properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}.properties
-properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}-${ASUX::ItemNumber}.properties
+									### 'Scope' refers to 'Public', 'Private' or 'PublicWithNATGW'
+properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::Scope}.properties
+properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::Scope}-${ASUX::ItemNumber}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -45,8 +46,9 @@ include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-post.ASUX-batch.txt
 properties Tags=${ASUX::JobSetName}/Tags-MyMaster.properties
 properties Tags=${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
 properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::ItemNumber}.properties
-properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}.properties
-properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}-${ASUX::ItemNumber}.properties
+									### 'Scope' refers to 'Public', 'Private' or 'PublicWithNATGW'
+properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::Scope}.properties
+properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::Scope}-${ASUX::ItemNumber}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -103,7 +105,8 @@ useAsInput !AWSAZs
 		yaml --insert     Resources    @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicSubnet.yaml
 		yaml --macro ''
 		### !!!! ATTENTION !!!!! Try to match the BELOW Tag-name -- with EXPORT name of this Public Subnet
-		setProperty Tag_Name=Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
+									### 'Scope' refers to 'Public', 'Private' or 'PublicWithNATGW'
+		setProperty Tag_Name=Subnet-${ASUX::Scope}${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
 		yaml --insert 'Resources,MyPublicSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 		yaml --macro ''
 		saveTo !TopElemResources
