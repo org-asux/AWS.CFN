@@ -60,14 +60,24 @@ yaml --macro @/dev/null
 saveTo !TopElemResources
 
 //---------
-useAsInput !TopElemResources
-yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties,SecurityGroupIds	''   --delimiter ,
-saveTo !TopElemResources
+### !!!!!!!!! ATTENTION !!!!!!! This file is created within JAVA CODE _ONLY_ - in class: CmdProcessorFullStack.java - in method parseServerInfo()
+useAsInput @${ASUX::CURRENTWORKINGDIRECTORY}/${ASUX::JobSetName}/tmp/MyEC2-FullStackSGLIST-${ASUX::MyEC2InstanceName}.yaml
 
-useAsInput !MyEC2-SGLIST-${ASUX::MyEC2InstanceName}
 foreach
 	useAsInput !TopElemResources
-	yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties,SecurityGroupIds,[0]	@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2-SGs.yaml  --delimiter ,
+	yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties,NetworkInterfaces,[0],GroupSet,[0]	@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2-SGs.yaml	--delimiter ,
+						### was: insert:- '!ImportValue ${ASUX::foreach.iteration.value}' .. but the '!'-char was the problem
+	yaml --macro @/dev/null
+	saveTo !TopElemResources
+end
+
+### !!!!!!!!! ATTENTION !!!!!!! This file is created within JAVA CODE _ONLY_ - in class: CmdProcessorFullStack.java - in method parseServerInfo()
+useAsInput @${ASUX::CURRENTWORKINGDIRECTORY}/${ASUX::JobSetName}/tmp/MyEC2-ExistingSGLIST-${ASUX::MyEC2InstanceName}.yaml
+
+foreach
+	useAsInput !TopElemResources
+	yaml --insert Resources,${ASUX::MyEC2InstanceName},Properties, NetworkInterfaces,[0],GroupSet,[0]	@${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/EC2-SGs.yaml	--delimiter ,
+						### was: insert:- '!ImportValue ${ASUX::foreach.iteration.value}' .. but the '!'-char was the problem
 	yaml --macro @/dev/null
 	saveTo !TopElemResources
 end
