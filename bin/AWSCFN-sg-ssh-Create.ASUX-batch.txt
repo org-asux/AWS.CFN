@@ -24,8 +24,8 @@ setProperty ?cfnJobTYPE=sg-ssh
 properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-Master.properties
 properties GLOBAL.VARIABLES=${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}.properties
 properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::ItemNumber}.properties
-properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}.properties
-properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}-${ASUX::ItemNumber}.properties
+properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::Scope}.properties
+properties GLOBAL.VARIABLES=?${ASUX::JobSetName}/jobset-${ASUX::cfnJobTYPE}-${ASUX::Scope}-${ASUX::ItemNumber}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -45,8 +45,8 @@ include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-post.ASUX-batch.txt
 properties Tags=${ASUX::JobSetName}/Tags-MyMaster.properties
 properties Tags=${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}.properties
 properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::ItemNumber}.properties
-properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}.properties
-properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::PublicOrPrivate}-${ASUX::ItemNumber}.properties
+properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::Scope}.properties
+properties Tags=?${ASUX::JobSetName}/Tags-${ASUX::cfnJobTYPE}-${ASUX::Scope}-${ASUX::ItemNumber}.properties
 
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
