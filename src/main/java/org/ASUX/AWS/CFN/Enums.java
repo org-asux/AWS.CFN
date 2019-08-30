@@ -117,4 +117,45 @@ public final class Enums
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
+    /** Class that captures the ennumeration of the various commands supported by the org.ASUX.YAML implementation
+     */
+    public enum StackComponentType {
+        VPC, SUBNET_PUBLIC, SUBNET_PRIVATE, SG, EC2, NATGW, IGW,
+        VPNCLIENT, UNDEFINED;
+
+        //=========================================
+        public static StackComponentType fromString( final String _s )
+        {   final String HDR = CLASSNAME + ": fromString(): ";
+            if ( _s == null ) return UNDEFINED;
+            if ( _s.toLowerCase().equals("public") ) return SUBNET_PUBLIC;
+            if ( _s.toLowerCase().equals("private") ) return SUBNET_PRIVATE;
+            if ( _s.toLowerCase().equals(Environment.PUBLIC_PLUS_NATGW.toLowerCase()) ) return SUBNET_PUBLIC;
+            if ( _s.toLowerCase().equals(Environment.PUBLIC_WITH_NATGW.toLowerCase()) ) return SUBNET_PUBLIC;
+            System.err.println( HDR +"!!!!!!!!!!!!!!!!!!!!!!!!!!! Incompletely defined method.  Unable to handle '"+ _s +"'" );
+            return UNDEFINED;
+        }
+
+        //=========================================
+        public static StackComponentType fromCmdType( final Enums.GenEnum _cmd, final String _arg )
+        {   final String HDR = CLASSNAME + ": fromCmdType(): ";
+            if ( _cmd == Enums.GenEnum.UNDEFINED ) return UNDEFINED;
+            if ( _cmd == Enums.GenEnum.VPC ) return VPC;
+            if ( _cmd == Enums.GenEnum.SG ) return SG;
+            if ( _cmd == Enums.GenEnum.EC2PLAIN ) return EC2;
+            if ( _cmd == Enums.GenEnum.SUBNET ) {
+                if ( _arg != null )
+                    return fromString( _arg );
+                else
+                    return SUBNET_PRIVATE; // <<-------- <<---------
+            }
+            System.err.println( HDR +"!!!!!!!!!!!!!!!!!!!!!!!!!!! Incompletely defined method.  Unable to handle '"+ _cmd +"'" );
+            return UNDEFINED;
+        }
+
+    }
+
+    //=================================================================================
+    //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+    //=================================================================================
+
 };
