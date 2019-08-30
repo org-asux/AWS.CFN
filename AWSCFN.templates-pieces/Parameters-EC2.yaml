@@ -12,14 +12,14 @@ Parameters:
     Type: String
 
 
-  MySSHSecurityGroup:
-    Description: "What is the EXPORTED OUTPUT NAME of the SG for SSH? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
-    Type: String
   MyIamInstanceProfiles:
     Description: "What is the **LIST** of IAM groups? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
     Type: String
     Default: EC2-ReadWrite-to-S3
-    
+  # MySSHSecurityGroup:
+  #   Description: "What is the EXPORTED OUTPUT NAME of the SG for SSH? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
+  #   Type: String
+
 
   # MyEC2InstanceName:
   #   Type: String
