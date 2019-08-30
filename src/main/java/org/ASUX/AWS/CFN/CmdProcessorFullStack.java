@@ -86,12 +86,21 @@ public final class CmdProcessorFullStack
     protected CmdProcessor cmdProcessor;
     protected CmdInvoker cmdinvoker;
 
+    /** This contains all the SGs created, labelled by a 'user-defined nickname'.  When EC2-instances are being created, the EC2-specs can identify which SGs apply, using these nicknames */
     protected LinkedHashMap<String,Stack> createdSGs = new LinkedHashMap<>();
+
+    /** This reference is used to identify STACKSET-dependency. In case there's a PRIVATE subnet also being created as new, then that PRIVATE-subnet will have a dependency on this Public-Subnet-Which-has-a-NATGW */
+    protected Stack publicPlusNATGW_stack = null;
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
+    /**
+     * The only constructor.  The verbose-ness ({@link #verbose}) of this class is defined by the 'verbose' instance-variable of _cmdProcessor argument.
+     * @param _cmdProcessor a NotNull reference
+     * @param _cmdinvoker a NotNull reference
+     */
     public CmdProcessorFullStack( final CmdProcessor _cmdProcessor, final CmdInvoker _cmdinvoker ) {
         this.verbose = _cmdProcessor.verbose;
         this.cmdProcessor = _cmdProcessor;
@@ -140,7 +149,7 @@ public final class CmdProcessorFullStack
         // _cmdLA.verbose       <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
         // _cmdLA.quoteType     <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
         // _cmdLA.jobSetName    <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
-        // _cmdLA.PublicOrPrivate <-- SAME VALUE FOR ALL CMDs (as other commands will IGNORE this)
+        // _cmdLA.scope <-- SAME VALUE FOR ALL CMDs (as other commands will IGNORE this)
 
         //-------------------------------------
         // read the single YAML-configuration-file.. that's describing the entire-stack / fullstack
@@ -250,10 +259,15 @@ public final class CmdProcessorFullStack
             // it's ok if boot.myEnv.getStack() ==== null
 
         final Path path = FileSystems.getDefault().getPath( _myEnv.get_cwd(), _cmdLA.jobSetName );
-        // final File outputFldr = new File( _cmdLA.jobSetName );
         final File newOutputFldr = path.toFile();
         newOutputFldr.mkdir(); // create a folder in '.' called '{JobSetName}'
         boot.myEnv.enhancedUserInput.setOutputFolderPath( newOutputFldr.getAbsolutePath() );
+        if (this.verbose) System.out.println( HDR +"Created folder: "+ newOutputFldr.getAbsolutePath() );
+
+        final Path path2TMP = FileSystems.getDefault().getPath( path.toAbsolutePath().toString(), "tmp" );
+        final File newTmpFldr = path2TMP.toFile();
+        newTmpFldr.mkdir(); // create a SUB-folder in '.' called '{JobSetName}/tmp'
+        if (this.verbose) System.out.println( HDR +"Created folder: "+ newTmpFldr.getAbsolutePath() );
 
         //========================================================================
         //-------------------------- Prep for Recursion --------------------------
@@ -270,12 +284,12 @@ public final class CmdProcessorFullStack
             // // myEnvVPC.setHomeFolders( .. .. .. );             // <-- above boot.configure() will invoke this
             // // myEnvVPC.setFundamentalGlobalProps( .. .. );     // <-- above boot.configure() will invoke this
             // // myEnvVPC.setFundamentalPrefixes( .. .. );        // <-- above boot.configure() will invoke this
-            // final Stack stackVPC = new Stack( this.verbose, AWSRegion, AWSLocation );
+            // final Stack stackVPC = new Stack( this.verbose, AWSRegion, AWSLocation, Enums.StackComponentType.VPC );
             // boot.myEnv.setStack( stackVPC );
             // boot.myEnv.getStack().setCFNTemplateFileName( InputOutput.genStackCFNFileName( boot.myEnv.enhancedUserInput.getCmd(), _cmdLA, boot.myEnv ) );
             // boot.myEnv.getStackSet().add( boot.myEnv.getStack() ); // add the above new Stack object/instance
             final CmdLineArgs claVPC = CmdLineArgs.deepCloneWithChanges( _cmdLA, Enums.GenEnum.VPC, null, null );
-            final Stack stackVPC = new Stack( this.verbose, AWSRegion, AWSLocation );
+            final Stack stackVPC = new Stack( this.verbose, AWSRegion, AWSLocation, Enums.StackComponentType.VPC );
             this.reconfigureBoot( Enums.GenEnum.VPC, claVPC, stackVPC, boot.myEnv, boot);  // FYI: boot.myEnv gets replaced with a clone
 
             final String VPCNameWithMacros   = Macros.evalThoroughly( this.verbose, "${ASUX::VPCID}", boot.myEnv.getAllPropsRef() ); // set by BootCheckAndConfig  === boot.myEnv.enhancedUserInput.... + "-VPCID"
@@ -296,7 +310,7 @@ public final class CmdProcessorFullStack
             // 1st generate the YAML.
             this.cmdProcessor.genYAML( claVPC, boot.myEnv.getCfnJobTYPEString(), boot.myEnv );          // Note: the 2nd argument automtically has "fullstack-" prefix in it.
             // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
-            this.cmdProcessor.genCFNShellScript( claVPC, boot.myEnv );
+            this.cmdProcessor.genCFNShellScript( claVPC, boot.myEnv, null /* no Subnet-stack-depedency */ );
         }
 
         //----------------- SG --------------------
@@ -339,21 +353,21 @@ public final class CmdProcessorFullStack
                 // final CmdLineArgs claSG   = CmdLineArgs.deepCloneWithChanges( _cmdLA, myEnvSG.enhancedUserInput.getCmd(), SGPortType_asEnteredByUser+"-"+ix, null );
                 // boot.myEnv = myEnvSG;
                 // boot.configure( claSG ); // this will set appropriate instance-variables in myEnvSG
-                // final Stack stackSG = new Stack( this.verbose, AWSRegion, AWSLocation );
+                // final Stack stackSG = new Stack( this.verbose, AWSRegion, AWSLocation, Enums.StackComponentType.SG );
                 // boot.myEnv.setStack( stackSG );
                 // boot.myEnv.getStack().setCFNTemplateFileName( InputOutput.genStackCFNFileName( boot.myEnv.enhancedUserInput.getCmd(), _cmdLA, boot.myEnv ) );
                 // boot.myEnv.getStackSet().add( boot.myEnv.getStack() ); // add the above new Stack object/instance
                 final CmdLineArgs claSG = CmdLineArgs.deepCloneWithChanges( _cmdLA, Enums.GenEnum.SG, "-"+ix, SGPortType_asEnteredByUser );
-                                                                            // The last argument is 'PublicOrPrivate'.. .. but ..
-                                                                            //  we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing
+                                                                            // The last argument is 'Scope'.. .. but ..
+                                                                            //  we're re-purposing '_cmdLA.scope' for passing/storing
                                                                             // the SG-PORT# (ssh/https/..) as provided by user on commandline.
-                final Stack stackSG = new Stack( this.verbose, AWSRegion, AWSLocation );
+                final Stack stackSG = new Stack( this.verbose, AWSRegion, AWSLocation, Enums.StackComponentType.SG );
                 this.reconfigureBoot( Enums.GenEnum.SG, claSG, stackSG, boot.myEnv, boot);  // FYI: boot.myEnv gets replaced with a clone
 
                 // 1st generate the YAML.
                 this.cmdProcessor.genYAML( claSG, boot.myEnv.getCfnJobTYPEString(), boot.myEnv );           // Note: the 2nd argument automtically has "fullstack-" prefix in it.
                 // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
-                this.cmdProcessor.genCFNShellScript( claSG, boot.myEnv );
+                this.cmdProcessor.genCFNShellScript( claSG, boot.myEnv, null /* no Subnet-stack-depedency */ );
 
                 boot.myEnv.getStackSet().popDependencyHeirarchy(); // 'pop' the last StackSet Elem. repreenting the SUBNET created @ top of this FOR-LOOP.
                 boot.myEnv.setStack( null );
@@ -380,16 +394,21 @@ public final class CmdProcessorFullStack
         for ( Node subnet: subnetseqs ) {// loop over EACH subnet
             if ( this.verbose ) System.out.println( HDR +" subnet YAML-tree =\n" + NodeTools.Node2YAMLString( subnet ) +"\n" );
 
-            final String PublicOrPrivate = boot.myEnv.enhancedUserInput.getPublicOrPrivate( yamltools, subnet );
-            globalProps.setProperty( "PublicOrPrivate", PublicOrPrivate );  // Override what's set in BootCheckAndConfig
-
+            final String scope = boot.myEnv.enhancedUserInput.getPublicOrPrivate( yamltools, subnet );
+            globalProps.setProperty( "Scope", scope );  // Override what's set in BootCheckAndConfig
+            globalProps.setProperty( "PublicOrPrivate", scope ); // "Scope" can also be "PublicWithNATGW".  But, this PROPERTY's value can only be Public or Private.
+            if ( scope.startsWith("Public"))
+                globalProps.setProperty( "PublicOrPrivate", "Public" ); // 'PublicWithNATGW' or 'Public+NATGW' -> -> 'Public'
+    
             final String existingSubnetID_asEnteredByUser  = yamltools.readStringFromYAML( subnet, "SubnetID" );
             // the above value can be either the word 'existing' .. or, something like 'subnet-0123456789';  We need to handle both variations (so, note the existingInfrastructure.getSubnetID() call in the next line)
             final String existingSubnetID = existingInfrastructure.getSubnetID(
-                                    AWSRegion, existingVPCID, existingSubnetID_asEnteredByUser, PublicOrPrivate,
+                                    AWSRegion, existingVPCID, existingSubnetID_asEnteredByUser, scope,
                                     MyOrgName, MyEnvironment, MyDomainName, _cmdLA.isOffline() );
 
             //---------------------------------
+            Stack subnetStackReference = null;
+
             if ( existingSubnetID == null ) {
                 final String VPCCIDRBlock = globalProps.getProperty( Environment.VPCCIDRBLOCK ); // "172.31.0.0/20"
                 final String CIDRBLOCK_Byte3_DeltaString = globalProps.getProperty( Inet.CIDRBLOCK_BYTE3_DELTA ); // example: 16
@@ -405,27 +424,30 @@ public final class CmdProcessorFullStack
                 // final Environment myEnvSubnet = Environment.deepClone( boot.myEnv );
                 // myEnvSubnet.bInRecursionByFullStack = true;
                 // myEnvSubnet.enhancedUserInput.setCmd( Enums.GenEnum.SUBNET, UserInputEnhanced.getCFNJobTypeAsString( Enums.GenEnum.SUBNET ) );
-                // final CmdLineArgs claSubnet  = CmdLineArgs.deepCloneWithChanges( _cmdLA, myEnvSubnet.enhancedUserInput.getCmd(), ""+ix, PublicOrPrivate );
+                // final CmdLineArgs claSubnet  = CmdLineArgs.deepCloneWithChanges( _cmdLA, myEnvSubnet.enhancedUserInput.getCmd(), ""+ix, scope );
                 // boot.myEnv = myEnvSubnet;
                 // boot.configure( claSubnet );     // this will set appropriate instance-variables in myEnvSubnet
-                // final Stack stackSubnet = new Stack( this.verbose, AWSRegion, AWSLocation );
+                // final Stack stackSubnet = new Stack( this.verbose, AWSRegion, AWSLocation, Enums.StackComponentType.SUBNET );
                 // boot.myEnv.setStack( stackSubnet );
                 // boot.myEnv.getStack().setCFNTemplateFileName( InputOutput.genStackCFNFileName( boot.myEnv.enhancedUserInput.getCmd(), _cmdLA, boot.myEnv ) );
                 // boot.myEnv.getStackSet().add( boot.myEnv.getStack() ); // add the above new Stack object/instance
-                final CmdLineArgs claSubnet = CmdLineArgs.deepCloneWithChanges( _cmdLA, Enums.GenEnum.SUBNET, ""+ix, PublicOrPrivate );
-                final Stack stackSubnet = new Stack( this.verbose, AWSRegion, AWSLocation );
+                final CmdLineArgs claSubnet = CmdLineArgs.deepCloneWithChanges( _cmdLA, Enums.GenEnum.SUBNET, "-"+ix, scope );
+                final Stack stackSubnet = new Stack( this.verbose, AWSRegion, AWSLocation, Enums.StackComponentType.fromString(scope) );
                 this.reconfigureBoot( Enums.GenEnum.SUBNET, claSubnet, stackSubnet, boot.myEnv, boot);  // FYI: boot.myEnv gets replaced with a clone
+                subnetStackReference = stackSubnet;
 
                 // 1st generate the YAML.
                 this.cmdProcessor.genYAML( claSubnet, boot.myEnv.getCfnJobTYPEString(), boot.myEnv );          // Note: the 2nd argument automtically has "fullstack-" prefix in it.
                 // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
-                this.cmdProcessor.genCFNShellScript( claSubnet, boot.myEnv );
+                this.cmdProcessor.genCFNShellScript( claSubnet, boot.myEnv, null /* no Subnet-stack-depedency */ );
 
+                if ( Environment.PUBLIC_WITH_NATGW.equals(scope) )
+                    this.publicPlusNATGW_stack = stackSubnet; // save this reference, in case there's a PRIVATE subnet also being created new
             } // End-IF-block (IF subnetID Not provided by user within FullStackJob.yaml file)
 
             //--------------- Server(s) -------------------
             if ( existingSubnetID == null ) {
-                genServerCFN( fullStackJob_Filename, AWSRegion, AWSLocation, subnet, PublicOrPrivate, boot, yamltools, _cmdLA, boot.myEnv );
+                genServerCFN( fullStackJob_Filename, AWSRegion, AWSLocation, subnet, scope, subnetStackReference /* no Subnet-stack-depedency */, boot, yamltools, _cmdLA, boot.myEnv );
                 boot.myEnv.getStackSet().popDependencyHeirarchy(); // 'pop' the last StackSet Elem. repreenting the SUBNET created @ top of this FOR-LOOP.
                 boot.myEnv.setStack( null );
             } else {
@@ -434,7 +456,7 @@ public final class CmdProcessorFullStack
                 final Environment myEnv_ServersInExistingSubnet = Environment.deepClone( boot.myEnv );
                 myEnv_ServersInExistingSubnet.enhancedUserInput.setExisting( existingVPCID, existingSubnetID );
                 // above setExisting() is important.  This set flags, that change the Batch-Script to 'AWSCFN-fullstack-ec2plainExistingSubnet-Create.ASUX-batch.txt'
-                genServerCFN( fullStackJob_Filename, AWSRegion, AWSLocation, subnet, "Public" /* assume publicly accessible server */, boot, yamltools, _cmdLA, myEnv_ServersInExistingSubnet );
+                genServerCFN( fullStackJob_Filename, AWSRegion, AWSLocation, subnet, "Public" /* assume publicly accessible server */, subnetStackReference /* no Subnet-stack-depedency */, boot, yamltools, _cmdLA, myEnv_ServersInExistingSubnet );
             }
 
             ix ++;
@@ -493,6 +515,7 @@ public final class CmdProcessorFullStack
      *  @param _AWSLocation pass in valid AWS-Locations like 'virginia', 'Ohio', 'Tokyo', 'Seoul', 'Sydney' .. (case-insensitive is NOT-valid)
      *  @param _subnet a NotNull SnakeYaml Node representing the entire YAML-tree rooted at _ONE_ single subnet-LHS/Key.
      *  @param _PublicOrPrivate whether a public or private subnet EC2 instance (String value is case-sensitive.  Exact allowed values are: 'Public' 'Private')
+     *  @param _dependsOnSubnetStack Nullable reference to another Stack, that this EC2 instance's CFN depends on.
      *  @param _boot a NotNull instance created within {@link #genAllCFNs(CmdLineArgs, Environment)}
      *  @param _yamltools a NotNull instance (created within {@link #genAllCFNs(CmdLineArgs, Environment)})
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
@@ -501,7 +524,7 @@ public final class CmdProcessorFullStack
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
     public void genServerCFN( final String _fullStackJob_Filename, final String _AWSRegion, final String _AWSLocation,
-                                    final Node _subnet, final String _PublicOrPrivate,
+                                    final Node _subnet, final String _PublicOrPrivate, final Stack _dependsOnSubnetStack,
                                     final BootCheckAndConfig _boot, final YAMLTools _yamltools,
                                     final CmdLineArgs _cmdLA, final Environment _myEnv ) throws IOException, Exception
     {   final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
@@ -542,7 +565,7 @@ public final class CmdProcessorFullStack
                     final Node valNode = kv.getValueNode();
                     if ( this.verbose ) System.out.println( HDR +" SERVER(#"+ix+") YAML-tree =\n" + NodeTools.Node2YAMLString( valNode ) +"\n" );
                     if ( valNode instanceof MappingNode ) {
-                        parseServerInfo( ec2instanceName, (MappingNode) valNode, "packages", _yamltools, _myEnv, _cmdLA.isOffline() );
+                        parseServerInfo( ec2instanceName, (MappingNode) valNode, "packages", _yamltools, _myEnv, _cmdLA );
 // ????????????????????? Need to parametrize "packages"
                     } else {
                         if ( this.verbose ) System.out.println( HDR +" (server["+ ec2instanceName +"] instanceof MappingNode) is Not a mapping within:\n" + NodeTools.Node2YAMLString( mapNode ) + "\n");
@@ -562,7 +585,7 @@ public final class CmdProcessorFullStack
                 for( Node seqItem: seqs ) {
                     ec2instanceName = Integer.toString( ix + 1 );
                     if ( seqItem instanceof MappingNode ) {
-                        parseServerInfo( ec2instanceName, (MappingNode) seqItem, "packages", _yamltools, _myEnv, _cmdLA.isOffline() );
+                        parseServerInfo( ec2instanceName, (MappingNode) seqItem, "packages", _yamltools, _myEnv, _cmdLA );
 // ????????????????????? Need to parametrize "packages"
                     } else {
                         if ( this.verbose ) System.out.println( HDR +" (server["+ ix +"] instanceof SequenceNode) failed with:\n" + NodeTools.Node2YAMLString( seqItem ) + "\n");
@@ -584,18 +607,18 @@ public final class CmdProcessorFullStack
             // final CmdLineArgs claEC2     = CmdLineArgs.deepCloneWithChanges( _cmdLA, myEnvEC2.enhancedUserInput.getCmd(), null, _PublicOrPrivate );
             // _boot.myEnv = myEnvEC2;
             // _boot.configure( claEC2 ); // this will set appropriate instance-variables in myEnvEC2
-            // final Stack stackEC2 = new Stack( this.verbose, _AWSRegion, _AWSLocation );
+            // final Stack stackEC2 = new Stack( this.verbose, _AWSRegion, _AWSLocation, Enums.StackComponentType.EC2 );
             // _boot.myEnv.setStack( stackEC2 );
             // _boot.myEnv.getStack().setCFNTemplateFileName( InputOutput.genStackCFNFileName( _boot.myEnv.enhancedUserInput.getCmd(), _cmdLA, _boot.myEnv ) );
             // _boot.myEnv.getStackSet().add( _boot.myEnv.getStack() ); // add the above new Stack object/instance
             final CmdLineArgs claEC2 = CmdLineArgs.deepCloneWithChanges( _cmdLA, Enums.GenEnum.EC2PLAIN, null, _PublicOrPrivate );
-            final Stack stackEC2 = new Stack( this.verbose, _AWSRegion, _AWSLocation );
+            final Stack stackEC2 = new Stack( this.verbose, _AWSRegion, _AWSLocation, Enums.StackComponentType.EC2 );
             this.reconfigureBoot( Enums.GenEnum.EC2PLAIN, claEC2, stackEC2, _myEnv, _boot);  // FYI: boot.myEnv gets replaced with a clone
 
             // 1st generate the YAML.
             this.cmdProcessor.genYAML( claEC2, _boot.myEnv.getCfnJobTYPEString(), _boot.myEnv );               // Note: the 2nd argument automtically has "fullstack-" prefix in it.
             // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
-            this.cmdProcessor.genCFNShellScript( claEC2, _boot.myEnv );
+            this.cmdProcessor.genCFNShellScript( claEC2, _boot.myEnv, _dependsOnSubnetStack );
 
             _boot.myEnv.getStackSet().popDependencyHeirarchy(); // 'pop' the last StackSet Elem. representing the EC2 instance immediately above..
             _boot.myEnv.setStack( null );
@@ -614,11 +637,11 @@ public final class CmdProcessorFullStack
      *  @param _cfnInitContext typically, it's one of the AWS cfn-init ConfigSets (StandupOnly, StandUpInstallAndRun, ..)
      *  @param _yamltools a NotNull instance
      *  @param _myEnv a NotNull object (created by {@link BootCheckAndConfig#exec})
-     *  @param _offline true === NOT To invoke AWS-SDK or any other internet-activity
+     *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
      *  @throws Exception logic inside method will throw if the right YAML-structure is not provided, to read simple KV-pairs.
      */
     private void parseServerInfo( final String _ec2instanceName, final MappingNode _mapNode, final String _cfnInitContext,
-                                final YAMLTools _yamltools, final Environment _myEnv, final boolean _offline )
+                                final YAMLTools _yamltools, final Environment _myEnv, final CmdLineArgs _cmdLA )
                                 throws Exception
     {   final String HDR = CLASSNAME + ": parseServerInfo(<mapNode>,"+ _cfnInitContext +"): ";
 
@@ -626,7 +649,7 @@ public final class CmdProcessorFullStack
 
         final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         final NodeTools nodetools = (NodeTools) this.cmdinvoker.getYAMLImplementation();
-        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _offline );
+        final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
 
         //-----------------
         final String EC2InstanceType      = _yamltools.readStringFromYAML( _mapNode, "EC2InstanceType" );
@@ -668,6 +691,7 @@ public final class CmdProcessorFullStack
         assertTrue ( SGs instanceof SequenceNode );
 
         final ArrayList<String> sgStkNames = new ArrayList<>();
+        final ArrayList<String> sgExistingNames = new ArrayList<>();
         final SequenceNode seqNode = (SequenceNode) SGs;
         final java.util.List<Node> seqs = seqNode.getValue();
         assertTrue( seqs.size() >= 1 ); // why bother having the SG element and having nothing INSIDE/UNDER that 'sg' LHS-YAML-key
@@ -675,19 +699,27 @@ public final class CmdProcessorFullStack
         for ( Node n: seqs ) {
             assertTrue( n instanceof ScalarNode );
             final ScalarNode scalar = (ScalarNode) n;
-            final Stack stk = this.createdSGs.get( scalar.getValue() ); // check if the user provided a definition of this 'scalar.getValue()' security-group WITHIN the same YAML-file for the job
-            if ( this.verbose ) System.out.println( HDR +" SG-lookup using nickname=" + scalar.getValue() + " points to SG stack-name="+ stk );
+            final String sgRef = scalar.getValue(); // let's see what kind of reference to a Security-Group did the user provide.
+            final Stack stk = this.createdSGs.get( sgRef ); // check if the user _ALREDY_ provided a definition of this 'sgRef' security-group WITHIN the same _FULLSTACK_ YAML-file for the job
+            if ( this.verbose ) System.out.println( HDR +" SG-lookup using nickname=" + sgRef + " within the FULLSTACK job points to the SG with stack-name="+ stk );
             if ( stk == null ) { // it means, the user did _NOT_ provide a definition of this 'SG' WITHIN the same YAML-file for the job.  (Or, perhaps a typo, but we can't help him)
-                sgStkNames.add ( scalar.getValue() );
-                if ( ! awssdk.matchesAWSIDPattern( scalar.getValue(), "sg" ) )
-                    throw new Exception( "'"+ scalar.getValue() +"' is Not a 'nick-name' for a SG .. Nor.. is it an actual AWS-ID for a security-group\n"+ NodeTools.Node2YAMLString( _mapNode ) );
+                sgExistingNames.add ( sgRef ); // perhaps .. could be the AWS-ID of an _EXISTING_ SG ?
+                if ( ! awssdk.matchesAWSIDPattern( sgRef, "sg" ) )
+                    throw new Exception( "'"+ sgRef +"' is Not a 'nick-name' for a SG .. Nor.. is it an actual AWS-ID for a security-group\n"+ NodeTools.Node2YAMLString( _mapNode ) );
             } else {
                 sgStkNames.add ( stk.getStackName() );
             }
         }
         final SequenceNode seqN = NodeTools.ArrayList2Node( this.verbose, sgStkNames, nodetools.getDumperOptions() );
-        this.cmdinvoker.getMemoryAndContext().saveDataIntoMemory( Environment.EC2_SGLIST +"-"+ _ec2instanceName, seqN );   // <<----------- <<-------------
-        if ( this.verbose ) System.out.println( HDR +"Saved ArrayList-as-Node under Memory as !"+ (Environment.EC2_SGLIST +"-"+ _ec2instanceName) );
+        final SequenceNode seqN222 = NodeTools.ArrayList2Node( this.verbose, sgExistingNames, nodetools.getDumperOptions() );
+        final String filenameFullstackSGs = "@"+ Environment.getJobTmpFolderPath( _cmdLA.getJobSetName() ) +"/MyEC2-FullStackSGLIST-"+ _ec2instanceName +".yaml";
+        final String filenameExistingSGs  = "@"+ Environment.getJobTmpFolderPath( _cmdLA.getJobSetName() ) +"/MyEC2-ExistingSGLIST-"+ _ec2instanceName +".yaml";
+
+        // InputsOutputs needs 'memoryAndContext' reference as 3rd parameter.  I'm passing null.  Simply because the 1st parameter is _NOT_ like: !InMemoryReference.
+        InputsOutputs.saveDataIntoReference( filenameFullstackSGs, seqN,    null, nodetools, this.verbose );     // <<----------- <<-------------
+        InputsOutputs.saveDataIntoReference( filenameExistingSGs,  seqN222, null, nodetools, this.verbose );     // <<----------- <<-------------
+        if ( this.verbose ) System.out.println( HDR +"Saved ArrayList-as-Node to the file: "+ filenameFullstackSGs +"'\n"+ NodeTools.Node2YAMLString(seqN) );
+        if ( this.verbose ) System.out.println( HDR +"Saved ArrayList-as-Node to the file: "+ filenameExistingSGs +"'\n"+ NodeTools.Node2YAMLString(seqN222) );
 
         //-----------------
         final Node yum      = _yamltools.readNodeFromYAML( _mapNode, "yum" );
@@ -789,7 +821,7 @@ public final class CmdProcessorFullStack
     //=================================================================================
 
     /**
-     *  <p>This should be invoked as the final step, after repeatedly invoking {@link CmdProcessor#genYAML(CmdLineArgs, String, Environment)} and {@link CmdProcessor#genCFNShellScript(CmdLineArgs, Environment)}.</p>
+     *  <p>This should be invoked as the final step, after repeatedly invoking {@link CmdProcessor#genYAML} and {@link CmdProcessor#genCFNShellScript}.</p>
      *  <p>This method will generate the Stack-Set YAML, so that all the various components are run as a single set of Nested Stacks (very convenient, rather than run each one-after-another, waiting for each to complete)</p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
      *  @param _myEnv a NotNull object (created by {@link BootCheckAndConfig#configure})
@@ -837,7 +869,6 @@ public final class CmdProcessorFullStack
 
         if ( this.verbose ) System.out.println( HDR + " # of Stacks Created ="+ _myEnv.getStackSet().getAllStacksCreated().size() );
         bufferYAML.append( "\nResources:\n\n" );
-        // String dependsOn = null;
         int ix = -1;
         for ( Stack stackCmd:   _myEnv.getStackSet().getAllStacksCreated()   ) {
 
@@ -853,12 +884,21 @@ public final class CmdProcessorFullStack
             //     awssdk.S3put( correctBucketRegionID, _cmdLA.s3bucketname,  stackCmd.getStackName() /* _S3ObjectName */,   stackCmd.getCFNTemplateFileName() /* _filepathString */ );
             //     if ( this.verbose ) System.out.println( HDR + "Completed upload to "+ s3ObjectURL );
             // }
+            final ArrayList<String> dependencyList = new ArrayList<>();
             final Stack dependsOnObj = _myEnv.getStackSet().getDependencyFor( ix );
-            final String dependsOn = (dependsOnObj == null) ? null : Macros.evalThoroughly( this.verbose,    dependsOnObj.getStackId(),    _myEnv.getAllPropsRef() );
-            final Tuple<String,String> tuple22 = stackCmd.getCFNYAMLString( s3ObjectHTTPSURL, dependsOn );
-            // update: dependsOn = tuple22.key;
+            if (dependsOnObj != null) {
+                final String aDependency = Macros.evalThoroughly( this.verbose,    dependsOnObj.getStackId(),    _myEnv.getAllPropsRef() );
+                dependencyList.add( aDependency );
+            }
+            if ( stackCmd.type == Enums.StackComponentType.SUBNET_PRIVATE && this.publicPlusNATGW_stack != null ) {
+                final String anotherDependency = Macros.evalThoroughly( this.verbose,    this.publicPlusNATGW_stack.getStackId(),    _myEnv.getAllPropsRef() );
+                dependencyList.add( anotherDependency );
+            }
+            final Tuple<String,String> tuple22 = stackCmd.getCFNYAMLString( s3ObjectHTTPSURL, dependencyList );
             bufferYAML.append( tuple22.val ).append("\n");
-            bufferShellScript.append( "aws s3 cp --profile ${AWSprofile} --acl public-read  " ) // make the S3 object automatically publicly readable.
+
+            // bufferShellScript.append( "aws s3 cp --profile ${AWSprofile} --acl public-read  " ) // make the S3 object automatically publicly readable.
+            bufferShellScript.append( "aws s3 cp --profile ${AWSprofile} " ) // make the S3 object automatically publicly readable.
                             .append( _myEnv.enhancedUserInput.getOutputFolderPath() ).append( "/" ).append( stackCmd.getCFNTemplateFileName() ).append("   ").append( s3ObjectURL )
                             .append( " --region " ).append( correctBucketRegionID ).append( "\n" );
         }
