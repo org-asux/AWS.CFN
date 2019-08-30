@@ -150,15 +150,14 @@ public final class CmdProcessor
                             break;
             case SG:
                             batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+ _cfnJobType +"-Create.ASUX-batch.txt";
-                            // batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+ _cfnJobType +"-"+ _cmdLA.PublicOrPrivate +"-Create.ASUX-batch.txt";
-                            // we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
+                            // batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+ _cfnJobType +"-"+ _cmdLA.scope +"-Create.ASUX-batch.txt";
+                            // we're re-purposing '_cmdLA.scope' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
                             break;
             case SUBNET:
-                            assertTrue( _cmdLA.PublicOrPrivate != null && _cmdLA.PublicOrPrivate.length() > 0 ); // CmdLineArgs.class guarantees that it will be 'Public' or 'Private' or 'Public+natgw', if NOT NULL.
-                            // globalProps.setProperty( "PublicOrPrivate", _cmdLA.PublicOrPrivate );  // already set in BootCheckAndConfig.configure()
+                            assertTrue( _cmdLA.scope != null && _cmdLA.scope.length() > 0 ); // CmdLineArgs.class guarantees that it will be 'Public' or 'Private' or 'Public+natgw', if NOT NULL.
                             if (this.verbose) System.out.println( HDR + "Currently " + globalProps.size() + " entries into globalProps." );
 
-                            batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+ _cfnJobType +"-"+ _cmdLA.PublicOrPrivate +"-Create.ASUX-batch.txt";
+                            batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+ _cfnJobType +"-"+ _cmdLA.scope +"-Create.ASUX-batch.txt";
                             // batchFilePath = "@"+ _myEnv.get_awscfnhome() +"/bin/AWSCFN-"+_cfnJobType+"-Create.ASUX-batch.txt";
                             break;
             case FULLSTACK:
@@ -227,12 +226,14 @@ public final class CmdProcessor
      *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
      *  @param _myEnv a NotNull object (created by {@link BootCheckAndConfig#configure})
+     *  @param _dependsOnSubnetStack Nullable reference to another Stack, that this EC2 instance's CFN depends on.
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
-    public void genCFNShellScript( final CmdLineArgs _cmdLA, final Environment _myEnv ) throws IOException, Exception
+    public void genCFNShellScript( final CmdLineArgs _cmdLA, final Environment _myEnv, final Stack _dependsOnSubnetStack )
+                        throws IOException, Exception
     {
-        final String HDR = CLASSNAME + ": genVPCCFNShellScript("+ _cmdLA.getCmdName() +",_myEnv): ";
+        final String HDR = CLASSNAME + ": genCFNShellScript("+ _cmdLA.getCmdName() +",_myEnv): ";
         final UserInputEnhanced enhancedUserInput = _myEnv.enhancedUserInput;
 
         final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
@@ -268,20 +269,20 @@ public final class CmdProcessor
                         _myEnv.getStack().setCFNTemplateFileName( InputOutput.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
                         // scriptfile = enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +".sh";
                         break;
-        case SUBNET:    // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.PublicOrPrivate +"-"+ _cmdLA.jobSetName + itemSuffix +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
+        case SUBNET:    // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-subnets-"+ _cmdLA.scope +"-"+ _cmdLA.jobSetName + itemSuffix +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --template-body file://"+ outpfile;
                         _myEnv.getStack().setStackName( Stack.genSubnetStackName(_cmdLA) );
                         _myEnv.getStack().setCFNTemplateFileName( InputOutput.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
-                        // scriptfile = enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + itemSuffix +".sh";
+                        // scriptfile = enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.scope + itemSuffix +".sh";
                         break;
         case SG:        // preStr = "aws cloudformation create-stack --stack-name ${ASUX::"+Environment.MYVPCSTACKPREFIX+"}-"+ _cmdLA.jobSetName +"-SG-SSH"+ itemSuffix +"  --region ${ASUX::AWSRegion} --profile ${AWSprofile} --parameters ParameterKey=MyVPC,ParameterValue=${ASUX::VPCID} --template-body file://"+ outpfile;
                         _myEnv.getStack().setStackName( Stack.genSGStackName(_cmdLA) );
                         _myEnv.getStack().addParameter( "MyVPC", "${ASUX::VPCID}" );
                         _myEnv.getStack().setCFNTemplateFileName( InputOutput.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
-                        // scriptfile = enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + itemSuffix +".sh";
+                        // scriptfile = enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.scope + itemSuffix +".sh";
                         break;
         case EC2PLAIN:  
                         final CmdProcessorEC2 ec2Processor = new CmdProcessorEC2( this );
-                        ec2Processor.genCFNShellScript( _cmdLA, _myEnv );
+                        ec2Processor.genCFNShellScript( _cmdLA, _myEnv, _dependsOnSubnetStack );
                         _myEnv.getStack().setCFNTemplateFileName( InputOutput.genStackCFNFileName( _cmdLA.getCmdName(), _cmdLA, _myEnv ) );
                         // scriptfile = enhancedUserInput.getOutputFolderPath() +"/"+ _myEnv.getCfnJobTYPEString() +"-"+ globalProps.getProperty( Environment.MYEC2INSTANCENAME ) +".sh";
                         break;
