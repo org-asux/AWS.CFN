@@ -9,9 +9,6 @@ Parameters:
   MyPrivateSubnet1:
     Description: "What is the EXPORTED OUTPUT NAME of the Appropriate PUBLIC-vs-PRIVATE-SUBNET #1 - from the other VPC CFN-template"
     Type: String
-  MySSHSecurityGroup:
-    Description: "What is the EXPORTED OUTPUT NAME of the SG for SSH? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
-    Type: String
   MyIamInstanceProfiles:
     Description: "What is the **LIST** of IAM groups? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
     Type: String
@@ -70,8 +67,8 @@ Resources:
       NetworkInterfaces:
       - DeviceIndex: "0"
         GroupSet:
-        - !ImportValue
-          Ref: MySSHSecurityGroup
+        - Fn::ImportValue: org-ASUX-Playground-Ohio-5432-2layer-2-SG
+        - Fn::ImportValue: org-ASUX-Playground-Ohio-ssh-2layer-0-SG
         SubnetId: !ImportValue
           Ref: MyPrivateSubnet1
         AssociatePublicIpAddress: !If [
@@ -93,11 +90,6 @@ Resources:
         Ref: needsMonitoring
       KeyName:
         Ref: MySSHKeyName
-      SecurityGroupIds:
-      - !ImportValue
-        Ref: org-ASUX-Playground-Ohio-5432-2layer-2-SG
-      - !ImportValue
-        Ref: org-ASUX-Playground-Ohio-ssh-2layer-0-SG
       Tags:
       - Key: LOCATION
         Value: Ohio
@@ -136,7 +128,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Fri Aug 23 23:48:50 EDT 2019
+        Value: Fri Aug 30 08:20:25 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
       - Key: FQDN
