@@ -1,5 +1,5 @@
   EIPForNATGateway${ASUX::foreach.index+1}:
-    Description: NOTE, NAT-GW (NAT-Gateway) No.${ASUX::foreach.index+1} is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet '${ASUX::MyStackNamePrefix}-Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
+    Description: NOTE, NAT-GW (NAT-Gateway) No.${ASUX::foreach.index+1} is associated with _ONE_ _SINGLE_ SUBNET (The public-subnet '${ASUX::MyStackNamePrefix}-Subnet-${ASUX::Scope}${ASUX::foreach.index+1}-ID').   In a true H.A. and Fault-tolerant design, you need a NAT-GW in _EACH_ AZ.
     Type: 'AWS::EC2::EIP'
     Properties:
       Domain: vpc
@@ -25,6 +25,6 @@
         - 'AllocationId'
       SubnetId: !Ref MyPublicSubnetAZ${ASUX::foreach.index+1}
       # SubnetId: !ImportValue
-      #   Ref: '${ASUX::MyStackNamePrefix}-Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-ID'
+      #   Ref: '${ASUX::MyStackNamePrefix}-Subnet-${ASUX::Scope}${ASUX::foreach.index+1}-ID'
 
 #EOF
