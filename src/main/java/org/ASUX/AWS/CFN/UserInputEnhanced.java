@@ -122,6 +122,19 @@ public class UserInputEnhanced extends UserInput
         assertTrue( this.outputFolderPath != null );
     }
 
+    //=================================================================================
+
+    /**
+     *  <p>This method allows the code to uniformly determine the "tmp sub-folder" that is specific to the job-set being processed via cmdline.</p>
+     *  <p>FYI: The "tmp-folder" is created by {@link CmdProcessorFullStack#genAllCFNs(CmdLineArgs, Environment)}, if it does Not exist.</p>
+     *  @return a NotNull Absolute-path string, that represents a subfolder 'tmp' to the folder defined by {@link #setOutputFolderPath(String)}
+     *  @see Environment#getJobTmpFolderPath(String)
+     *  @see Environment#getJobFolderPath(String)
+     */
+    public String getTmpFolderPath() {
+        return getOutputFolderPath() +"/tmp";
+    }
+
     // ==============================================================================
     // @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     // ==============================================================================
@@ -164,19 +177,37 @@ public class UserInputEnhanced extends UserInput
             strPublicSubnet    = _yamltools.readStringFromYAML( _subnet, "public" );
         } catch( java.lang.AssertionError ae ) { /* do Nothing */ }
 
+        if ( strPublicSubnet == null )
+            strPublicSubnet = "";
+        else
+            strPublicSubnet = strPublicSubnet.toLowerCase();
+
         try {
             strPrivateSubnet   = _yamltools.readStringFromYAML( _subnet, "private" );
         } catch( java.lang.AssertionError ae ) { /* do Nothing */ }
 
-        final boolean isPublicSubnet    = ( strPublicSubnet != null && strPublicSubnet.toLowerCase().equals("yes") );
-        final boolean isPrivateSubnet   = ( strPrivateSubnet != null && strPrivateSubnet.toLowerCase().equals("yes") );
+        if ( strPrivateSubnet == null )
+            strPrivateSubnet = "";
+        else
+            strPrivateSubnet = strPrivateSubnet.toLowerCase();
+
+        //-------------------------------------
+        final boolean isPublicSubnet      = ( strPublicSubnet.equals("yes") );
+        final boolean isPublicNATGWSubnet = ( strPublicSubnet.equals( Environment.PUBLIC_WITH_NATGW.toLowerCase() )
+                                            || strPublicSubnet.equals( "yes+natgw" ) ); // offer two meaningful alternatives for humans.
+        final boolean isPrivateSubnet     = ( strPrivateSubnet.equals("yes") );
 
         //-------------------------------------
         String PublicOrPrivate = "NeitherPublicNorPrivate"; // by default - in case of existing Subnet ID
 
-        if ( isPublicSubnet && ! isPrivateSubnet )
-            PublicOrPrivate = "Public"; // unless I am 100% sure, I'm _NOT_ making the subnet _PUBLIC_.
-        else
+        if (   !  isPrivateSubnet ) {
+            if ( isPublicSubnet )
+               PublicOrPrivate = "Public"; // unless I am 100% sure, I'm _NOT_ making the subnet _PUBLIC_.
+            else if ( isPublicNATGWSubnet )
+                PublicOrPrivate = Environment.PUBLIC_WITH_NATGW; // unless I am 100% sure, I'm _NOT_ making the subnet _PUBLIC_.
+            else
+                PublicOrPrivate = "Private";
+        } else
             PublicOrPrivate = "Private";
 
         if ( this.verbose ) System.out.println( HDR +" PublicOrPrivate="+ PublicOrPrivate +" strPublicSubnet="+ strPublicSubnet +" strPrivateSubnet="+ strPrivateSubnet +" isPublicSubnet="+ isPublicSubnet +" isPrivateSubnet="+ isPrivateSubnet );
