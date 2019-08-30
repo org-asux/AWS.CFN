@@ -79,7 +79,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
     protected String jobSetName = "undefined-JobSetName";
     protected String s3bucketname = "undefined-S3-BucketName";
     protected String itemNumber = "undefined-ItemNumber";
-    protected String PublicOrPrivate = "NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable";
+    protected String scope = "NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable";
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -191,12 +191,14 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
                 if ( _THIS.jobSetName.endsWith(".yaml") )
                     _THIS.jobSetName = _THIS.jobSetName.replaceAll( ".yaml$", "" );
                 if ( verbose ) System.err.println( "_THIS.jobSetName for Cmd="+ _cmd +" is "+ _THIS.jobSetName );
-                _THIS.PublicOrPrivate = subnetsArgs[1];
-                if ( _THIS.PublicOrPrivate == null || ( ! _THIS.PublicOrPrivate.toLowerCase().matches("public|private|public+natgw") ) )
+                _THIS.scope = subnetsArgs[1];
+                if ( _THIS.scope == null || ( ! _THIS.scope.toLowerCase().matches("public|private|public+natgw") ) )
                     throw new MissingOptionException("Command "+ _cmd +" requires 2nd argument to be precisely 'public' or 'private' or 'public+natgw'");
                 else
-                    _THIS.PublicOrPrivate = _THIS.PublicOrPrivate.toLowerCase();
-                    _THIS.PublicOrPrivate = Character.toUpperCase( _THIS.PublicOrPrivate.charAt(0) ) + _THIS.PublicOrPrivate.substring(1);
+                    _THIS.scope = _THIS.scope.toLowerCase();
+                    _THIS.scope = Character.toUpperCase( _THIS.scope.charAt(0) ) + _THIS.scope.substring(1);
+                    if ( _THIS.scope.equals( Environment.PUBLIC_PLUS_NATGW ) )
+                        _THIS.scope = Environment.PUBLIC_WITH_NATGW; // make 'natgw' into ALL upper-case
                 }
         }
 
@@ -213,7 +215,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             this.cmdName = Enums.GenEnum.SG;
             final String[] sgArgs = _apacheCmdProcessor.getOptionValues( SGGEN );
             this.jobSetName = sgArgs[0];
-            this.PublicOrPrivate = sgArgs[1];
+            this.scope = sgArgs[1];
         }
 
         if ( _apacheCmdProcessor.hasOption( EC2PLAINGEN ) ) {
@@ -276,7 +278,7 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             if ( _newItemNumber != null )
                 newobj.itemNumber = _newItemNumber;
             if ( _PublicOrPrivate != null )
-                newobj.PublicOrPrivate = _PublicOrPrivate;
+                newobj.scope = _PublicOrPrivate;
             return newobj;
         } catch (Exception e) {
 			e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping it on the user.
