@@ -73,26 +73,18 @@ useAsInput !AWSAZs
 		yaml --insert     Resources    @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/PublicSubnet.yaml
 		yaml --macro ''
 		### !!!! ATTENTION !!!!! Try to match the BELOW Tag-name -- with EXPORT name of this Public Subnet
-		setProperty Tag_Name=Subnet-${ASUX::PublicOrPrivate}${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
+									### 'Scope' refers to 'Public', 'Private' or 'PublicWithNATGW'
+		setProperty Tag_Name=Subnet-${ASUX::Scope}${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
 		yaml --insert 'Resources,MyPublicSubnetAZ${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
-		yaml --insert 'Resources,My${ASUX::PublicOrPrivate}SubnetAZ${ASUX::foreach.index+1},Properties,Tags,0'  'Key: PublicOrPrivate;Value: ${ASUX::PublicOrPrivate}'     --delimiter ,
+		yaml --insert 'Resources,My${ASUX::Scope}SubnetAZ${ASUX::foreach.index+1},Properties,Tags,0'  'Key: Scope;Value: ${ASUX::Scope}'     --delimiter ,
 		yaml --macro ''
 		saveTo !TopElemResources
 	end
 
 
-useAsInput !AWSAZs
-
-	foreach
-		useAsInput !TopElemResources
-		yaml --insert     Resources    @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/NATGW.yaml
-		yaml --macro ''
-		### !!!! ATTENTION !!!!! Try to match the BELOW Tag-name -- with EXPORT name of this NATGW
-		setProperty Tag_Name=NATGW-${ASUX::foreach.index+1}-${ASUX::MyStackNamePrefix}
-		yaml --insert 'Resources,MyNATGW${ASUX::foreach.index+1},Properties'  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
-		yaml --macro ''
-		saveTo !TopElemResources
-	end
+### Difference between	AWSCFN-fullstack-subnet-Public-Create.ASUX-batch.txt  
+###		and	AWSCFN-fullstack-subnet-Public+natgw-Create.ASUX-batch.txt
+### This file (the former) is __MISSING__ a FOREACH-loop _here_  +.  __MISSING__ "EXPORTS" for NAT-Gateway (NAT-GW) at bottom.
 
 //--------------------------------------------------
 useAsInput !AWSAZs
@@ -132,16 +124,6 @@ useAsInput !AWSAZs
 	foreach
 		useAsInput !TopElemOutputs
 		yaml --insert     Outputs   @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-DefaultPublicSubnet.yaml
-		yaml --macro ''
-		saveTo !TopElemOutputs
-	end
-
-
-useAsInput !AWSAZs
-
-	foreach
-		useAsInput !TopElemOutputs
-		yaml --insert     Outputs   @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Outputs-NATGW.yaml
 		yaml --macro ''
 		saveTo !TopElemOutputs
 	end
