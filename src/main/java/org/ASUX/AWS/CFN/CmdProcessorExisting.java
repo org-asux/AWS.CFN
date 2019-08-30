@@ -252,7 +252,7 @@ public final class CmdProcessorExisting
             return null;
         }
         // assertTrue( _subnetID != null );
-        assertTrue( _PublicOrPrivate != null );
+        assertTrue( "Public".equals(_PublicOrPrivate)  || "Private".equals(_PublicOrPrivate)  );
         if ( _subnetID == null ) {
             if ( this.verbose ) System.out.println( HDR +" Subnet ID entered by user is '"+ _subnetID +"'" );
             return null;
@@ -284,7 +284,7 @@ public final class CmdProcessorExisting
                 if ( _MyOrgName.equals(subnet.get(Environment.MYORGNAME)) &&  _MyDomainName.equals(subnet.get(Environment.MYDOMAINNAME)) ) {
                     final String id = (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.SUBNET_ID );
                     if ( this.verbose ) System.out.println( HDR +"Found a Subnet that matched the OrgName and DomainName provided.  ID is '"+ id +"' "+ subnet );
-                    if ( _PublicOrPrivate.equals( (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.KV_PUBLICorPRIVATE ) ) ) {
+                    if ( _PublicOrPrivate.startsWith( (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.KV_PUBLICorPRIVATE ) ) ) {
                         if ( this.verbose ) System.out.println( HDR +"Found a Subnet! For PublicOrPrivate="+ _PublicOrPrivate +". ID is '"+ id +"'." );
                         System.out.print( "Using 'existing' Subnet '"+ id +"'\t" );
                         return id;
@@ -304,7 +304,7 @@ public final class CmdProcessorExisting
                     if ( this.verbose ) System.out.println( HDR +"I found the text "+ matcher.group() +" starting at index "+  matcher.start() +" and ending at index "+ matcher.end() );
                     final String id = (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.SUBNET_ID );
                     if ( this.verbose ) System.out.println( HDR +"Found a Subnet that has Tags that ASUX.org tools created.  ID is '"+ id +"'   "+ subnet );
-                    if ( _PublicOrPrivate.equals( (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.KV_PUBLICorPRIVATE ) ) ) {
+                    if ( _PublicOrPrivate.startsWith( (String) subnet.get( org.ASUX.AWSSDK.AWSSDK.KV_PUBLICorPRIVATE ) ) ) {
                         if ( this.verbose ) System.out.println( HDR +"Found a Subnet! For PublicOrPrivate="+ _PublicOrPrivate +". ID is '"+ id +"'.");
                         System.out.print( "Using 'existing' Subnet '"+ id +"'\t" );
                         return id;
