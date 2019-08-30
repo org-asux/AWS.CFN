@@ -1,7 +1,7 @@
-  SG${ASUX::PublicOrPrivate}:
+  SG${ASUX::Scope}:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: SG${ASUX::ItemNumber} to allow access to port ${ASUX::PublicOrPrivate} in the environment SG${ASUX::MyEnvironment}
+      GroupDescription: SG${ASUX::ItemNumber} to allow access to port ${ASUX::Scope} in the environment SG${ASUX::MyEnvironment}
       VpcId: !ImportValue 
         Ref: MyVPC
 ##      VpcId: !ImportValue: !Sub "${MyOrgName}-${MyEnvironment}-${AWS::Region}-${AWS::StackName}"
