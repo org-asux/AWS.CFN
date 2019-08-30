@@ -101,9 +101,9 @@ public final class InputOutput implements Serializable
 
         switch ( _cmd ) {
             case VPC:       return _myEnv.getCfnJobTYPEString() + UserInput.getItemNumberSuffix(_cmdLA.itemNumber) +_suffix; // ".yaml";
-            case SUBNET:    return _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + UserInput.getItemNumberSuffix(_cmdLA.itemNumber) +_suffix; // ".yaml";
-            case SG:        return _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.PublicOrPrivate + UserInput.getItemNumberSuffix(_cmdLA.itemNumber) +_suffix; // ".yaml";
-                            // we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
+            case SUBNET:    return _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.scope + UserInput.getItemNumberSuffix(_cmdLA.itemNumber) +_suffix; // ".yaml";
+            case SG:        return _myEnv.getCfnJobTYPEString() +"-"+ _cmdLA.scope + UserInput.getItemNumberSuffix(_cmdLA.itemNumber) +_suffix; // ".yaml";
+                            // we're re-purposing '_cmdLA.scope' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
             case EC2PLAIN:
                             final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
                             return _myEnv.getCfnJobTYPEString() +"-"+ globalProps.getProperty( Environment.MYEC2INSTANCENAME ) +_suffix; // ".yaml";
