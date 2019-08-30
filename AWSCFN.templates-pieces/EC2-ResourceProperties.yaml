@@ -14,8 +14,8 @@
         ### This one line *BELOW* distinguishes the 2 files MyEC2wEFS-cloudformation.yaml & MyEC2PrivatewEFS-cloudformation.yaml
         - DeviceIndex: "0"
           GroupSet:
-            - !ImportValue
-                Ref: MySSHSecurityGroup
+          #   - !ImportValue
+          #       Ref: MySSHSecurityGroup
           SubnetId: !ImportValue
               Ref: My${ASUX::PublicOrPrivate}Subnet1
           AssociatePublicIpAddress: !If [  isPublic, 'true' , 'false' ]   ### "true"
@@ -25,10 +25,14 @@
             #   - "${ASUX::PublicOrPrivate}"
             # - "true"
             # - "false"
-      # AWS CFN ERROR: Network interfaces and an instance-level security-groups CANNOT be specified on the same request (Status Code: 400; Error Code: InvalidParameterCombination)
+
+      ### AWS-CloudFormation ERROR: Network interfaces and an instance-level security-groups CANNOT be specified on the same request (Status Code: 400; Error Code: InvalidParameterCombination)
       # SecurityGroupIds:
       #   - !ImportValue
       #       Ref: MySSHSecurityGroup
+      ### !!!!!!!!!!!! ATTENTION !!!!!!!!!!!!
+      ### So, WHY choose "GroupSet" (under "NetworkInterfaces") - over this?
+      ### Answer: You canNOT specify/ask for a PublicIpAddress _here_;  Can only do that under "NetworkInterfaces". 
 
       InstanceType: !Ref EC2InstanceType
 
