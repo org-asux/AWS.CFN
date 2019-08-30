@@ -9,9 +9,6 @@ Parameters:
   MyPublicSubnet1:
     Description: "What is the EXPORTED OUTPUT NAME of the Appropriate PUBLIC-vs-PRIVATE-SUBNET #1 - from the other VPC CFN-template"
     Type: String
-  MySSHSecurityGroup:
-    Description: "What is the EXPORTED OUTPUT NAME of the SG for SSH? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
-    Type: String
   MyIamInstanceProfiles:
     Description: "What is the **LIST** of IAM groups? (No Default, as CFN does Not allow for expressions as DEFAULT-value)"
     Type: String
@@ -70,8 +67,6 @@ Resources:
       NetworkInterfaces:
       - DeviceIndex: "0"
         GroupSet:
-        - !ImportValue
-          Ref: MySSHSecurityGroup
         SubnetId: !ImportValue
           Ref: MyPublicSubnet1
         AssociatePublicIpAddress: !If [
@@ -131,7 +126,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Aug 14 22:03:37 EDT 2019
+        Value: Fri Aug 30 15:37:06 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
       - Key: FQDN
