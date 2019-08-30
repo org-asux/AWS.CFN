@@ -29,7 +29,7 @@ Conditions:
   - ASUXorg_Tools_Work
   - ASUXorg_Tools_Work
 Resources:
-  MyPublicWithNATGWSubnetAZ1:
+  MyPublicSubnetAZ1:
     Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
     Type: 'AWS::EC2::Subnet'
     Condition: doesExistSubnet1
@@ -40,12 +40,8 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: us-east-2a
       Tags:
-        '0':
-          Key: PublicOrPrivate
-          Value: PublicWithNATGW
-  MyPublicSubnetAZ1:
-    Properties:
-      Tags:
+      - Key: Scope
+        Value: PublicWithNATGW
       - Key: LOCATION
         Value: Ohio
       - Key: AWSRegion
@@ -83,10 +79,10 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Tue Aug 27 23:18:31 EDT 2019
+        Value: Fri Aug 30 08:20:24 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
-  MyPublicWithNATGWSubnetAZ2:
+  MyPublicSubnetAZ2:
     Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
     Type: 'AWS::EC2::Subnet'
     Condition: doesExistSubnet2
@@ -97,12 +93,8 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: us-east-2b
       Tags:
-        '0':
-          Key: PublicOrPrivate
-          Value: PublicWithNATGW
-  MyPublicSubnetAZ2:
-    Properties:
-      Tags:
+      - Key: Scope
+        Value: PublicWithNATGW
       - Key: LOCATION
         Value: Ohio
       - Key: AWSRegion
@@ -140,10 +132,10 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Tue Aug 27 23:18:31 EDT 2019
+        Value: Fri Aug 30 08:20:24 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
-  MyPublicWithNATGWSubnetAZ3:
+  MyPublicSubnetAZ3:
     Description: Attention. If you _INSIST_ on specifying a true / false value for the property AssignIpv6AddressOnCreation (whose default value = false), then Ipv6CidrBlock property __MUST__ be specified. - - - Also, Unlike aws-cli, we can provide Tag with Key=Name.
     Type: 'AWS::EC2::Subnet'
     Condition: doesExistSubnet3
@@ -154,12 +146,8 @@ Resources:
       MapPublicIpOnLaunch: !Ref 'EC2getsPublicIPByDefault'
       AvailabilityZone: us-east-2c
       Tags:
-        '0':
-          Key: PublicOrPrivate
-          Value: PublicWithNATGW
-  MyPublicSubnetAZ3:
-    Properties:
-      Tags:
+      - Key: Scope
+        Value: PublicWithNATGW
       - Key: LOCATION
         Value: Ohio
       - Key: AWSRegion
@@ -197,7 +185,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Tue Aug 27 23:18:31 EDT 2019
+        Value: Fri Aug 30 08:20:24 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway1:
@@ -251,7 +239,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Tue Aug 27 23:18:31 EDT 2019
+        Value: Fri Aug 30 08:20:24 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway2:
@@ -305,7 +293,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Tue Aug 27 23:18:31 EDT 2019
+        Value: Fri Aug 30 08:20:24 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   EIPForNATGateway3:
@@ -359,7 +347,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Tue Aug 27 23:18:31 EDT 2019
+        Value: Fri Aug 30 08:20:24 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
   MyPublicSubnetRouteTableAssociationAZ1:
@@ -383,43 +371,43 @@ Resources:
       SubnetId: !Ref 'MyPublicSubnetAZ3'
       RouteTableId: !ImportValue
         Ref: MyPublicRouteTable
-  MyPublicWithNATGWSubnetNetworkAclAssociation1:
+  MyPublicSubnetNetworkAclAssociation1:
     Type: 'AWS::EC2::SubnetNetworkAclAssociation'
     Condition: doesExistSubnet1
     Properties:
-      SubnetId: !Ref 'MyPublicWithNATGWSubnetAZ1'
+      SubnetId: !Ref 'MyPublicSubnetAZ1'
       NetworkAclId: !ImportValue 'org-ASUX-Playground-Ohio-DefaultNetworkAclID'
-  MyPublicWithNATGWSubnetNetworkAclAssociation2:
+  MyPublicSubnetNetworkAclAssociation2:
     Type: 'AWS::EC2::SubnetNetworkAclAssociation'
     Condition: doesExistSubnet2
     Properties:
-      SubnetId: !Ref 'MyPublicWithNATGWSubnetAZ2'
+      SubnetId: !Ref 'MyPublicSubnetAZ2'
       NetworkAclId: !ImportValue 'org-ASUX-Playground-Ohio-DefaultNetworkAclID'
-  MyPublicWithNATGWSubnetNetworkAclAssociation3:
+  MyPublicSubnetNetworkAclAssociation3:
     Type: 'AWS::EC2::SubnetNetworkAclAssociation'
     Condition: doesExistSubnet3
     Properties:
-      SubnetId: !Ref 'MyPublicWithNATGWSubnetAZ3'
+      SubnetId: !Ref 'MyPublicSubnetAZ3'
       NetworkAclId: !ImportValue 'org-ASUX-Playground-Ohio-DefaultNetworkAclID'
 Outputs:
-  DefaultPublicWithNATGWSubnet1:
+  DefaultPublicSubnet1:
     Description: The subnet no.1's ID to use for web servers if public, or for databases if private.
-    Value: !Ref 'MyPublicWithNATGWSubnetAZ1'
+    Value: !Ref 'MyPublicSubnetAZ1'
     Condition: doesExistSubnet1
     Export:
-      Name: 'org-ASUX-Playground-Ohio-2layer-0-Subnet-PublicWithNATGW1-ID'
-  DefaultPublicWithNATGWSubnet2:
+      Name: 'org-ASUX-Playground-Ohio-PublicWithNATGW-2layer-0-Subnet1-ID'
+  DefaultPublicSubnet2:
     Description: The subnet no.2's ID to use for web servers if public, or for databases if private.
-    Value: !Ref 'MyPublicWithNATGWSubnetAZ2'
+    Value: !Ref 'MyPublicSubnetAZ2'
     Condition: doesExistSubnet2
     Export:
-      Name: 'org-ASUX-Playground-Ohio-2layer-0-Subnet-PublicWithNATGW2-ID'
-  DefaultPublicWithNATGWSubnet3:
+      Name: 'org-ASUX-Playground-Ohio-PublicWithNATGW-2layer-0-Subnet2-ID'
+  DefaultPublicSubnet3:
     Description: The subnet no.3's ID to use for web servers if public, or for databases if private.
-    Value: !Ref 'MyPublicWithNATGWSubnetAZ3'
+    Value: !Ref 'MyPublicSubnetAZ3'
     Condition: doesExistSubnet3
     Export:
-      Name: 'org-ASUX-Playground-Ohio-2layer-0-Subnet-PublicWithNATGW3-ID'
+      Name: 'org-ASUX-Playground-Ohio-PublicWithNATGW-2layer-0-Subnet3-ID'
   NATGW1:
     Description: The NAT-Gateway specific to the PUBLIC-Subnet 'org-ASUX-Playground-Ohio-2layer-0-Subnet-Public1-ID' to use for PRIVATE-Subnets in this VPC.  You now need to add Route-Table entries for each PRIVATE-subnet's Route-Table
     Value: !Ref 'MyNATGW1'
