@@ -110,7 +110,7 @@ public final class CmdProcessorEC2
         final String MyDomainName       = globalProps.getProperty( Environment.MYDOMAINNAME );
         if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName );
         final String Rt53HostedZoneId   = awssdk.getRt53HostedZoneId(  _myEnv.enhancedUserInput.getAWSRegion(),   MyDomainName,
-                                "Public".equals(_cmdLA.PublicOrPrivate) || "Public-natgw".equals(_cmdLA.PublicOrPrivate) /* _needPublicHostedZone */ );
+                                "Public".equals(_cmdLA.scope) || Environment.PUBLIC_WITH_NATGW.equals(_cmdLA.scope) /* _needPublicHostedZone */ );
         if (this.verbose) System.out.println( HDR + "MyDomainName " + MyDomainName + " Rt53HostedZoneId " + Rt53HostedZoneId  );
         globalProps.setProperty( Environment.MYRT53HOSTEDZONEID, Rt53HostedZoneId ); // will define ${ASUX::MyRt53HostedZoneId}
 
@@ -127,10 +127,12 @@ public final class CmdProcessorEC2
      *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
      *  @param _cmdLA a NotNull instance (created within {@link CmdInvoker#processCommand})
      *  @param _myEnv a NotNull object (created by {@link BootCheckAndConfig#configure})
+     *  @param _dependsOnSubnetStack Nullable reference to another Stack, that this EC2 instance's CFN depends on.
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
-    public void genCFNShellScript( final CmdLineArgs _cmdLA, final Environment _myEnv ) throws IOException, Exception
+    public void genCFNShellScript( final CmdLineArgs _cmdLA, final Environment _myEnv, final Stack _dependsOnSubnetStack )
+                            throws IOException, Exception
     {
         final String HDR = CLASSNAME + ": genVPCCFNShellScript(): ";
         final String AWSRegion = _myEnv.enhancedUserInput.getAWSRegion();
@@ -167,20 +169,20 @@ public final class CmdProcessorEC2
                 throw e;
         } // try-catch
 
-        final String DefaultSubnet1wMacro = MyStackNamePrefix + "-Subnet-${ASUX::PublicOrPrivate}1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", _myEnv.getAllPropsRef()  );
+        // Make sure 'DefaultSubnet1wMacro' matches with 'Outputs-DefaultPublicSubnet.yaml'
+        final String DefaultSubnet1wMacro = ( _dependsOnSubnetStack != null ) ? (_dependsOnSubnetStack.getStackName() +"1-ID") // === 1st subnet
+                            : MyStackNamePrefix + "-Subnet-${ASUX::PublicOrPrivate}1-ID";// Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-Subnet-1-ID", _myEnv.getAllPropsRef()  );
         final String DefaultSubnet1 = Macros.evalThoroughly( this.verbose, DefaultSubnet1wMacro, _myEnv.getAllPropsRef() );
-        final String MySSHSecurityGroup = MyStackNamePrefix + "-SG-SSH"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-SG-SSH", this.getAllPropsRef()  );
+        // final String MySSHSecurityGroup = MyStackNamePrefix + "-SG-SSH"; // Macros.evalThoroughly( this.verbose, "${ASUX::MyStackNamePrefix}-SG-SSH", this.getAllPropsRef()  );
         final String MySSHKeyName = Macros.evalThoroughly( this.verbose, "${ASUX::AWSLocation}-${ASUX::MyOrgName}-${ASUX::MyEnvironment}-LinuxSSH.pem", _myEnv.getAllPropsRef() );
         // final String MyIamInstanceProfiles = Macros.evalThoroughly( this.verbose, "${ASUX::?????????????????}-"+HDR, this.getAllPropsRef() );
         // 'MyIamInstanceProfiles' must be set within one of the JOB files (like Job-Master.properties or Job-ec2plain.properties)
-        // globalProps.setProperty( "DefaultSubnet1", DefaultSubnet1 );
-        // globalProps.setProperty( "MySSHSecurityGroup", MySSHSecurityGroup );
-        // globalProps.setProperty( "MySSHKeyName", MySSHKeyName );
-        if (this.verbose) System.out.println( HDR + "DefaultSubnet1=" + DefaultSubnet1 + " MySSHSecurityGroup=" + MySSHSecurityGroup + " MySSHKeyName=" + MySSHKeyName );
+        // if (this.verbose) System.out.println( HDR + "DefaultSubnet1=" + DefaultSubnet1 + " MySSHSecurityGroup=" + MySSHSecurityGroup + " MySSHKeyName=" + MySSHKeyName );
+        if (this.verbose) System.out.println( HDR + "DefaultSubnet1=" + DefaultSubnet1 + " MySSHKeyName=" + MySSHKeyName );
 
         _myEnv.getStack().setStackName( Stack.genEC2StackName(_cmdLA) );
         _myEnv.getStack().addParameter( "My${ASUX::PublicOrPrivate}Subnet1", DefaultSubnet1 );
-        _myEnv.getStack().addParameter( "MySSHSecurityGroup", MySSHSecurityGroup );
+        // _myEnv.getStack().addParameter( "MySSHSecurityGroup", MySSHSecurityGroup );
         _myEnv.getStack().addParameter( "MyIamInstanceProfiles", "${ASUX::"+ Environment.EC2IAMROLES +"}" );
         _myEnv.getStack().addParameter( "AWSAMIID", "${ASUX::AWSAMIID}" );
         _myEnv.getStack().addParameter( "EC2InstanceType", "${ASUX::EC2InstanceType}" );
