@@ -44,12 +44,13 @@ saveTo !YAMLROOT
 
 //--------------------------------------------------
 makeNewRoot Resources
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/SG_SSH.yaml
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/SG.yaml
 yaml --macro ''
 
-setProperty Tag_Name=SG-${ASUX::PublicOrPrivate}${ASUX::ItemNumber}-${ASUX::MyVPCStackPrefix}
-							### we're re-purposing '_cmdLA.PublicOrPrivate' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
-yaml --insert Resources,SGSSH${ASUX::MyEnvironment},Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
+						### 'Scope' refers to Port#s for SecurityGroups
+setProperty Tag_Name=SG${ASUX::ItemNumber}-${ASUX::Scope}-${ASUX::MyVPCStackPrefix}
+					### we're re-purposing '_cmdLA.Scope' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
+yaml --insert Resources,SG${ASUX::Scope},Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 yaml --macro ''
 saveTo !TopElemResources
 
