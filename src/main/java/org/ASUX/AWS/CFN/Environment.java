@@ -84,11 +84,13 @@ public final class Environment implements Serializable {
 
     public static final String VPCCIDRBLOCK         = "VPCCIDRBLOCK";
 
+    public static final String PUBLIC_WITH_NATGW = "PublicWithNATGW";
+    public static final String PUBLIC_PLUS_NATGW = "Public+natgw";
     public static final String CFNINIT_PACKAGES = "AWS-CFNInit-Standup";
     public static final String CFNINIT_SERVICES = "AWS-CFNInit-Services";
     public static final String EC2INSTANCETYPE = "EC2InstanceType";
     public static final String EC2IAMROLES = "MyIAM-roles";
-    public static final String EC2_SGLIST = "MyEC2-SGLIST";
+
     // ------ private ------
     public static final String JOB_DEFAULTS = "/config/DEFAULTS/job-DEFAULTS.properties"; // under AWSCFNHOME
     public static final String FULLSTACKJOB_DEFAULTS = "/config/DEFAULTS/FullStackJob-DEFAULTS.properties"; // under AWSCFNHOME
@@ -183,6 +185,10 @@ public final class Environment implements Serializable {
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
     //=================================================================================
 
+    /**
+     * Returns the "enhanced" version of the commands (vpc-gen, subnet-gen, sg-gen, ec2-gen), but conditionally prefixing it with "fullstack-" .. in case code is recursively called by {CmdProcessorFullStack}.
+     * @return a NotNull String (A Null represents serious internal logic-errors)
+     */
     public String getCfnJobTYPEString() {
         final String retstr = this.enhancedUserInput.getCmdAsString();
         if (this.bInRecursionByFullStack) {
@@ -193,6 +199,33 @@ public final class Environment implements Serializable {
         } else {
             return retstr;
         }
+    }
+
+    //=================================================================================
+
+    /**
+     *  <p>This method allows the code to uniformly determine the "folder" into which output is placed.</p>
+     *  <p>FYI: The "folder" is created by {@link CmdProcessorFullStack#genAllCFNs(CmdLineArgs, Environment)}, if it does Not exist.</p>
+     *  @param _jobSetName a NotNull string (expected to come ONLY from {@link CmdLineArgs#jobSetName})
+     *  @return a NotNull Absolute-path string
+     *  @see UserInputEnhanced#getOutputFolderPath()
+     */
+    public static String getJobFolderPath( final String _jobSetName ) {
+        return Environment.get_cwd() +"/"+ _jobSetName ;
+    }
+
+    //=================================================================================
+
+    /**
+     *  <p>This method allows the code to uniformly determine the "tmp sub-folder" that is specific to the job-set being processed via cmdline.</p>
+     *  <p>FYI: The "tmp-folder" is created by {@link CmdProcessorFullStack#genAllCFNs(CmdLineArgs, Environment)}, if it does Not exist.</p>
+     *  @param _jobSetName a NotNull string (expected to come ONLY from {@link CmdLineArgs#jobSetName})
+     *  @return a NotNull Absolute-path string, that represents a subfolder 'tmp' to the folder defined by {@link #getJobFolderPath(String)}
+     *  @see UserInputEnhanced#getOutputFolderPath()
+     *  @see UserInputEnhanced#getTmpFolderPath()
+     */
+    public static String getJobTmpFolderPath( final String _jobSetName ) {
+        return Environment.getJobFolderPath( _jobSetName ) +"/tmp";
     }
 
     //=================================================================================
