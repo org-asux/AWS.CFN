@@ -32,7 +32,7 @@ AWS:
     #   SG-type: 1521
 
     subnet:
-      public: yes   ### Attention: The public subnet must _ALWAYS_ _PRECEDE_ the _PRIVATE_ subnet(s) creation.
+      public: yes+NATGW   ### Attention: The public subnet must _ALWAYS_ _PRECEDE_ the _PRIVATE_ subnet(s) creation.
                     ### The only reason: The Public-subnet will have NAT-GW in it, and.. CFN-EXPORT-names for the NAT-Gateway is a PRE-REQUISITE for the PRIVATE-subnets
 
       SERVERS:
