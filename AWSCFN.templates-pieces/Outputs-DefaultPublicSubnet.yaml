@@ -4,6 +4,6 @@
     Condition: doesExistSubnet${ASUX::foreach.index+1}
     Export:             ## The name of the resource output to be exported for a cross-stack reference.
       Name: '${ASUX::MyVPCStackPrefix}-${ASUX::Scope}-${ASUX::JobSetName}${ASUX::ItemNumber}-Subnet${ASUX::foreach.index+1}-ID'  ## For each AWS account, Export names must be unique within a region.
-    ### Make sure 'DefaultSubnet1' & 'DefaultSubnet1wMacro' (for 1st AZ) matches with 'DefaultSubnet1wMacro' in CmdProcessorEC2.java
+    ### Make sure 'DefaultSubnet1' & 'DefaultSubnet1wMacro' (for 1st AZ) in CmdProcessorEC2.java .. matches with above-line
 
 #EOF
