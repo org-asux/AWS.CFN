@@ -62,7 +62,7 @@ saveTo !YAMLROOT
 
 //--------------------------------------------------
 makeNewRoot Resources
-yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/SG_SSH.yaml
+yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/SG.yaml
 yaml --macro @/dev/null
 yaml --macro @/dev/null   ### Don't know why.  If I do NOT run this twice, I get a duplicate YAML element for /Resources/SGSSHPlayground1/Properties
 
