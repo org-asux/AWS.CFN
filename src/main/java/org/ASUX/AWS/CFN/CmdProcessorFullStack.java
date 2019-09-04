@@ -125,6 +125,7 @@ public final class CmdProcessorFullStack
 
         final Properties globalProps = _myEnv.getAllPropsRef().get( org.ASUX.common.ScriptFileScanner.GLOBALVARIABLES );
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline() );
+        final Inet inet = new Inet( this.verbose );
         final NodeTools nodetools = (NodeTools) this.cmdinvoker.getYAMLImplementation();
         final YAMLTools yamltools = new YAMLTools( this.verbose, /* showStats */ false, nodetools );
         final CmdProcessorExisting existingInfrastructure = new CmdProcessorExisting( this.cmdinvoker );
@@ -148,13 +149,13 @@ public final class CmdProcessorFullStack
         //-------------------------------------
         // _cmdLA.verbose       <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
         // _cmdLA.quoteType     <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
-        // _cmdLA.jobSetName    <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
+        // _cmdLA.getJobSetName()    <-- SAME VALUE FOR ALL CMDs (as provided by user on commandline)
         // _cmdLA.scope <-- SAME VALUE FOR ALL CMDs (as other commands will IGNORE this)
 
         //-------------------------------------
         // read the single YAML-configuration-file.. that's describing the entire-stack / fullstack
         Node output = null;
-        final String fullStackJob_Filename = _cmdLA.jobSetName + ".yaml";
+        final String fullStackJob_Filename = _cmdLA.getJobSetName() + ".yaml";
         if ( this.verbose ) System.out.println( HDR +" about to read file '" + fullStackJob_Filename + "'" );
         // final Node emptyInput = NodeTools.getEmptyYAML( this.cmdinvoker.dumperopt );
 
@@ -251,14 +252,14 @@ public final class CmdProcessorFullStack
         //========================================================================
         final BootCheckAndConfig boot = new BootCheckAndConfig( this.verbose, Environment.deepClone( _myEnv ) );
         boot.myEnv.enhancedUserInput = new UserInputEnhanced( new UserInput( this.verbose, AWSRegion, AWSLocation ) );
-        boot.myEnv.enhancedUserInput.setCmd( _cmdLA.cmdName, UserInputEnhanced.getCFNJobTypeAsString( _cmdLA.cmdName ) );
+        boot.myEnv.enhancedUserInput.setCmd( _cmdLA.getCmdName(), UserInputEnhanced.getCFNJobTypeAsString( _cmdLA.getCmdName() ) );
         // So, any existing value of _myEnv.enhancedUserInput is invalid.
         // redo - cuz we set Macro-sensitive values for 'MyOrgName' and 'MyEnvironment' and 'MyDomainName' above..
         boot.configure( _cmdLA );   // this will set appropriate instance-variables in myEnvVPC, myEnvSubnet, .. myEnvEC2
         assertTrue( boot.myEnv.getStackSet() != null );
             // it's ok if boot.myEnv.getStack() ==== null
 
-        final Path path = FileSystems.getDefault().getPath( _myEnv.get_cwd(), _cmdLA.jobSetName );
+        final Path path = FileSystems.getDefault().getPath( _myEnv.get_cwd(), _cmdLA.getJobSetName() );
         final File newOutputFldr = path.toFile();
         newOutputFldr.mkdir(); // create a folder in '.' called '{JobSetName}'
         boot.myEnv.enhancedUserInput.setOutputFolderPath( newOutputFldr.getAbsolutePath() );
@@ -347,6 +348,7 @@ public final class CmdProcessorFullStack
 
             //------------
             if ( existingSecurityGroup == null ) { // So, new SG needs to be created
+
                 // final Environment myEnvSG = Environment.deepClone( boot.myEnv );
                 // myEnvSG.bInRecursionByFullStack = true;
                 // myEnvSG.enhancedUserInput.setCmd( Enums.GenEnum.SG, UserInputEnhanced.getCFNJobTypeAsString( Enums.GenEnum.SG ) );
@@ -364,6 +366,17 @@ public final class CmdProcessorFullStack
                 final Stack stackSG = new Stack( this.verbose, AWSRegion, AWSLocation, Enums.StackComponentType.SG );
                 this.reconfigureBoot( Enums.GenEnum.SG, claSG, stackSG, boot.myEnv, boot);  // FYI: boot.myEnv gets replaced with a clone
 
+                //-----------------
+                final Properties SGattributes = new Properties();
+                final String SGCIDR = yamltools.readStringFromYAML( SG, "SG-CIDR" );
+                SGattributes.setProperty( "SG-Inbound-Port", ""+inet.getPortFromName( SGPortType_asEnteredByUser ) ); // convert 'ssh' into '22', 'https' into '443' .. or use numeric-values AS-IS
+                SGattributes.setProperty( "SG-Inbound-CIDRRange", SGCIDR );
+                // InputsOutputs needs 'memoryAndContext' reference as 3rd parameter.  I'm passing null.  Simply because the 1st parameter is _NOT_ like: !InMemoryReference.
+                final String filenameSGAttributes = Environment.getJobTmpFolderPath( claSG.getJobSetName() ) +"/SG-attributes-"+ claSG.getScope() + claSG.getItemNumber() +".properties";
+                org.ASUX.common.IOUtils.write2File( filenameSGAttributes, SGattributes );
+                if ( this.verbose ) System.out.println( HDR +"Saved Properties to the file: "+ filenameSGAttributes +"'\n"+ SGattributes );
+
+                //-----------------
                 // 1st generate the YAML.
                 this.cmdProcessor.genYAML( claSG, boot.myEnv.getCfnJobTYPEString(), boot.myEnv );           // Note: the 2nd argument automtically has "fullstack-" prefix in it.
                 // 2nd generate the .SHELL script to invoke AWS CLI for Cloudformatoin, with the above generated YAML
@@ -414,7 +427,6 @@ public final class CmdProcessorFullStack
                 final String CIDRBLOCK_Byte3_DeltaString = globalProps.getProperty( Inet.CIDRBLOCK_BYTE3_DELTA ); // example: 16
                 final int CIDRBLOCK_Byte3_Delta = Integer.parseInt( CIDRBLOCK_Byte3_DeltaString );
                 int subix = 1;
-                final Inet inet = new Inet( this.verbose );
                 for ( String subnetMask: inet.genSubnetRangeWithMasks( VPCCIDRBlock, numOfAZs, CIDRBLOCK_Byte3_Delta) ) {
                     globalProps.setProperty( "CidrBlockAZ" + subix, subnetMask );    // globalProps.setProperty( "CidrBlockAZ1", "172.31.0.0/20" )
                     subix ++;
@@ -447,7 +459,7 @@ public final class CmdProcessorFullStack
 
             //--------------- Server(s) -------------------
             if ( existingSubnetID == null ) {
-                genServerCFN( fullStackJob_Filename, AWSRegion, AWSLocation, subnet, scope, subnetStackReference /* no Subnet-stack-depedency */, boot, yamltools, _cmdLA, boot.myEnv );
+                genEC2InstanceCFN( fullStackJob_Filename, AWSRegion, AWSLocation, subnet, scope, subnetStackReference /* no Subnet-stack-depedency */, boot, yamltools, _cmdLA, boot.myEnv );
                 boot.myEnv.getStackSet().popDependencyHeirarchy(); // 'pop' the last StackSet Elem. repreenting the SUBNET created @ top of this FOR-LOOP.
                 boot.myEnv.setStack( null );
             } else {
@@ -456,7 +468,7 @@ public final class CmdProcessorFullStack
                 final Environment myEnv_ServersInExistingSubnet = Environment.deepClone( boot.myEnv );
                 myEnv_ServersInExistingSubnet.enhancedUserInput.setExisting( existingVPCID, existingSubnetID );
                 // above setExisting() is important.  This set flags, that change the Batch-Script to 'AWSCFN-fullstack-ec2plainExistingSubnet-Create.ASUX-batch.txt'
-                genServerCFN( fullStackJob_Filename, AWSRegion, AWSLocation, subnet, "Public" /* assume publicly accessible server */, subnetStackReference /* no Subnet-stack-depedency */, boot, yamltools, _cmdLA, myEnv_ServersInExistingSubnet );
+                genEC2InstanceCFN( fullStackJob_Filename, AWSRegion, AWSLocation, subnet, "Public" /* assume publicly accessible server */, subnetStackReference /* no Subnet-stack-depedency */, boot, yamltools, _cmdLA, myEnv_ServersInExistingSubnet );
             }
 
             ix ++;
@@ -508,13 +520,12 @@ public final class CmdProcessorFullStack
     //=================================================================================
 
     /**
-     *  <p>generate CFN-YAML snippets for each and every subnet within the subnet specified by the user.</p>
-     *  <p>The shell script to use that CFN-Template YAML:-  "aws cloudformation create-stack --stack-name ${MyVPCStackPrefix}-VPC  --region ${AWSRegion} --profile \${AWSprofile} --parameters ParameterKey=MyVPCStackPrefix,ParameterValue=${MyVPCStackPrefix} --template-body file://${CFNfile} " </p>
+     *  <p>generate CFN-YAML snippets for each and every EC2-instance within the subnet specified by the user.</p>
      *  @param _fullStackJob_Filename a NotNull String - file name of the full-stack-job yaml file.
      *  @param _AWSRegion pass in valid AWS region names like 'us-east-2', 'us-west-1', 'ap-northeast-1' ..
      *  @param _AWSLocation pass in valid AWS-Locations like 'virginia', 'Ohio', 'Tokyo', 'Seoul', 'Sydney' .. (case-insensitive is NOT-valid)
      *  @param _subnet a NotNull SnakeYaml Node representing the entire YAML-tree rooted at _ONE_ single subnet-LHS/Key.
-     *  @param _PublicOrPrivate whether a public or private subnet EC2 instance (String value is case-sensitive.  Exact allowed values are: 'Public' 'Private')
+     *  @param _PublicOrPrivate whether a public or private subnet/EC2 instance (String value is case-sensitive.  Exact allowed values are: 'Public' 'Private')
      *  @param _dependsOnSubnetStack Nullable reference to another Stack, that this EC2 instance's CFN depends on.
      *  @param _boot a NotNull instance created within {@link #genAllCFNs(CmdLineArgs, Environment)}
      *  @param _yamltools a NotNull instance (created within {@link #genAllCFNs(CmdLineArgs, Environment)})
@@ -523,7 +534,7 @@ public final class CmdProcessorFullStack
      *  @throws IOException if any errors creating output files for CFN-template YAML or for the script to run that CFN-YAML
      *  @throws Exception if any errors with inputs or while running batch-command to generate CFN templates
      */
-    public void genServerCFN( final String _fullStackJob_Filename, final String _AWSRegion, final String _AWSLocation,
+    public void genEC2InstanceCFN( final String _fullStackJob_Filename, final String _AWSRegion, final String _AWSLocation,
                                     final Node _subnet, final String _PublicOrPrivate, final Stack _dependsOnSubnetStack,
                                     final BootCheckAndConfig _boot, final YAMLTools _yamltools,
                                     final CmdLineArgs _cmdLA, final Environment _myEnv ) throws IOException, Exception
@@ -712,9 +723,9 @@ public final class CmdProcessorFullStack
         }
         final SequenceNode seqN = NodeTools.ArrayList2Node( this.verbose, sgStkNames, nodetools.getDumperOptions() );
         final SequenceNode seqN222 = NodeTools.ArrayList2Node( this.verbose, sgExistingNames, nodetools.getDumperOptions() );
+
         final String filenameFullstackSGs = "@"+ Environment.getJobTmpFolderPath( _cmdLA.getJobSetName() ) +"/MyEC2-FullStackSGLIST-"+ _ec2instanceName +".yaml";
         final String filenameExistingSGs  = "@"+ Environment.getJobTmpFolderPath( _cmdLA.getJobSetName() ) +"/MyEC2-ExistingSGLIST-"+ _ec2instanceName +".yaml";
-
         // InputsOutputs needs 'memoryAndContext' reference as 3rd parameter.  I'm passing null.  Simply because the 1st parameter is _NOT_ like: !InMemoryReference.
         InputsOutputs.saveDataIntoReference( filenameFullstackSGs, seqN,    null, nodetools, this.verbose );     // <<----------- <<-------------
         InputsOutputs.saveDataIntoReference( filenameExistingSGs,  seqN222, null, nodetools, this.verbose );     // <<----------- <<-------------
@@ -829,15 +840,15 @@ public final class CmdProcessorFullStack
      */
     public void createStackSetCFNTemplate( final CmdLineArgs _cmdLA, final Environment _myEnv ) throws Exception
     {   final String HDR = CLASSNAME + ": createStackSetCFNTemplate(): ";
-        if ( _cmdLA.s3bucketname == null || "".equals( _cmdLA.s3bucketname )  ) {
+        if ( _cmdLA.getS3bucketname() == null || "".equals( _cmdLA.getS3bucketname() )  ) {
             System.out.println( "Not generating StackSET." );
             return;
         }
 
         final org.ASUX.AWSSDK.AWSSDK awssdk = org.ASUX.AWSSDK.AWSSDK.AWSCmdline( this.verbose, _cmdLA.isOffline()  );
 
-        final Tuple<String,String> tuple = awssdk.parseS3Bucketname( _cmdLA.s3bucketname ); // splits "bucketname@eu-west-1" into 'bucketname' & 'eu-west-1'
-        final String properBucketName = tuple.key; // if _cmdLA.s3bucketname was null, this will be null too.
+        final Tuple<String,String> tuple = awssdk.parseS3Bucketname( _cmdLA.getS3bucketname() ); // splits "bucketname@eu-west-1" into 'bucketname' & 'eu-west-1'
+        final String properBucketName = tuple.key; // if _cmdLA.getS3bucketname() was null, this will be null too.
         final String correctBucketRegionID = ( tuple.val == null || "".equals(tuple.val) )   ?   _myEnv.enhancedUserInput.getAWSRegion() : tuple.val;
         if (  !   awssdk.matchesAWSRegionPattern( correctBucketRegionID ) ) {
             System.err.println( "\n\nERROR!!!!!! Invalid AWS Region: "+ tuple.val );
@@ -847,12 +858,12 @@ public final class CmdProcessorFullStack
             final boolean haveAccess = awssdk.isValidS3Bucket( correctBucketRegionID, properBucketName )
                                     && awssdk.haveS3BucketAccess( correctBucketRegionID, properBucketName, AWSSDK.S3Permissions.READWRITE ); 
             if (  ! haveAccess  ) {
-                System.err.println( "\n\nERROR!!!!!! You do _NOT_ have access to the Bucket that you provided on command line: "+ _cmdLA.s3bucketname );
+                System.err.println( "\n\nERROR!!!!!! You do _NOT_ have access to the Bucket that you provided on command line: "+ _cmdLA.getS3bucketname() );
                 // awssdk.listBuckets( correctBucketRegionID ); // show the buckets that the user has in the region?
                 return;
             }
         } else {
-            System.err.println( "\n\nERROR!!!!!! Invalid Bucketname provided on command line: "+ _cmdLA.s3bucketname );
+            System.err.println( "\n\nERROR!!!!!! Invalid Bucketname provided on command line: "+ _cmdLA.getS3bucketname() );
             return;
         }
         final String s3BucketHTTPSURL = "https://"+ properBucketName +".s3."+ correctBucketRegionID +".amazonaws.com";
@@ -861,7 +872,7 @@ public final class CmdProcessorFullStack
         final StringBuffer bufferShellScript = new StringBuffer();
         bufferYAML.append( "AWSTemplateFormatVersion: '2010-09-09'\n" );
         bufferYAML.append( "Description: This CloudFormation StackSet deploys multiple AWS-specific CloudFormation-templates - as created using ASUX.org tools for Jobset '" );
-        bufferYAML.append( _cmdLA.jobSetName ).append( "' on " ).append( new Date() ).append( " within Working-folder '" ).append( Environment.get_cwd() ).append("'\n");
+        bufferYAML.append( _cmdLA.getJobSetName() ).append( "' on " ).append( new Date() ).append( " within Working-folder '" ).append( Environment.get_cwd() ).append("'\n");
         // Parameters:
         //		AWSprofile:
         //	 		Type: String
@@ -881,7 +892,7 @@ public final class CmdProcessorFullStack
             // !!!!!!!!!!! DO NOT UNCOMMENT THESE LINES !!!!!!!!!!!
             // Unless you make arrangements to enhance awssdk.S3put() to take on '--acl' options via API.
             //     if ( this.verbose ) System.out.println( HDR + "About to upload "+ stackCmd.getCFNTemplateFileName() +" as S3-object at s3://"+ stackCmd.getStackName() +"/..." );
-            //     awssdk.S3put( correctBucketRegionID, _cmdLA.s3bucketname,  stackCmd.getStackName() /* _S3ObjectName */,   stackCmd.getCFNTemplateFileName() /* _filepathString */ );
+            //     awssdk.S3put( correctBucketRegionID, _cmdLA.getS3bucketname(),  stackCmd.getStackName() /* _S3ObjectName */,   stackCmd.getCFNTemplateFileName() /* _filepathString */ );
             //     if ( this.verbose ) System.out.println( HDR + "Completed upload to "+ s3ObjectURL );
             // }
             final ArrayList<String> dependencyList = new ArrayList<>();
