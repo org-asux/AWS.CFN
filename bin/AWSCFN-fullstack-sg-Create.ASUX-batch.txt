@@ -30,6 +30,11 @@ include @${ASUX::AWSCFNHOME}/bin/AWSCFN-CommonHeader-FullStack.ASUX-batch.txt
 
 ### Any ___OVERRIDES___ already came in via JobSetName.yaml
 
+//---------
+### Load the Port# and Inbound-CIDR-IPRange (for replacing MACROs within 'SG.yaml' below)
+### !!!!!!!!! ATTENTION !!!!!!! This file is created within JAVA CODE _ONLY_ - in class: CmdProcessorFullStack.java - in method ___()
+properties SGattributes=${ASUX::CURRENTWORKINGDIRECTORY}/${ASUX::JobSetName}/tmp/SG-attributes-${ASUX::Scope}${ASUX::ItemNumber}.properties
+
 //=============================================================
 //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 //=============================================================
@@ -44,6 +49,8 @@ saveTo !YAMLROOT
 
 //--------------------------------------------------
 makeNewRoot Resources
+
+### See Properties-file above.. for the the Port# and Inbound-CIDR-IPRange (for replacing MACROs within 'SG.yaml' below)
 yaml --insert Resources @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/SG.yaml
 yaml --macro ''
 
@@ -52,6 +59,7 @@ setProperty Tag_Name=SG${ASUX::ItemNumber}-${ASUX::Scope}-${ASUX::MyVPCStackPref
 					### we're re-purposing '_cmdLA.Scope' for passing/storing the SG-PORT# (ssh/https/..) as provided by user on commandline.
 yaml --insert Resources,SG${ASUX::Scope},Properties  @${ASUX::AWSCFNHOME}/AWSCFN.templates-pieces/Tags.yaml     --delimiter ,
 yaml --macro ''
+
 saveTo !TopElemResources
 
 //--------------------------------------------------
