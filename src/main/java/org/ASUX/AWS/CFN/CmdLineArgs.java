@@ -77,9 +77,10 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
     protected Enums.GenEnum cmdName = Enums.GenEnum.UNDEFINED;
 
     protected String jobSetName = "undefined-JobSetName";
-    protected String s3bucketname = "undefined-S3-BucketName";
     protected String itemNumber = "undefined-ItemNumber";
     protected String scope = "NeitherPublicNorPrivate-UNINITIALIZEDJavaInstanceVariable";
+    
+    private String s3bucketname = "undefined-S3-BucketName";
 
     //=================================================================================
     //@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -88,6 +89,9 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
     public Enums.GenEnum getCmdName()   { return this.cmdName; }
     public String getJobSetName()       { return this.jobSetName; }
     public String getItemNumber()       { return this.itemNumber; }
+    public String getScope()            { return this.scope; }
+
+    public String getS3bucketname()            { return this.s3bucketname; }
 
     //------------------------------------
     /** 
@@ -266,10 +270,10 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
      *  @param _orig what you want to deep-clone
      *  @param _newCmdName after cloning change the {@link #cmdName} to this-value
      *  @param _newItemNumber after cloning change the {@link #itemNumber} to this-value
-     *  @param _PublicOrPrivate make sure to pass in either "public" or "private" (case sensitive) _ONLY_
+     *  @param _scope make sure to pass in either "public" or "private" (case sensitive) _ONLY_
      *  @return a deep-cloned copy, created by serializing into a ByteArrayOutputStream and reading it back (leveraging ObjectOutputStream)
      */
-    public static CmdLineArgs deepCloneWithChanges( final CmdLineArgs _orig, final Enums.GenEnum _newCmdName, final String _newItemNumber, final String _PublicOrPrivate ) {
+    public static CmdLineArgs deepCloneWithChanges( final CmdLineArgs _orig, final Enums.GenEnum _newCmdName, final String _newItemNumber, final String _scope ) {
         try {
             final CmdLineArgs newobj = org.ASUX.common.Utils.deepClone( _orig );
             newobj.deepCloneFix( _orig );
@@ -277,8 +281,8 @@ public class CmdLineArgs extends org.ASUX.yaml.CmdLineArgsCommon {
             newobj.cmdName = _newCmdName;
             if ( _newItemNumber != null )
                 newobj.itemNumber = _newItemNumber;
-            if ( _PublicOrPrivate != null )
-                newobj.scope = _PublicOrPrivate;
+            if ( _scope != null )
+                newobj.scope = _scope;
             return newobj;
         } catch (Exception e) {
 			e.printStackTrace(System.err); // Static Method. So.. can't avoid dumping it on the user.
