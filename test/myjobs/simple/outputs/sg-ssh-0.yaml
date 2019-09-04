@@ -10,10 +10,10 @@ Parameters:
     Description: "Make sure this VPC-ID-Ref matches EXACTLY with the EXPORT-OUTPUT of another Stack"
     Type: String
 Resources:
-  SGSSHPlayground:
+  SGssh:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Allow SSH access to a Linux EC2 instance hosting org.ASUX components
+      GroupDescription: SG0 to allow access to port ssh in the environment SGPlayground
       VpcId: !ImportValue
         Ref: MyVPC
       SecurityGroupIngress:
@@ -24,6 +24,8 @@ Resources:
       SecurityGroupEgress:
       - IpProtocol: -1
         CidrIp: 0.0.0.0/0
+  SGSSHPlayground:
+    Properties:
       Tags:
       - Key: LOCATION
         Value: Tokyo
@@ -34,7 +36,7 @@ Resources:
       - Key: Name
         Value: SG-SSH0-org-ASUX-Playground-Tokyo
       - Key: APPLNAME
-        Value: SSH-into-LinuxEC2Instances
+        Value: PortNumber ssh in the environment org-ASUX-Playground-Tokyo
       - Key: CHRGCODE
         Value: org.ASUX
       - Key: ITOWNER
@@ -62,12 +64,12 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Wed Aug 14 23:41:03 EDT 2019
+        Value: Fri Aug 30 15:59:41 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
 Outputs:
-  SGPlayground-ssh0:
+  SGssh:
     Description: Security Group for enabling SSH access to Linux EC2 instances for the ___UNKNOWN__ application(s) and EC2-instances within the Playground environment
-    Value: !Ref 'SGSSHPlayground'
+    Value: !Ref 'SGssh'
     Export:
-      Name: 'org-ASUX-Playground-Tokyo-simple-SG-ssh0'
+      Name: 'org-ASUX-Playground-Tokyo-ssh-simple0-SG'
