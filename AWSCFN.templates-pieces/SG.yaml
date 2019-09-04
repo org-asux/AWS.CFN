@@ -10,13 +10,13 @@
 ##      VpcId: !ImportValue "OrgASUX-SydneyVPC-VPCID"
       SecurityGroupIngress:    ## to allow NO Protocol (a.k.a. No internet-traffic at all): IpProtocol: "-1"
       - IpProtocol: tcp
-        FromPort: 22
-        ToPort: 22
-        CidrIp: 0.0.0.0/0
+        FromPort: ${ASUX::SG-Inbound-Port}  ### Note: These ASUX-variables will be defined in a PROPERTIES File called: ${ASUX::CURRENTWORKINGDIRECTORY}/${ASUX::JobSetName}/tmp/SG-attributes-${ASUX::Scope}-${ASUX::ItemNumber}.properties
+        ToPort: ${ASUX::SG-Inbound-Port}    ### Note: These ASUX-variables will be defined in a PROPERTIES File called: ${ASUX::CURRENTWORKINGDIRECTORY}/${ASUX::JobSetName}/tmp/SG-attributes-${ASUX::Scope}-${ASUX::ItemNumber}.properties
+        CidrIp: ${ASUX::SG-Inbound-CIDRRange} ### 0.0.0.0/0
       SecurityGroupEgress:    ## to allow NO Protocol (a.k.a. No internet-traffic at all): IpProtocol: "-1"
       - IpProtocol: -1
 ##        FromPort: -1    ## An ICMP type number of -1 indicates a wildcard (i.e., any ICMP type number).
 ##        ToPort: -1      ## An ICMP type number of -1 indicates a wildcard (i.e., any ICMP type number).
-        CidrIp: 0.0.0.0/0
+        CidrIp: 0.0.0.0/0 ### THIS iS STATIC/Fixed: Let's Not offer too many bells-n-whistles.  Not a bad idea to connect to any external source, especially since most other APPS/SERVICES are on the defacto-internet called AWS/Azure)
 
 ### EOF
