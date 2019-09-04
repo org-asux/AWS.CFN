@@ -11,25 +11,32 @@ AWS:
     SG:
     - SG-nickname: ssh
       SG-type: ssh
+      SG-CIDR: 0.0.0.0/0
       #___ SG-ID: sg-01234567890ab  ### REQUIREMENT: If VPC-ID and __EVEN__ 1-single Subnet-ID is specified, then SG must be specified.
     SG:
     - SG-nickname: web
       SG-type: https
+      SG-CIDR: 0.0.0.0/0
     SG:
     - SG-nickname: postgres           ### incl. RDS & Aurora
       SG-type: 5432
+      SG-CIDR: 0.0.0.0/0
     # SG:
     # - SG-nickname: MYSQL            ### incl. RDS & Aurora
     #   SG-type: 3306
+    #   SG-CIDR: 0.0.0.0/0
     # SG:
     # - SG-nickname: MS-SQL           ### incl. RDS
     #   SG-type: 1433
+    #   SG-CIDR: 0.0.0.0/0
     # SG:
     # - SG-nickname: Amazon Redshift cluster
     #   SG-type: 5439
+    #   SG-CIDR: 0.0.0.0/0
     # SG:
     # - SG-nickname: Oracle
     #   SG-type: 1521
+    #   SG-CIDR: 0.0.0.0/0
 
     subnet:
       public: yes+NATGW   ### Attention: The public subnet must _ALWAYS_ _PRECEDE_ the _PRIVATE_ subnet(s) creation.
