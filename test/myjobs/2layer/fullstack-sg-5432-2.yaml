@@ -18,8 +18,8 @@ Resources:
         Ref: MyVPC
       SecurityGroupIngress:
       - IpProtocol: tcp
-        FromPort: 22
-        ToPort: 22
+        FromPort: '5432'
+        ToPort: '5432'
         CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
       - IpProtocol: -1
@@ -62,7 +62,7 @@ Resources:
       - Key: MyDomainName
         Value: playground.asux.org
       - Key: Created
-        Value: Fri Aug 30 08:20:23 EDT 2019
+        Value: Wed Sep 04 14:13:36 EDT 2019
       - Key: CreatedBy
         Value: arn:aws:iam::591580567012:user/sarmaapi
 Outputs:
