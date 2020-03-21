@@ -3,6 +3,8 @@
 CloudFormation-MyTemplates/JSON
 .DS_Store
 **/.DS_Store
+.idea
+*.iml
 AWSCloudFormation-MyTemplates/JSON
 AWSCloudFormation-MyTemplates/JSON/*.json
 AWSCloudFormation-MyTemplates/JSON/*BACKUP
